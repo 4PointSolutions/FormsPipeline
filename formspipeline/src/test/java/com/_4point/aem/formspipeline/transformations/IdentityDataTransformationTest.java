@@ -28,7 +28,7 @@ class IdentityDataTransformationTest {
 		assertSame(testStream, underTest.process(testStream));
 	}
 
-	private static class TestChunk implements DataChunk {
+	private static class TestChunk implements DataChunk<Context> {
 
 		@Override
 		public byte[] bytes() {
@@ -39,6 +39,5 @@ class IdentityDataTransformationTest {
 		public Context dataContext() {
 			return null;
 		}
-		
 	}
 }

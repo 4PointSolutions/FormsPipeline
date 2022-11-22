@@ -28,7 +28,7 @@ class IdentityOutputTransformationTest {
 		assertSame(testStream, underTest.process(testStream));
 	}
 
-	private static class TestChunk implements OutputChunk {
+	private static class TestChunk implements OutputChunk<Context, Context> {
 
 		@Override
 		public byte[] bytes() {
