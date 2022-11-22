@@ -2,6 +2,7 @@ package com._4point.aem.formspipeline.contexts;
 
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 
 import com._4point.aem.formspipeline.api.Context;
 
@@ -13,10 +14,13 @@ public class HashMapContext implements Context {
 	}
 
 	@Override
-	public <T> T get(String key, Class<T> target) {
+	public <T> Optional<T> get(String key, Class<T> target) {
 		Object object = contextMap.get(key);
+		if (object == null) {
+			return Optional.empty();
+		}
 		if (target.isInstance(object)) {
-			return target.cast(object);
+			return Optional.of(target.cast(object));
 		}
 		throw new IllegalArgumentException("Unable to convert object of type " + object.getClass().getName() + " to " + target.getName() + ".");
 	}

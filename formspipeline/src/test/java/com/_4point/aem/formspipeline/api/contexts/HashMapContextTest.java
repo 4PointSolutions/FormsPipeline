@@ -5,6 +5,7 @@ import static org.hamcrest.Matchers.*;
 import static org.junit.jupiter.api.Assertions.*;
 
 import java.util.Map;
+import java.util.Optional;
 
 import org.junit.jupiter.api.Test;
 
@@ -23,14 +24,20 @@ class HashMapContextTest {
 	
 	@Test
 	void testGetString() {
-		String result = underTest.get(KEY1, String.class);
+		String result = underTest.get(KEY1, String.class).orElseThrow();
 		assertEquals(VALUE1, result);
 	}
 
 	@Test
 	void testGetInteger() {
-		int result = underTest.get(KEY2, Integer.class);
+		int result = underTest.get(KEY2, Integer.class).orElseThrow();
 		assertEquals(VALUE2, result);
+	}
+
+	@Test
+	void testGetNotFound() {
+		Optional<String> result = underTest.get("foobar", String.class);
+		assertTrue(result.isEmpty(), "Expected the Optional to be empty because key is not found.");
 	}
 
 	@Test
@@ -43,7 +50,7 @@ class HashMapContextTest {
 
 	@Test
 	void testGetString2() {
-		String result = underTest.getString(KEY1);
+		String result = underTest.getString(KEY1).orElseThrow();
 		assertEquals(VALUE1, result);
 	}
 
