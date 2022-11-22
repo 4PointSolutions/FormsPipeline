@@ -1,4 +1,4 @@
-package com._4point.aem.formspipeline.api.contexts;
+package com._4point.aem.formspipeline.contexts;
 
 import java.util.Map;
 import java.util.Objects;

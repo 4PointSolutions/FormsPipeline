@@ -8,6 +8,8 @@ import java.util.Map;
 
 import org.junit.jupiter.api.Test;
 
+import com._4point.aem.formspipeline.contexts.HashMapContext;
+
 class HashMapContextTest {
 
 	private static final String KEY1 = "key1";
