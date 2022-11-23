@@ -4,8 +4,8 @@ import java.util.stream.Stream;
 
 import com._4point.aem.formspipeline.api.Context;
 import com._4point.aem.formspipeline.api.OutputChunk;
-import com._4point.aem.formspipeline.api.OutputTransformationManyToMany;
-import com._4point.aem.formspipeline.api.OutputTransformationOneToOne;
+import com._4point.aem.formspipeline.api.OutputTransformation.OutputTransformationManyToMany;
+import com._4point.aem.formspipeline.api.OutputTransformation.OutputTransformationOneToOne;
 
 public class IdentityOutputTransformation<T extends OutputChunk<? extends Context, ? extends Context>>
 		implements OutputTransformationManyToMany, OutputTransformationOneToOne<T, T> {
