@@ -1,4 +1,4 @@
-package com._4point.aem.formspipeline.api.contexts;
+package com._4point.aem.formspipeline.contexts;
 
 import static org.hamcrest.MatcherAssert.assertThat; 
 import static org.hamcrest.Matchers.*;
