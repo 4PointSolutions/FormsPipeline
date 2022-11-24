@@ -7,9 +7,30 @@
 		<relativePath /> <!-- lookup parent from repository -->
 	</parent>
 	<groupId>com._4point.aem.formspipeline</groupId>
-	<artifactId>formspipeline-spring-starter</artifactId>
+	<artifactId>formspipeline-spring-boot-starter</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
 	<name>Forms Pipeline Spring Starter</name>
+
+	<!--
+	Build this project with the following goals:
+	install
+	
+	This project uses the 4PointSolutions/FormsPipeline package repository.  GitHub requires a user to authenticate in order
+	to access a package repository.  In order for this build to work, you need to have your personal credentials configured
+	in your local settings.xml file (found in you $HOME/.m2 directory).
+	
+	Your settings.xml should look something like this:
+	<?xml version="1.0"?>
+	<settings xsi:schemaLocation="http://maven.apache.org/SETTINGS/1.0.0 https://maven.apache.org/xsd/settings-1.0.0.xsd" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://maven.apache.org/SETTINGS/1.0.0">
+		<servers>
+			<server>
+				<id>github</id>
+				<username>Your GitHub Username goes here</username>
+				<password>Your Personal Access Token goes here</password>
+			</server>
+		</servers>
+	</settings>
+	-->
 
 	<properties>
 		<java.version>17</java.version>
@@ -21,14 +42,14 @@
 		<junit-addons.version>1.4</junit-addons.version>
 	</properties>
 
-	<build>
-		<plugins>
-			<plugin>
-				<groupId>org.springframework.boot</groupId>
-				<artifactId>spring-boot-maven-plugin</artifactId>
-			</plugin>
-		</plugins>
-	</build>
+
+	<distributionManagement>
+		<repository>
+			<id>github</id>
+			<name>GitHub 4PointSolutions Apache Maven Packages</name>
+			<url>https://maven.pkg.github.com/4PointSolutions-PS/MCC</url>
+		</repository>
+	</distributionManagement>
 
 	<dependencies>
 		<dependency>
@@ -40,6 +61,10 @@
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter</artifactId>
 		</dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-autoconfigure</artifactId>
+        </dependency>
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-test</artifactId>
@@ -109,6 +134,13 @@
 			<url>https://repo.spring.io/milestone</url>
 			<snapshots>
 				<enabled>false</enabled>
+			</snapshots>
+		</repository>
+		<repository>
+			<id>github</id>
+			<url>https://maven.pkg.github.com/4PointSolutions/*</url>
+			<snapshots>
+				<enabled>true</enabled>
 			</snapshots>
 		</repository>
 	</repositories>
