@@ -6,6 +6,7 @@ public class SampleOutputTransformationOneToOne1 implements OutputTransformation
 
 	@Override
 	public SampleOutputChunk2 process(SampleOutputChunk1 outputChunk) {
+		System.out.println("Transforming SampleOutputChunk1 to SampleOutputChunk2");
 		return new SampleOutputChunk2(outputChunk.dataContext());
 	}
 

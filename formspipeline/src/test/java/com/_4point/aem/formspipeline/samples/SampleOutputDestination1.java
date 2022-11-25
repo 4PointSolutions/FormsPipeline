@@ -6,6 +6,7 @@ public class SampleOutputDestination1 implements OutputDestination<SampleOutputC
 
 	@Override
 	public SampleResult1 process(SampleOutputChunk2 outputChunk) {
+		System.out.println("Sending SampleOutputChunk1 to Destination and returning SampleResult1");
 		return new SampleResult1(outputChunk.dataContext(), outputChunk.outputContext());
 	}
 }

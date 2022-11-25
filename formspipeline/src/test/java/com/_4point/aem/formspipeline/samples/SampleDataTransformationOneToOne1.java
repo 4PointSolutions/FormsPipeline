@@ -6,6 +6,7 @@ public class SampleDataTransformationOneToOne1 implements DataTransformationOneT
 
 	@Override
 	public SampleDataChunk2 process(SampleDataChunk1 dataChunk) {
+		System.out.println("Transforming SampleDataChunk1 to SampleDataChunk2");
 		return new SampleDataChunk2();
 	}
 }

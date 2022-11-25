@@ -9,26 +9,26 @@ import com._4point.aem.formspipeline.api.OutputTransformation.*;
  *
  */
 @SuppressWarnings("rawtypes")
-public sealed interface OutputTransformation permits OutputTransformationOneToOne,
+public sealed interface OutputTransformation<T extends OutputChunk<? extends Context, ? extends Context>, R extends OutputChunk<? extends Context, ? extends Context>> permits OutputTransformationOneToOne,
 													 OutputTransformationOneToMany,
 													 OutputTransformationManyToOne,
 													 OutputTransformationManyToMany
 													 {
 
 	public non-sealed interface OutputTransformationOneToOne<T extends OutputChunk<? extends Context, ? extends Context>, R extends OutputChunk<? extends Context, ? extends Context>> extends OutputTransformation {
-		public R process(T outputChunk);
+		R process(T outputChunk);
 	}
 
-	public non-sealed interface OutputTransformationOneToMany<T extends OutputChunk<? extends Context, ? extends Context>> extends OutputTransformation {
-		public Stream<? extends OutputChunk<? extends Context, ? extends Context>> process(T outputChunk);
+	public non-sealed interface OutputTransformationOneToMany<T extends OutputChunk<? extends Context, ? extends Context>, R extends OutputChunk<? extends Context, ? extends Context>> extends OutputTransformation {
+		Stream<R> process(T outputChunk);
 	}
 
-	public non-sealed interface OutputTransformationManyToOne<T extends OutputChunk<? extends Context, ? extends Context>> extends OutputTransformation {
-		T process(Stream<? extends OutputChunk<? extends Context, ? extends Context>> outputChunks);
+	public non-sealed interface OutputTransformationManyToOne<T extends OutputChunk<? extends Context, ? extends Context>, R extends OutputChunk<? extends Context, ? extends Context>> extends OutputTransformation {
+		R process(Stream<T> outputChunks);
 	}
 
-	public non-sealed interface OutputTransformationManyToMany extends OutputTransformation {
-		Stream<? extends OutputChunk<? extends Context, ? extends Context>> process(Stream<? extends OutputChunk<? extends Context, ? extends Context>> outputChunks);
+	public non-sealed interface OutputTransformationManyToMany<T extends OutputChunk<? extends Context, ? extends Context>, R extends OutputChunk<? extends Context, ? extends Context>> extends OutputTransformation {
+		Stream<R> process(Stream<T> outputChunks);
 	}
 
 }

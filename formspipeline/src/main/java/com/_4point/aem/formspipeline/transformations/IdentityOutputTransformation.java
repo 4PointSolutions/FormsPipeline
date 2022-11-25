@@ -8,7 +8,7 @@ import com._4point.aem.formspipeline.api.OutputTransformation.OutputTransformati
 import com._4point.aem.formspipeline.api.OutputTransformation.OutputTransformationOneToOne;
 
 public class IdentityOutputTransformation<T extends OutputChunk<? extends Context, ? extends Context>>
-		implements OutputTransformationManyToMany, OutputTransformationOneToOne<T, T> {
+		implements OutputTransformationManyToMany<T, T>, OutputTransformationOneToOne<T, T> {
 	
 	@Override
 	public T process(T outputChunk) {
@@ -16,7 +16,7 @@ public class IdentityOutputTransformation<T extends OutputChunk<? extends Contex
 	}
 
 	@Override
-	public Stream<? extends OutputChunk<? extends Context, ? extends Context>> process(Stream<? extends OutputChunk<? extends Context, ? extends Context>> outputChunks) {
+	public Stream<T> process(Stream<T> outputChunks) {
 		return outputChunks;
 	}
 }
