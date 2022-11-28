@@ -24,7 +24,9 @@ transformations before being disposed of.
 At its simplest level, this transformation pipeline looks like this:
 
 <div hidden>
+
 ```
+
 @startuml SimpleOverview
 
 (*) -->[Data Chunk(s)] "Data Transformation"
@@ -34,10 +36,12 @@ At its simplest level, this transformation pipeline looks like this:
 -->[Result Chunk(s)] (*)
 
 @enduml
+
 ```
+
 </div>
 
-![](SimpleOverview.svg)
+![Simplified Overview of Process](SimpleOverview.svg)
 
 Let's examine each step in detail.
 
@@ -53,7 +57,9 @@ to themselves be aggregate transformations too.  This allows the top level Data 
 allowing it to built using smaller, simpler, reusable pieces.
 
 <div hidden>
+
 ```
+
 @startuml DataOverview
 
 (*) -->[Data Chunk(s)] "Aggregate Data Transformation"
@@ -67,10 +73,12 @@ allowing it to built using smaller, simpler, reusable pieces.
 -->[Result Chunk(s)] (*)
 
 @enduml
+
 ```
+
 </div>
 
-![](DataOverview.svg)
+![Overview of Aggregate Data Transformations](DataOverview.svg)
 
 
 ### Output Generation
@@ -96,7 +104,9 @@ Likewise, it's possible, that an aggregate Output Transformation also contains a
 top level Output Transformation to be arbitrarily complex while still allowing it to built using smaller, simpler, reusable pieces.
 
 <div hidden>
+
 ```
+
 @startuml OutputOverview
 
 (*) -->[Data Chunk(s)] "Data Transformation"
@@ -110,10 +120,12 @@ top level Output Transformation to be arbitrarily complex while still allowing i
 -->[Result Chunk(s)] (*)
 
 @enduml
+
 ```
+
 </div>
 
-![](OutputOverview.svg)
+![Overview of Aggregate Output Transformations](OutputOverview.svg)
 
 ### Output Disposition
 
@@ -127,7 +139,9 @@ It's not uncommon for a top level Output Disposition step to contain logic that 
 conditionally delegates to one or more child Output Disposition steps.
 
 <div hidden>
+
 ```
+
 @startuml DispositionOverview
 
 (*) -->[Data Chunk(s)] "Data Transformation"
@@ -143,10 +157,12 @@ conditionally delegates to one or more child Output Disposition steps.
 --> "Output Disposition"
 
 @enduml
+
 ```
+
 </div>
 
-![](DispositionOverview.svg)
+![Overview of Aggregate Output Dispostion](DispositionOverview.svg)
 
 ### Chunks
 
