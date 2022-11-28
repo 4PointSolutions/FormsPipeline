@@ -23,25 +23,14 @@ transformations before being disposed of.
 
 At its simplest level, this transformation pipeline looks like this:
 
-<div hidden>
-
+```mermaid
+graph TD
+    A((start))-->|"Data Chunk(s)"| B[Data Transformation]
+    B -->|"Data Chunk(s)"| C[Output Generation]
+    C -->|"Output Chunk(s)"| D[Output Transformation]
+    D -->|"Output Chunk(s)"| E[Output Disposition]
+    E -->|"Result Chunk(s)"| F((end))
 ```
-
-@startuml SimpleOverview
-
-(*) -->[Data Chunk(s)] "Data Transformation"
--->[Data Chunk(s)] "Output Generation"
--->[Output Chunk(s)] "Output Transformation"
--->[Output Chunk(s)] "Output Disposition"
--->[Result Chunk(s)] (*)
-
-@enduml
-
-```
-
-</div>
-
-![Simplified Overview of Process](SimpleOverview.svg)
 
 Let's examine each step in detail.
 
@@ -56,30 +45,19 @@ that consists of multiple Data Transformation steps.  It's possible, if a little
 to themselves be aggregate transformations too.  This allows the top level Data Transformation to be arbitrarily complex while still 
 allowing it to built using smaller, simpler, reusable pieces.
 
-<div hidden>
-
+```mermaid
+graph TD
+    subgraph Child Transformations
+        B1[Child Data Transformation 1] ---> B2[Child Data Transformation 2] --> B3[Child Data Transformation 3]
+    end
+    A((start))-->|"Data Chunk(s)"| B[Data Transformation]
+    B -->|"Data Chunk(s)"| C[Output Generation]
+    B --> B1
+    B3 --> B
+    C -->|"Output Chunk(s)"| D[Output Transformation]
+    D -->|"Output Chunk(s)"| E[Output Disposition]
+    E -->|"Result Chunk(s)"| F((end))
 ```
-
-@startuml DataOverview
-
-(*) -->[Data Chunk(s)] "Aggregate Data Transformation"
--right-> "Child Data Transformation 1"
---> "Child Data Transformation 2"
---> "Child Data Transformation 3"
---> "Aggregate Data Transformation"
--->[Data Chunk(s)] "Output Generation"
--->[Output Chunk(s)] "Output Transformation"
--->[Output Chunk(s)] "Output Disposition"
--->[Result Chunk(s)] (*)
-
-@enduml
-
-```
-
-</div>
-
-![Overview of Aggregate Data Transformations](DataOverview.svg)
-
 
 ### Output Generation
 
@@ -103,30 +81,19 @@ that consists of multiple Output Transformation steps.
 Likewise, it's possible, that an aggregate Output Transformation also contains aggregate transformations too.  This allows the 
 top level Output Transformation to be arbitrarily complex while still allowing it to built using smaller, simpler, reusable pieces.
 
-<div hidden>
-
+```mermaid
+graph TD
+    subgraph Child Transformations
+        B1[Child Output Transformation 1] ---> B2[Child Output Transformation 2] --> B3[Child Output Transformation 3]
+    end
+    A((start))-->|"Data Chunk(s)"| B[Data Transformation]
+    B -->|"Data Chunk(s)"| C[Output Generation]
+    C -->|"Output Chunk(s)"| D[Output Transformation]
+    D --> B1
+    B3 --> D
+    D -->|"Output Chunk(s)"| E[Output Disposition]
+    E -->|"Result Chunk(s)"| F((end))
 ```
-
-@startuml OutputOverview
-
-(*) -->[Data Chunk(s)] "Data Transformation"
--->[Data Chunk(s)] "Output Generation"
--->[Output Chunk(s)] "Aggregate Output Transformation"
--right-> "Child Output Transformation 1"
---> "Child Output Transformation 2"
---> "Child Output Transformation 3"
---> "Aggregate Output Transformation"
--->[Output Chunk(s)] "Output Disposition"
--->[Result Chunk(s)] (*)
-
-@enduml
-
-```
-
-</div>
-
-![Overview of Aggregate Output Transformations](OutputOverview.svg)
-
 ### Output Disposition
 
 The Output Disposition step is used to send an output chunk to
@@ -138,31 +105,22 @@ The result of the Output Disposition is then returned as an "result chunk".
 It's not uncommon for a top level Output Disposition step to contain logic that then
 conditionally delegates to one or more child Output Disposition steps.
 
-<div hidden>
-
+```mermaid
+graph TD
+    subgraph Child Dispostions
+        B1[Child Output Disposition 1]
+        B2[Child Output Disposition 2]
+        B3[Child Output Disposition 3]
+    end
+    A((start))-->|"Data Chunk(s)"| B[Data Transformation]
+    B -->|"Data Chunk(s)"| C[Output Generation]
+    C -->|"Output Chunk(s)"| D[Output Transformation]
+    D -->|"Output Chunk(s)"| E[Output Disposition]
+    E <--> B1
+    E <--> B2
+    E <--> B3
+    E -->|"Result Chunk(s)"| F((end))
 ```
-
-@startuml DispositionOverview
-
-(*) -->[Data Chunk(s)] "Data Transformation"
--->[Data Chunk(s)] "Output Generation"
--->[Output Chunk(s)] "Output Transformation"
--->[Output Chunk(s)] "Output Disposition"
-"Output Disposition" -down->[Result Chunk(s)] (*)
-"Output Disposition" -right-> "Child Output Disposition 1"
---> "Output Disposition"
-"Output Disposition" -right-> "Child Output Disposition 2"
---> "Output Disposition"
-"Output Disposition" -right-> "Child Output Disposition 3"
---> "Output Disposition"
-
-@enduml
-
-```
-
-</div>
-
-![Overview of Aggregate Output Dispostion](DispositionOverview.svg)
 
 ### Chunks
 
