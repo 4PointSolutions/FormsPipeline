@@ -28,7 +28,7 @@ graph TD
     A((start))-->|"Data Chunk(s)"| B[Data Transformation]
     B -->|"Data Chunk(s)"| C[Output Generation]
     C -->|"Output Chunk(s)"| D[Output Transformation]
-    D -->|"Output Chunk(s)"| E[Output Disposition]
+    D -->|"Output Chunk(s)"| E[Output Destination]
     E -->|"Result Chunk(s)"| F((end))
 ```
 
@@ -55,7 +55,7 @@ graph TD
     B --> B1
     B3 --> B
     C -->|"Output Chunk(s)"| D[Output Transformation]
-    D -->|"Output Chunk(s)"| E[Output Disposition]
+    D -->|"Output Chunk(s)"| E[Output Destination]
     E -->|"Result Chunk(s)"| F((end))
 ```
 
@@ -71,7 +71,7 @@ The Output Generation step typically calls AEM to merge the data to the form but
 ### Output Transformation
 
 One or more data "output chunks" are passed into the Output Transformation step.  The output tranformation(s) is/are performed and this produces
-one or more (usually different) output chunks which are fed to the Output Disposition step.
+one or more (usually different) output chunks which are fed to the Output Destination step.
 
 Like data transformaations, output transformations are often required to be complicated, with multiple steps 
 (or are actually multiple transformations).  In order to accomodate this, like the Data Transformation step the top level 
@@ -91,31 +91,31 @@ graph TD
     C -->|"Output Chunk(s)"| D[Output Transformation]
     D --> B1
     B3 --> D
-    D -->|"Output Chunk(s)"| E[Output Disposition]
+    D -->|"Output Chunk(s)"| E[Output Destination]
     E -->|"Result Chunk(s)"| F((end))
 ```
-### Output Disposition
+### Output Destination
 
-The Output Disposition step is used to send an output chunk to
+The Output Destination step is used to send an output chunk to
 its final destination.  It could be sent out as an email,
 written to an archive system or sent to a printer.
 
-The result of the Output Disposition is then returned as an "result chunk".
+The result of the Output Destination is then returned as an "result chunk".
 
-It's not uncommon for a top level Output Disposition step to contain logic that then
-conditionally delegates to one or more child Output Disposition steps.
+It's not uncommon for a top level Output Destination step to contain logic that then
+conditionally delegates to one or more child Output Destination steps.
 
 ```mermaid
 graph TD
     subgraph Child Dispostions
-        B1[Child Output Disposition 1]
-        B2[Child Output Disposition 2]
-        B3[Child Output Disposition 3]
+        B1[Child Output Destination 1]
+        B2[Child Output Destination 2]
+        B3[Child Output Destination 3]
     end
     A((start))-->|"Data Chunk(s)"| B[Data Transformation]
     B -->|"Data Chunk(s)"| C[Output Generation]
     C -->|"Output Chunk(s)"| D[Output Transformation]
-    D -->|"Output Chunk(s)"| E[Output Disposition]
+    D -->|"Output Chunk(s)"| E[Output Destination]
     E <--> B1
     E <--> B2
     E <--> B3
@@ -132,7 +132,7 @@ Each chunk consist of two parts:
 1. The payload - this is usually just the bytes.  In data chunks, this is the data
 intended for the next step.  In output chunks, this is the output (or transformed output) from the
 output generation step.  Lastly, there are result chunks which contain the results of the output
-disposition step.  The payload is generally treated as an opaque object.  If specific elements
+Destination step.  The payload is generally treated as an opaque object.  If specific elements
 of the data need to be accessed, these are usually exposed via the associated context.
 
 1. The contexts - this is metadata and/or information within the data that is available to each
