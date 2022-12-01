@@ -50,7 +50,7 @@ graph TD
     subgraph Child Transformations
         B1[Child Data Transformation 1] ---> B2[Child Data Transformation 2] --> B3[Child Data Transformation 3]
     end
-    A((start))-->|"Data Chunk(s)"| B[Data Transformation]
+    A((start))-->|"Data Chunk(s)"| B[Aggregate Data Transformation]
     B -->|"Data Chunk(s)"| C[Output Generation]
     B --> B1
     B3 --> B
@@ -88,7 +88,7 @@ graph TD
     end
     A((start))-->|"Data Chunk(s)"| B[Data Transformation]
     B -->|"Data Chunk(s)"| C[Output Generation]
-    C -->|"Output Chunk(s)"| D[Output Transformation]
+    C -->|"Output Chunk(s)"| D[Aggregate Output Transformation]
     D --> B1
     B3 --> D
     D -->|"Output Chunk(s)"| E[Output Destination]
@@ -115,7 +115,7 @@ graph TD
     A((start))-->|"Data Chunk(s)"| B[Data Transformation]
     B -->|"Data Chunk(s)"| C[Output Generation]
     C -->|"Output Chunk(s)"| D[Output Transformation]
-    D -->|"Output Chunk(s)"| E[Output Destination]
+    D -->|"Output Chunk(s)"| E[Routing Output Destination]
     E <--> B1
     E <--> B2
     E <--> B3
