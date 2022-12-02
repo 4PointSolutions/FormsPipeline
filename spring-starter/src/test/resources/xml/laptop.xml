@@ -1,0 +1,17 @@
+<laptops>
+<laptop name="Lenonvo">
+<price value="2000"/>
+<ram value="250GB"/>
+<hardDrive value="2GB"/>
+</laptop>
+<laptop name="Dell">
+<price value="1000"/>
+<ram value="100GB"/>
+<hardDrive value="1GB"/>
+</laptop>
+<laptop name="Apple">
+<price value="4000"/>
+<ram value="400GB"/>
+<hardDrive value="4GB"/>
+</laptop>
+</laptops>
