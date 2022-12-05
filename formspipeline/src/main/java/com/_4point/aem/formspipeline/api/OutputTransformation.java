@@ -15,18 +15,22 @@ public sealed interface OutputTransformation<T extends OutputChunk<? extends Con
 													 OutputTransformationManyToMany
 													 {
 
+	@FunctionalInterface
 	public non-sealed interface OutputTransformationOneToOne<T extends OutputChunk<? extends Context, ? extends Context>, R extends OutputChunk<? extends Context, ? extends Context>> extends OutputTransformation {
 		R process(T outputChunk);
 	}
 
+	@FunctionalInterface
 	public non-sealed interface OutputTransformationOneToMany<T extends OutputChunk<? extends Context, ? extends Context>, R extends OutputChunk<? extends Context, ? extends Context>> extends OutputTransformation {
 		Stream<R> process(T outputChunk);
 	}
 
+	@FunctionalInterface
 	public non-sealed interface OutputTransformationManyToOne<T extends OutputChunk<? extends Context, ? extends Context>, R extends OutputChunk<? extends Context, ? extends Context>> extends OutputTransformation {
 		R process(Stream<T> outputChunks);
 	}
 
+	@FunctionalInterface
 	public non-sealed interface OutputTransformationManyToMany<T extends OutputChunk<? extends Context, ? extends Context>, R extends OutputChunk<? extends Context, ? extends Context>> extends OutputTransformation {
 		Stream<R> process(Stream<T> outputChunks);
 	}
