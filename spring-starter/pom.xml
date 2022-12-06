@@ -47,7 +47,7 @@
 		<repository>
 			<id>github</id>
 			<name>GitHub 4PointSolutions Apache Maven Packages</name>
-			<url>https://maven.pkg.github.com/4PointSolutions-PS/MCC</url>
+			<url>https://maven.pkg.github.com/4PointSolutions/FormsPipeline</url>
 		</repository>
 	</distributionManagement>
 
