@@ -8,12 +8,16 @@ import java.nio.file.Paths;
 import java.util.List;
 
 public class TestHelper {
-	public static String BAD_XML_DATA_FILE = "/transformations/InvalidXml.xml";
-	public static String SIMPLE_XML_DATA_FILE = "/transformations/simpleXmlSample.xml";	
-	public static String SIMPLE_XSLT_DATA_FILE = "/transformations/simpleXmlSample.xslt";
-	public static String INVALID_XSLT_DATA_FILE = "/transformations/invalidXmlSample.xslt";
-	public static String COMPLEX_XML_DATA_FILE = "/transformations/English/complexXmlSample.xml";
-	public static String COMPLEX_XML_DATA_FILE_ASIAN = "/transformations/Asian/complexXmlSample.xml";
+	public static final String BAD_XML_DATA_FILE = "/transformations/InvalidXml.xml";
+	public static final String SIMPLE_XML_DATA_FILE = "/transformations/simpleXmlSample.xml";	
+	public static final String SIMPLE_XSLT_DATA_FILE = "/transformations/simpleXmlSample.xslt";
+	public static final String INVALID_XSLT_DATA_FILE = "/transformations/invalidXmlSample.xslt";
+	public static final String COMPLEX_XML_DATA_FILE = "/transformations/English/complexXmlSample.xml";
+	public static final String COMPLEX_XML_DATA_FILE_ASIAN = "/transformations/Asian/complexXmlSample.xml";
+	
+	public static final String BAD_XPATH_EXPRESSION = "*laptops*laptop?price";
+	public static final String REPEAT_SECTION_XPATH_EXP_FOR_SIMPLE_XML = "/laptops/laptop/price";
+	public static final String NOTFOUND_XPATH_EXP_FOR_SIMPLE_XML = "/laptops/laptop/price";
 	    
     public static String getFileContentFromResource(String filePath) {
 		List<String> content = null;

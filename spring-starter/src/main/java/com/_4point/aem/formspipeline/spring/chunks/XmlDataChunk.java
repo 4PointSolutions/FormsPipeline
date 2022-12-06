@@ -74,9 +74,8 @@ public class XmlDataChunk implements DataChunk<XmlDataContext> {
 		}
 	
 		@Override
-		public Optional<String> getString(String xpath) {
-			//If it couldn't find the value (i.e pointing to something that isn't text than default to the xpath provided)
-			String value = xpath; 
+		public Optional<String> getString(String xpath) {			
+			String value = null; 
 			try {
 				NodeList nodes = getNodeListByXpath(xpath);	        
 		        if (nodes.getLength() > 1) {

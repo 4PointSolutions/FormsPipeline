@@ -1,10 +1,10 @@
 package com._4point.aem.formspipeline.spring.utils;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static org.hamcrest.MatcherAssert.assertThat; 
-import static org.hamcrest.Matchers.*;
-import static org.xmlunit.matchers.CompareMatcher.*;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.xmlunit.matchers.CompareMatcher.isIdenticalTo;
 
+import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
@@ -17,8 +17,8 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.xmlunit.builder.Input;
 
-import com._4point.aem.formspipeline.api.Context;
-import com._4point.aem.formspipeline.api.DataChunk;
+import com._4point.aem.formspipeline.XmlDataException;
+import com._4point.aem.formspipeline.XmlTransformationException;
 import com._4point.aem.formspipeline.spring.chunks.XmlDataChunk;
 import com._4point.aem.formspipeline.spring.common.TestHelper;
 
@@ -51,7 +51,7 @@ class XsltXmlDataTransformationTest {
 
 	@Test
 	void testTransform_throwException()  {
-		XsltXmlDataTransformation xmlTransformer = new XsltXmlDataTransformation(invalidXsltBytes);		
+		XsltXmlDataTransformation xmlTransformer = new XsltXmlDataTransformation(invalidXsltBytes);		  
 		
 		InputStream xmlDoc = TestHelper.getFileFromResource(TestHelper.SIMPLE_XML_DATA_FILE);
 		Source source = new StreamSource(xmlDoc);
@@ -72,13 +72,20 @@ class XsltXmlDataTransformationTest {
 		assertThat(transformedXML, isIdenticalTo(Input.fromString(EXPECTED_TRANSFORMED_XML)));
 	}
 	
+    
+    @Test
+    void testProcess_throwException() {
+		XsltXmlDataTransformation xmlTransformer = new XsltXmlDataTransformation(invalidXsltBytes);		
+		
+		assertThrows( XmlTransformationException.class, () -> {
+			xmlTransformer.process(new XmlDataChunk(xmlBytes));
+	    });    
+    }
+	
 	@Test
 	void testProcess_success() {
 		XsltXmlDataTransformation xmlTransformer = new XsltXmlDataTransformation(xsltBytes);		
-		
-		//Something not right here, needs to be re-factored.
 		XmlDataChunk data = xmlTransformer.process(new XmlDataChunk(xmlBytes));
-//		assertEquals(EXPECTED_TRANSFORMED_XML,new String(data.bytes(), StandardCharsets.UTF_8));
 		assertThat(Input.fromByteArray(data.bytes()), isIdenticalTo(Input.fromString(EXPECTED_TRANSFORMED_XML)));
 	}
 }
