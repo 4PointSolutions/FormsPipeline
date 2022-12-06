@@ -27,10 +27,8 @@ import com._4point.aem.formspipeline.api.DataChunk;
 import com._4point.aem.formspipeline.spring.chunks.XmlDataChunk.XmlDataContext;
 
 
-public class XmlDataChunk<XmlDataContext> implements DataChunk<Context> {
-	
+public class XmlDataChunk<XmlDataContext> implements DataChunk<Context> {	
 	private static final Logger logger = LoggerFactory.getLogger(XmlDataChunk.class);
-	
 	private final byte[] xmlBytes;  
 	
 	public XmlDataChunk(byte[] pXmlBytes) {
@@ -69,7 +67,7 @@ public class XmlDataChunk<XmlDataContext> implements DataChunk<Context> {
 				DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
 			    DocumentBuilder builder = factory.newDocumentBuilder();
 			    doc = builder.parse(inputStream);
-			    doc.getDocumentElement().normalize();
+			    doc.getDocumentElement().normalize();			    
 			} catch (ParserConfigurationException | SAXException | IOException e) {
 				throw new XmlDataException(String.format("Failed to create XmlDataContext ... %s", e.getMessage()),e);
 			} 
@@ -81,7 +79,7 @@ public class XmlDataChunk<XmlDataContext> implements DataChunk<Context> {
 			//If it couldn't find the value (i.e pointing to something that isn't text than default to the xpath provided)
 			String value = xpath; 
 			try {
-				NodeList nodes = getNodeList(xpath);	        
+				NodeList nodes = getNodeListByXpath(xpath);	        
 		        if (nodes.getLength() > 1) {
 		        	//Multiple matches for the same xpath (i.e. repeated sections)
 		        	return Optional.ofNullable(value); 
@@ -96,10 +94,10 @@ public class XmlDataChunk<XmlDataContext> implements DataChunk<Context> {
 			} catch (XPathExpressionException e) {			
 				logger.error(String.format("Failed to parse xml path %s. Error message: %s", xpath, e.getMessage()));
 			} 		
-			return Optional.ofNullable(value);	
+			return Optional.ofNullable(value);	 
 		}
 
-		private NodeList getNodeList(String xpath) throws XPathExpressionException {
+		private NodeList getNodeListByXpath(String xpath) throws XPathExpressionException {
 			XPathExpression expr = xpathFactory.compile(xpath);
 			return (NodeList) expr.evaluate(xmlDoc, XPathConstants.NODESET);
 		}

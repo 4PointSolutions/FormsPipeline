@@ -11,6 +11,7 @@ public class TestHelper {
 	public static String BAD_XML_DATA_FILE = "/transformations/InvalidXml.xml";
 	public static String SIMPLE_XML_DATA_FILE = "/transformations/simpleXmlSample.xml";	
 	public static String SIMPLE_XSLT_DATA_FILE = "/transformations/simpleXmlSample.xslt";
+	public static String INVALID_XSLT_DATA_FILE = "/transformations/invalidXmlSample.xslt";
 	public static String COMPLEX_XML_DATA_FILE = "/transformations/English/complexXmlSample.xml";
 	public static String COMPLEX_XML_DATA_FILE_ASIAN = "/transformations/Asian/complexXmlSample.xml";
 	    
@@ -29,8 +30,7 @@ public class TestHelper {
     public static byte[] getFileBytesFromResource(String filePath) {
 		byte[] content = null;
 		try {
-			content = Files.readAllBytes(Paths.get(
-					new org.springframework.core.io.ClassPathResource(filePath).getURI()));			
+			content = Files.readAllBytes(Paths.get(new org.springframework.core.io.ClassPathResource(filePath).getURI()));			
 		} catch (IOException e1) {
 			e1.printStackTrace();
 		}
