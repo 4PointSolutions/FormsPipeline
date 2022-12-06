@@ -1,14 +1,16 @@
 package com._4point.aem.formspipeline.spring.chunks;
 
-import java.util.ArrayList;
-import java.util.Formatter;
-import java.util.List;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.Optional;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.xpath.XPath;
 import javax.xml.xpath.XPathConstants;
 import javax.xml.xpath.XPathExpression;
+import javax.xml.xpath.XPathExpressionException;
 import javax.xml.xpath.XPathFactory;
 
 import org.slf4j.Logger;
@@ -17,75 +19,96 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
+import org.xml.sax.SAXException;
 
+import com._4point.aem.formspipeline.XmlDataException;
 import com._4point.aem.formspipeline.api.Context;
 import com._4point.aem.formspipeline.api.DataChunk;
+import com._4point.aem.formspipeline.spring.chunks.XmlDataChunk.XmlDataContext;
 
-public class XmlDataChunk<T extends Context> implements DataChunk<T> {
+
+public class XmlDataChunk<XmlDataContext> implements DataChunk<Context> {
 	
 	private static final Logger logger = LoggerFactory.getLogger(XmlDataChunk.class);
 	
-	private Document xmlDoc;
-	private String xmlString;
-	private XPath xpathFactory;
+	private final byte[] xmlBytes;  
 	
-	public XmlDataChunk() {
-		XPathFactory xPathF = XPathFactory.newInstance();
-		xpathFactory = xPathF.newXPath();	
+	public XmlDataChunk(byte[] pXmlBytes) {
+		xmlBytes = pXmlBytes;
 	}
-
+	
 	@Override
-	public byte[] bytes() 
-	{
-		return xmlString.getBytes();		
+	public byte[] bytes() {
+		return xmlBytes;		
 	}
-
+	
 	@Override
-	public T dataContext() {
+	public Context dataContext() {
+		// TODO Auto-generated method stub
 		return null;
 	}
-	
-	public void loadXMLFromString(String xml) throws Exception
-	{		
-		xmlString = xml;
-	    DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
-	    DocumentBuilder builder = factory.newDocumentBuilder();
-	    Document doc = builder.parse(this.asInputStream());
-	    doc.getDocumentElement().normalize();
-	    xmlDoc = doc;	  	    
-	}
-	
-	public List<String> getXmlDataValue(String xpath) {
-		List<String> list = new ArrayList<>();
-		try {
-	        //create XPathExpression object
-			XPathExpression expr = xpathFactory.compile(xpath);			
-	        //evaluate expression result on XML document
-	        NodeList nodes = (NodeList) expr.evaluate(xmlDoc, XPathConstants.NODESET);
-	        for (int i = 0; i < nodes.getLength(); i++) {
-	        	Node node = nodes.item(i);
-	        	if (node.getNodeType() == Node.ELEMENT_NODE) {
-	        		Element childElementDetails = (Element)node;
-	        		if(childElementDetails.getAttribute("value").isBlank()) {
-        				list.add(childElementDetails.getTextContent());
-	        		} else {
-	        			list.add(childElementDetails.getAttribute("value"));	
-	        		}
-	        	}	            
-	        }
-		} catch (Exception e) {
-			
-			Formatter fmt = new Formatter();
-			logger.error(fmt.format("Failed to parse xml path (%s). Error message %s", xpath, e.getMessage()).toString());
+		
+	public static class XmlDataContext implements Context {
+		private final Document xmlDoc;
+		private final XPath xpathFactory;
+		
+		XmlDataContext(Document pXmlDoc, XPath pXPathF) {
+			xpathFactory = pXPathF;
+			xmlDoc = pXmlDoc;
 		}
 		
-		if(list.isEmpty()) {
-			list.add(xpath);  	        //If it couldn't find the value (i.e pointing to something that isn't text)
+		public Document getXmlDoc() {
+			return xmlDoc;
 		}
-		return list;		
-	}
+		
+		public static XmlDataContext initializeXmlDoc(InputStream inputStream) throws XmlDataException {
+			Document doc = null;
+			XPath xPath = null;
+			try {
+				xPath = XPathFactory.newInstance().newXPath();
+				DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+			    DocumentBuilder builder = factory.newDocumentBuilder();
+			    doc = builder.parse(inputStream);
+			    doc.getDocumentElement().normalize();
+			} catch (ParserConfigurationException | SAXException | IOException e) {
+				throw new XmlDataException(String.format("Failed to create XmlDataContext ... %s", e.getMessage()),e);
+			} 
+			return new XmlDataContext(doc,xPath);
+		}
 	
-	public Element getXmlElement(String xpath) {
-		return xmlDoc.getElementById(xpath);
+		@Override
+		public Optional<String> getString(String xpath) {
+			//If it couldn't find the value (i.e pointing to something that isn't text than default to the xpath provided)
+			String value = xpath; 
+			try {
+				NodeList nodes = getNodeList(xpath);	        
+		        if (nodes.getLength() > 1) {
+		        	//Multiple matches for the same xpath (i.e. repeated sections)
+		        	return Optional.ofNullable(value); 
+		        }
+		        
+		        for (int i = 0; i < nodes.getLength(); i++) {
+		        	Node node = nodes.item(i);
+		        	if (node.getNodeType() == Node.ELEMENT_NODE) {
+	        			value = ((Element)node).getTextContent();	
+		        	}	            
+		        }
+			} catch (XPathExpressionException e) {			
+				logger.error(String.format("Failed to parse xml path %s. Error message: %s", xpath, e.getMessage()));
+			} 		
+			return Optional.ofNullable(value);	
+		}
+
+		private NodeList getNodeList(String xpath) throws XPathExpressionException {
+			XPathExpression expr = xpathFactory.compile(xpath);
+			return (NodeList) expr.evaluate(xmlDoc, XPathConstants.NODESET);
+		}
+
+		@Override
+		public <T> Optional<T> get(String arg0, Class<T> arg1) {
+			return Optional.empty();
+		}
 	}
+
+
 }

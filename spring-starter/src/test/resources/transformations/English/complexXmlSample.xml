@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Output xmlns:fo="http://www.w3.org/1999/XSL/Format">
+     <XMLInvoices>
+        <XMLInvoice>
+            <DriverSection>
+                <DocumentType>LETTER</DocumentType>
+                <DocumentTypeDesc>To be sent out through email</DocumentTypeDesc>
+            </DriverSection>
+            <DataSection>
+            	<transactionId>123</transactionId>
+            	<OrderNumber>111</OrderNumber>
+            	<ShipTo>
+	            	<Address>Some recipent street address</Address>
+	            	<Address></Address>
+	            	<City>Ottawa</City>
+	            	<State>Ontario</State>
+	            	<Zip>K2B 2L2</Zip>
+	            	<Country>Canada</Country>            	
+            	</ShipTo>
+            	<Seller>
+	            	<Address>106 Colonnade Rd #210</Address>
+	            	<Address></Address>
+	            	<City>Nepean</City>
+	            	<State>Ontario</State>
+	            	<Zip>K2E 7L6</Zip>
+	            	<Country>Canada</Country>          	            	
+            	</Seller>
+            </DataSection>
+            <DigitalData>
+            	<requestoremail>recipient1@abc.com</requestoremail>
+            	<recipientemail>recipient2@abc.com</recipientemail>
+            	<recipientemail>recipient3@abc.com</recipientemail>
+            	<recipientemail>recipient4@abc.com</recipientemail>
+            	<alias>recipientAlias</alias>
+            	<username></username>
+            	<message></message>
+				<FaxCover>
+                    <FaxCoverTitle/>
+                    <Customer/>
+                    <SenderAddress/>
+                    <Attention/>
+                    <Date/>
+                    <FaxNo/>
+                    <NofP/>
+                    <Subject/>
+                    <Company/>
+                </FaxCover>
+            </DigitalData>
+         </XMLInvoice>
+         <XMLInvoice>
+            <DriverSection>
+                <DocumentType>DOCUMENT</DocumentType>
+                <DocumentTypeDesc>To be sent out through regular mail</DocumentTypeDesc>
+            </DriverSection>
+            <DataSection>
+            	<transactionId>456</transactionId>
+            	<OrderNumber>444</OrderNumber>
+            	<ShipTo>
+	            	<Address>A recipent street address</Address>
+	            	<Address></Address>
+	            	<City>Ottawa</City>
+	            	<State>Ontario</State>
+	            	<Zip>K1L 4B6</Zip>
+	            	<Country>Canada</Country>            	
+            	</ShipTo>
+            	<Seller>
+	            	<Address>343 Preston St</Address>
+	            	<Address></Address>
+	            	<City>Ottawa</City>
+	            	<State>Ontario</State>
+	            	<Zip>K1S 1N46</Zip>
+	            	<Country>Canada</Country>          	            	
+            	</Seller>
+            </DataSection>
+            <DigitalData>
+            	<requestoremail>recipient6@abc.com</requestoremail>
+            	<recipientemail>recipient7@abc.com</recipientemail>
+            	<recipientemail>recipient8@abc.com</recipientemail>
+            	<recipientemail>recipient9@abc.com</recipientemail>
+            	<alias>recipientAlias</alias>
+            	<username></username>
+            	<message></message>
+				<FaxCover>
+                    <FaxCoverTitle/>
+                    <Customer/>
+                    <SenderAddress/>
+                    <Attention/>
+                    <Date/>
+                    <FaxNo/>
+                    <NofP/>
+                    <Subject/>
+                    <Company/>
+                </FaxCover>
+            </DigitalData>
+         </XMLInvoice>
+     </XMLInvoices>
+</Output>
