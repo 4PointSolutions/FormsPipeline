@@ -29,30 +29,27 @@ import org.slf4j.LoggerFactory;
  * @author lien.ly
  *
  */
-public class XsltXmlDataTransformation extends XmlDataChunk<Context> 
-		implements DataTransformationOneToOne<DataChunk<Context>, DataChunk<Context>> {
+public class XsltXmlDataTransformation implements DataTransformationOneToOne<XmlDataChunk, XmlDataChunk> {
 	
 	private static final Logger logger = LoggerFactory.getLogger(XsltXmlDataTransformation.class);	
 	private final byte[] xsltBytes;
 
-	public XsltXmlDataTransformation(byte[] xsltBytes, byte[] xmlContent){
-		super(xmlContent);
+	public XsltXmlDataTransformation(byte[] xsltBytes){
 		this.xsltBytes = xsltBytes;
 	}
 
 	@Override
-	public DataChunk<Context> process(DataChunk<Context> dataChunk)  {
-		XmlDataChunk<XmlDataContext> transformedXmlDataChunk = null;
+	public XmlDataChunk process(XmlDataChunk dataChunk) {
 		try {
 			ByteArrayOutputStream output = new ByteArrayOutputStream();
 			transform(new StreamSource(dataChunk.asInputStream()), output);
-			transformedXmlDataChunk = new XmlDataChunk<XmlDataContext>(output.toByteArray());	
+			return new XmlDataChunk(output.toByteArray());
 		} catch (TransformerException e) {
-			logger.error(String.format("Failed to execute process error: %s.", e.getMessage()));			
+			logger.error(String.format("Failed to execute process error: %s.", e.getMessage()));
+			throw new XmlTransformationException(e);
 		}
-		return transformedXmlDataChunk;
 	}
-	
+
     public void transform(Source xmlDoc, OutputStream output)
             throws TransformerException {
 
@@ -62,6 +59,5 @@ public class XsltXmlDataTransformation extends XmlDataChunk<Context>
         transformer.transform(xmlDoc, new StreamResult(output));
     }
 
-	
 
 }

@@ -1,11 +1,22 @@
 package com._4point.aem.formspipeline;
 
-public class XmlTransformationException extends Exception {
-	Exception originalException;
-	
-	public XmlTransformationException(String pMessage, Exception pException) {
-		super(pMessage);
-		originalException = pException;
+@SuppressWarnings("serial")
+public class XmlTransformationException extends RuntimeException {
+
+	public XmlTransformationException() {
+		super();
+	}
+
+	public XmlTransformationException(String message, Throwable cause) {
+		super(message, cause);
+	}
+
+	public XmlTransformationException(String message) {
+		super(message);
+	}
+
+	public XmlTransformationException(Throwable cause) {
+		super(cause);
 	}
 
 }

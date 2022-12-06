@@ -27,7 +27,7 @@ import com._4point.aem.formspipeline.api.DataChunk;
 import com._4point.aem.formspipeline.spring.chunks.XmlDataChunk.XmlDataContext;
 
 
-public class XmlDataChunk<XmlDataContext> implements DataChunk<Context> {	
+public class XmlDataChunk implements DataChunk<XmlDataContext> {	
 	private static final Logger logger = LoggerFactory.getLogger(XmlDataChunk.class);
 	private final byte[] xmlBytes;  
 	
@@ -41,9 +41,8 @@ public class XmlDataChunk<XmlDataContext> implements DataChunk<Context> {
 	}
 	
 	@Override
-	public Context dataContext() {
-		// TODO Auto-generated method stub
-		return null;
+	public XmlDataContext dataContext() {
+		return XmlDataContext.initializeXmlDoc(this.asInputStream());
 	}
 		
 	public static class XmlDataContext implements Context {

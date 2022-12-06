@@ -1,10 +1,21 @@
 package com._4point.aem.formspipeline;
 
-public class XmlDataException extends Exception {
-	Exception originalException;
-	
-	public XmlDataException(String pMessage, Exception pException) {
-		super(pMessage);
-		originalException = pException;
+@SuppressWarnings("serial")
+public class XmlDataException extends RuntimeException {
+
+	public XmlDataException() {
+		super();
+	}
+
+	public XmlDataException(String message, Throwable cause) {
+		super(message, cause);
+	}
+
+	public XmlDataException(String message) {
+		super(message);
+	}
+
+	public XmlDataException(Throwable cause) {
+		super(cause);
 	}
 }

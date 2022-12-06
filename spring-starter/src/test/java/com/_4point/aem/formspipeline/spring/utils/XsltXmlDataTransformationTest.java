@@ -19,6 +19,7 @@ import org.xmlunit.builder.Input;
 
 import com._4point.aem.formspipeline.api.Context;
 import com._4point.aem.formspipeline.api.DataChunk;
+import com._4point.aem.formspipeline.spring.chunks.XmlDataChunk;
 import com._4point.aem.formspipeline.spring.common.TestHelper;
 
 class XsltXmlDataTransformationTest {
@@ -50,7 +51,7 @@ class XsltXmlDataTransformationTest {
 
 	@Test
 	void testTransform_throwException()  {
-		XsltXmlDataTransformation xmlTransformer = new XsltXmlDataTransformation(invalidXsltBytes,xmlBytes);		
+		XsltXmlDataTransformation xmlTransformer = new XsltXmlDataTransformation(invalidXsltBytes);		
 		
 		InputStream xmlDoc = TestHelper.getFileFromResource(TestHelper.SIMPLE_XML_DATA_FILE);
 		Source source = new StreamSource(xmlDoc);
@@ -60,23 +61,23 @@ class XsltXmlDataTransformationTest {
 	
 	@Test
 	void testTransform_success() throws Exception  {
-		XsltXmlDataTransformation xmlTransformer = new XsltXmlDataTransformation(xsltBytes,xmlBytes);	
+		XsltXmlDataTransformation xmlTransformer = new XsltXmlDataTransformation(xsltBytes);	
 		
 		InputStream xmlDoc = TestHelper.getFileFromResource(TestHelper.SIMPLE_XML_DATA_FILE);
 		Source source = new StreamSource(xmlDoc);
 		ByteArrayOutputStream output = new ByteArrayOutputStream(); 		
 		
-			xmlTransformer.transform(source, output);
-			String transformedXML = new String(output.toByteArray(), StandardCharsets.UTF_8);
-			assertThat(transformedXML, isIdenticalTo(Input.fromString(EXPECTED_TRANSFORMED_XML)));
+		xmlTransformer.transform(source, output);
+		String transformedXML = new String(output.toByteArray(), StandardCharsets.UTF_8);
+		assertThat(transformedXML, isIdenticalTo(Input.fromString(EXPECTED_TRANSFORMED_XML)));
 	}
 	
 	@Test
 	void testProcess_success() {
-		XsltXmlDataTransformation xmlTransformer = new XsltXmlDataTransformation(xsltBytes,xmlBytes);		
+		XsltXmlDataTransformation xmlTransformer = new XsltXmlDataTransformation(xsltBytes);		
 		
 		//Something not right here, needs to be re-factored.
-		DataChunk<Context> data = xmlTransformer.process(xmlTransformer);
+		XmlDataChunk data = xmlTransformer.process(new XmlDataChunk(xmlBytes));
 //		assertEquals(EXPECTED_TRANSFORMED_XML,new String(data.bytes(), StandardCharsets.UTF_8));
 		assertThat(Input.fromByteArray(data.bytes()), isIdenticalTo(Input.fromString(EXPECTED_TRANSFORMED_XML)));
 	}
