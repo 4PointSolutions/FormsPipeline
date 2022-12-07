@@ -27,7 +27,6 @@ import com._4point.aem.formspipeline.spring.chunks.XmlDataChunk.XmlDataContext;
 
 
 public class XmlDataChunk implements DataChunk<XmlDataContext> {	
-	private static final Logger logger = LoggerFactory.getLogger(XmlDataChunk.class);
 	private final byte[] xmlBytes;  
 	
 	public XmlDataChunk(byte[] pXmlBytes) {
@@ -100,7 +99,7 @@ public class XmlDataChunk implements DataChunk<XmlDataContext> {
 		@SuppressWarnings("unchecked")
 		@Override
 		public <T> Optional<T> get(String key, Class<T> type) {
-			if (type.getClass().isInstance(String.class)) {
+			if (type.equals(String.class)) {
 				return (Optional<T>) getString(key);
 			}
 			return Optional.empty();
