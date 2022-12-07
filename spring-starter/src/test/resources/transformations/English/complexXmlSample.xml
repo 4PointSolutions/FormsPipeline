@@ -5,6 +5,7 @@
             <DriverSection>
                 <DocumentType>LETTER</DocumentType>
                 <DocumentTypeDesc>To be sent out through email</DocumentTypeDesc>
+                <MixContent>Text from parent<ElementInsideMix>Text from child</ElementInsideMix></MixContent>
             </DriverSection>
             <DataSection>
             	<transactionId>123</transactionId>
@@ -47,7 +48,7 @@
                 </FaxCover>
             </DigitalData>
          </XMLInvoice>
-         <XMLInvoice>
+        <XMLInvoice>
             <DriverSection>
                 <DocumentType>DOCUMENT</DocumentType>
                 <DocumentTypeDesc>To be sent out through regular mail</DocumentTypeDesc>

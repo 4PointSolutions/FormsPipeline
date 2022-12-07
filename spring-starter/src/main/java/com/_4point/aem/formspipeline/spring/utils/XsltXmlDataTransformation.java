@@ -2,25 +2,17 @@ package com._4point.aem.formspipeline.spring.utils;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
-import java.io.OutputStream;
-import java.nio.charset.StandardCharsets;
 
-import javax.xml.transform.Source;
+import javax.xml.XMLConstants;
 import javax.xml.transform.Transformer;
+import javax.xml.transform.TransformerConfigurationException;
 import javax.xml.transform.TransformerException;
 import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.stream.StreamResult;
 import javax.xml.transform.stream.StreamSource;
 
-import com._4point.aem.formspipeline.api.Context;
-import com._4point.aem.formspipeline.api.DataChunk;
 import com._4point.aem.formspipeline.api.DataTransformation.DataTransformationOneToOne;
-import com._4point.aem.formspipeline.XmlTransformationException;
 import com._4point.aem.formspipeline.spring.chunks.XmlDataChunk;
-import com._4point.aem.formspipeline.spring.chunks.XmlDataChunk.XmlDataContext;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * 
@@ -31,33 +23,54 @@ import org.slf4j.LoggerFactory;
  */
 public class XsltXmlDataTransformation implements DataTransformationOneToOne<XmlDataChunk, XmlDataChunk> {
 	
-	private static final Logger logger = LoggerFactory.getLogger(XsltXmlDataTransformation.class);	
 	private final byte[] xsltBytes;
+	private Transformer transformer;
 
-	public XsltXmlDataTransformation(byte[] xsltBytes){
+	public XsltXmlDataTransformation(byte[] xsltBytes, Transformer transformer) throws IllegalArgumentException {
 		this.xsltBytes = xsltBytes;
+		this.transformer = transformer;
+	}
+	
+	public XsltXmlDataTransformation(byte[] xsltBytes) throws IllegalArgumentException {
+		this(xsltBytes,null);
+        try {
+            TransformerFactory transformerFactory = TransformerFactory.newInstance();
+            transformerFactory.setAttribute(XMLConstants.ACCESS_EXTERNAL_DTD, "");
+            transformerFactory.setAttribute(XMLConstants.ACCESS_EXTERNAL_STYLESHEET, "");
+            this.transformer = transformerFactory.newTransformer(new StreamSource(new ByteArrayInputStream(xsltBytes)));
+		} catch (TransformerConfigurationException e) {
+			throw new IllegalArgumentException(String.format("Failed to instantiate XsltXmlDataTransformation.  %s", e.getMessage()));
+		}		        
 	}
 
 	@Override
 	public XmlDataChunk process(XmlDataChunk dataChunk) {
 		try {
 			ByteArrayOutputStream output = new ByteArrayOutputStream();
-			transform(new StreamSource(dataChunk.asInputStream()), output);
+			transformer.transform(new StreamSource(dataChunk.asInputStream()), new StreamResult(output));
 			return new XmlDataChunk(output.toByteArray());
 		} catch (TransformerException e) {
-			logger.error(String.format("Failed to execute process error: %s.", e.getMessage()));
 			throw new XmlTransformationException(e);
 		}
 	}
+    
+    @SuppressWarnings("serial")
+    public static class XmlTransformationException extends RuntimeException {
 
-    public void transform(Source xmlDoc, OutputStream output)
-            throws TransformerException {
+    	public XmlTransformationException() {
+    		super();
+    	}
 
-        TransformerFactory transformerFactory = TransformerFactory.newInstance();
-        // add XSLT in Transformer
-        Transformer transformer = transformerFactory.newTransformer(new StreamSource(new ByteArrayInputStream(xsltBytes)));
-        transformer.transform(xmlDoc, new StreamResult(output));
+    	public XmlTransformationException(String message, Throwable cause) {
+    		super(message, cause);
+    	}
+
+    	public XmlTransformationException(String message) {
+    		super(message);
+    	}
+
+    	public XmlTransformationException(Throwable cause) {
+    		super(cause);
+    	}
     }
-
-
 }

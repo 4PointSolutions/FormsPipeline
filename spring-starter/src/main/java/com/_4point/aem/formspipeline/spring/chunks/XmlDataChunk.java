@@ -21,7 +21,6 @@ import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
 
-import com._4point.aem.formspipeline.XmlDataException;
 import com._4point.aem.formspipeline.api.Context;
 import com._4point.aem.formspipeline.api.DataChunk;
 import com._4point.aem.formspipeline.spring.chunks.XmlDataChunk.XmlDataContext;
@@ -75,12 +74,12 @@ public class XmlDataChunk implements DataChunk<XmlDataContext> {
 	
 		@Override
 		public Optional<String> getString(String xpath) {			
-			String value = null; 
+			String value = ""; 
 			try {
 				NodeList nodes = getNodeListByXpath(xpath);	        
 		        if (nodes.getLength() > 1) {
-		        	//Multiple matches for the same xpath (i.e. repeated sections)
-		        	return Optional.ofNullable(value); 
+		        	//Multiple matches for the same xpath (i.e. repeated sections)9i
+		        	throw new IllegalArgumentException(String.format("Failed to parse xml path %s.", xpath));
 		        }
 		        
 		        for (int i = 0; i < nodes.getLength(); i++) {
@@ -90,9 +89,9 @@ public class XmlDataChunk implements DataChunk<XmlDataContext> {
 		        	}	            
 		        }
 			} catch (XPathExpressionException e) {			
-				logger.error(String.format("Failed to parse xml path %s. Error message: %s", xpath, e.getMessage()));
+				throw new IllegalArgumentException(String.format("Failed to parse xml path %s. Error message: %s", xpath, e.getMessage()));
 			} 		
-			return Optional.ofNullable(value);	 
+			return Optional.of(value);	 
 		}
 
 		private NodeList getNodeListByXpath(String xpath) throws XPathExpressionException {
@@ -100,9 +99,33 @@ public class XmlDataChunk implements DataChunk<XmlDataContext> {
 			return (NodeList) expr.evaluate(xmlDoc, XPathConstants.NODESET);
 		}
 
+		@SuppressWarnings("unchecked")
 		@Override
-		public <T> Optional<T> get(String arg0, Class<T> arg1) {
+		public <T> Optional<T> get(String key, Class<T> type) {
+			if (type.getClass().isInstance(String.class)) {
+				return (Optional<T>) getString(key);
+			}
 			return Optional.empty();
+		}
+	}
+		
+	@SuppressWarnings("serial")
+	public static class XmlDataException extends RuntimeException {
+
+		public XmlDataException() {
+			super();
+		}
+
+		public XmlDataException(String message, Throwable cause) {
+			super(message, cause);
+		}
+
+		public XmlDataException(String message) {
+			super(message);
+		}
+
+		public XmlDataException(Throwable cause) {
+			super(cause);
 		}
 	}
 

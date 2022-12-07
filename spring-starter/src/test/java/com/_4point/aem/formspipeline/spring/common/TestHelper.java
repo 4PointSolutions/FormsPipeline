@@ -17,7 +17,8 @@ public class TestHelper {
 	
 	public static final String BAD_XPATH_EXPRESSION = "*laptops*laptop?price";
 	public static final String REPEAT_SECTION_XPATH_EXP_FOR_SIMPLE_XML = "/laptops/laptop/price";
-	public static final String NOTFOUND_XPATH_EXP_FOR_SIMPLE_XML = "/laptops/laptop/price";
+	public static final String REPEAT_SECTION_XPATH_EXP_FOR_COMPLEX_XML = "/Output/XMLInvoices/XMLInvoice/DriverSection/DocumentType";
+	public static final String NOTFOUND_XPATH_EXP_FOR_SIMPLE_XML = "/laptops/laptop/notavalidtag";
 	    
     public static String getFileContentFromResource(String filePath) {
 		List<String> content = null;
@@ -51,6 +52,5 @@ public class TestHelper {
 		}
     	return is;
     	
-    }
-    
+    } 
 }

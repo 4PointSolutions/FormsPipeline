@@ -2,30 +2,34 @@ package com._4point.aem.formspipeline.spring.utils;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.any;
 import static org.xmlunit.matchers.CompareMatcher.isIdenticalTo;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.InputStream;
-import java.nio.charset.StandardCharsets;
-
+import javax.xml.transform.Result;
 import javax.xml.transform.Source;
+import javax.xml.transform.Transformer;
 import javax.xml.transform.TransformerException;
-import javax.xml.transform.stream.StreamSource;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.Mock;
+import org.mockito.Mockito;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.xmlunit.builder.Input;
 
-import com._4point.aem.formspipeline.XmlDataException;
-import com._4point.aem.formspipeline.XmlTransformationException;
 import com._4point.aem.formspipeline.spring.chunks.XmlDataChunk;
 import com._4point.aem.formspipeline.spring.common.TestHelper;
+import com._4point.aem.formspipeline.spring.utils.XsltXmlDataTransformation.XmlTransformationException;
 
+@ExtendWith(MockitoExtension.class)
 class XsltXmlDataTransformationTest {
 	private final byte[] xmlBytes = TestHelper.getFileBytesFromResource(TestHelper.SIMPLE_XML_DATA_FILE);
 	private final byte[] xsltBytes = TestHelper.getFileBytesFromResource(TestHelper.SIMPLE_XSLT_DATA_FILE);
 	private byte[] invalidXsltBytes = TestHelper.getFileBytesFromResource(TestHelper.INVALID_XSLT_DATA_FILE);
+	
+	@Mock
+	Transformer mockTransformer;
 		
 	private final String EXPECTED_TRANSFORMED_XML = "<?xml version=\"1.0\" encoding=\"UTF-8\"?><laptops>\n"
 			+ "	<laptop name=\"Lenonvo\">\n"
@@ -49,37 +53,25 @@ class XsltXmlDataTransformationTest {
 	void setUp() throws Exception {
 	}
 
-	@Test
-	void testTransform_throwException()  {
-		XsltXmlDataTransformation xmlTransformer = new XsltXmlDataTransformation(invalidXsltBytes);		  
-		
-		InputStream xmlDoc = TestHelper.getFileFromResource(TestHelper.SIMPLE_XML_DATA_FILE);
-		Source source = new StreamSource(xmlDoc);
-		ByteArrayOutputStream output = new ByteArrayOutputStream(); 				
-		assertThrows( TransformerException.class, ()->xmlTransformer.transform(source, output));	
-	}
-	
-	@Test
-	void testTransform_success() throws Exception  {
-		XsltXmlDataTransformation xmlTransformer = new XsltXmlDataTransformation(xsltBytes);	
-		
-		InputStream xmlDoc = TestHelper.getFileFromResource(TestHelper.SIMPLE_XML_DATA_FILE);
-		Source source = new StreamSource(xmlDoc);
-		ByteArrayOutputStream output = new ByteArrayOutputStream(); 		
-		
-		xmlTransformer.transform(source, output);
-		String transformedXML = new String(output.toByteArray(), StandardCharsets.UTF_8);
-		assertThat(transformedXML, isIdenticalTo(Input.fromString(EXPECTED_TRANSFORMED_XML)));
-	}
-	
     
     @Test
-    void testProcess_throwException() {
-		XsltXmlDataTransformation xmlTransformer = new XsltXmlDataTransformation(invalidXsltBytes);		
-		
-		assertThrows( XmlTransformationException.class, () -> {
-			xmlTransformer.process(new XmlDataChunk(xmlBytes));
-	    });    
+    void testConstructor_throwException() {
+    	assertThrows(IllegalArgumentException.class, () -> {
+    		new XsltXmlDataTransformation(invalidXsltBytes);
+    	});
+    }
+    
+    @Test
+    void testProcess_throwException() throws TransformerException {
+		mockTransformer = Mockito.mock(Transformer.class);
+    	Mockito.doThrow(TransformerException.class)
+    			.when(mockTransformer)
+    			.transform(any(Source.class), any(Result.class));
+    	
+    	XsltXmlDataTransformation xmlTransformer = new XsltXmlDataTransformation(xsltBytes,mockTransformer);
+    	assertThrows(XmlTransformationException.class, () -> {
+    		xmlTransformer.process(new XmlDataChunk(xmlBytes));
+    	});
     }
 	
 	@Test
