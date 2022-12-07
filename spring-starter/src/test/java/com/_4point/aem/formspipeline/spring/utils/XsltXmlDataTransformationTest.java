@@ -33,23 +33,26 @@ class XsltXmlDataTransformationTest {
 	@Mock Transformer mockTransformer;
 	@Mock TransformerFactory mockTransformerFactory;
 		
-	private final String EXPECTED_TRANSFORMED_XML = "<?xml version=\"1.0\" encoding=\"UTF-8\"?><laptops>\n"
-			+ "	<laptop name=\"Lenonvo\">\n"
-			+ "		<price>2000</price>\n"
-			+ "		<MEMORY>250GB</MEMORY>\n"
-			+ "		<hardDrive>2GB</hardDrive>\n"
-			+ "	</laptop>\n"
-			+ "	<laptop name=\"Dell\">\n"
-			+ "		<price>1000</price>\n"
-			+ "		<MEMORY>100GB</MEMORY>\n"
-			+ "		<hardDrive value=\"1GB\"/>\n"
-			+ "	</laptop>\n"
-			+ "	<laptop name=\"Apple\">\n"
-			+ "		<price>4000</price>\n"
-			+ "		<MEMORY>400GB</MEMORY>\n"
-			+ "		<hardDrive>4GB</hardDrive>\n"
-			+ "	</laptop>\n"
-			+ "</laptops>";
+	private final String EXPECTED_TRANSFORMED_XML = """
+			<?xml version="1.0" encoding="UTF-8"?>
+			<laptops>
+				<laptop name="Lenonvo">
+					<price>2000</price>
+					<MEMORY>250GB</MEMORY>
+					<hardDrive>2GB</hardDrive>
+				</laptop>
+				<laptop name="Dell">
+					<price>1000</price>
+					<MEMORY>100GB</MEMORY>
+					<hardDrive value="1GB"/>
+				</laptop>
+				<laptop name="Apple">
+					<price>4000</price>
+					<MEMORY>400GB</MEMORY>
+					<hardDrive>4GB</hardDrive>
+				</laptop>
+			</laptops>
+			""";
 	
 	@BeforeEach
 	void setUp() throws Exception {
