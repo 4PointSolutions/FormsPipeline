@@ -159,15 +159,13 @@ class XmlDataChunkTest {
     @Test
 	//Note: There are space due to the formatting in the xml
     void testGetString_complexXml_FoundElementWithChildren_returnAllChildrenValue()throws Exception {
-    	String EXPECTED_VALUE = "\r\n"
-    			+ "	            	Some recipent street address\r\n"
-    			+ "	            	\r\n"
-    			+ "	            	Ottawa\r\n"
-    			+ "	            	Ontario\r\n"
-    			+ "	            	K2B 2L2\r\n"
-    			+ "	            	Canada            	\r\n"
-    			+ "            	\r\n"
-    			+ "";
+    	String EXPECTED_VALUE = """
+    							Some recipent street address
+    							Ottawa
+    			      			Ontario
+    							K2B 2L2
+    							Canada
+    							""";
     	
     	XmlDataContext xmlDataContext = getXmlDataContext(TestHelper.COMPLEX_XML_DATA_FILE);		
 		String xpath = "/Output/XMLInvoices/XMLInvoice[1]/DataSection/ShipTo";
