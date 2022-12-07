@@ -2,6 +2,7 @@ package com._4point.aem.formspipeline.spring.utils;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.xmlunit.matchers.CompareMatcher.isIdenticalTo;
 
@@ -9,6 +10,7 @@ import javax.xml.transform.Result;
 import javax.xml.transform.Source;
 import javax.xml.transform.Transformer;
 import javax.xml.transform.TransformerException;
+import javax.xml.transform.TransformerFactory;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -28,8 +30,8 @@ class XsltXmlDataTransformationTest {
 	private final byte[] xsltBytes = TestHelper.getFileBytesFromResource(TestHelper.SIMPLE_XSLT_DATA_FILE);
 	private byte[] invalidXsltBytes = TestHelper.getFileBytesFromResource(TestHelper.INVALID_XSLT_DATA_FILE);
 	
-	@Mock
-	Transformer mockTransformer;
+	@Mock Transformer mockTransformer;
+	@Mock TransformerFactory mockTransformerFactory;
 		
 	private final String EXPECTED_TRANSFORMED_XML = "<?xml version=\"1.0\" encoding=\"UTF-8\"?><laptops>\n"
 			+ "	<laptop name=\"Lenonvo\">\n"
@@ -56,21 +58,24 @@ class XsltXmlDataTransformationTest {
     
     @Test
     void testConstructor_throwException() {
-    	assertThrows(IllegalArgumentException.class, () -> {
+    	Exception e = assertThrows(IllegalArgumentException.class, () -> {
     		new XsltXmlDataTransformation(invalidXsltBytes);
     	});
+    	assertTrue(e.getMessage().contains("Failed to instantiate XsltXmlDataTransformation."));
     }
     
     @Test
     void testProcess_throwException() throws TransformerException {
-		mockTransformer = Mockito.mock(Transformer.class);
+    	Mockito.when(mockTransformerFactory.newTransformer(Mockito.any()))
+    			.thenReturn(mockTransformer);
     	Mockito.doThrow(TransformerException.class)
-    			.when(mockTransformer)
-    			.transform(any(Source.class), any(Result.class));
-    	
-    	XsltXmlDataTransformation xmlTransformer = new XsltXmlDataTransformation(xsltBytes,mockTransformer);
+    			.when(mockTransformer)    			
+    			.transform(any(Source.class), any(Result.class));    	    	
+    	XmlDataChunk xmlChunk = new XmlDataChunk(xmlBytes);
+    	    	
+    	XsltXmlDataTransformation xmlTransformer = new XsltXmlDataTransformation(xsltBytes,mockTransformerFactory);
     	assertThrows(XmlTransformationException.class, () -> {
-    		xmlTransformer.process(new XmlDataChunk(xmlBytes));
+    		xmlTransformer.process(xmlChunk);
     	});
     }
 	

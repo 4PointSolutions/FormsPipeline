@@ -58,18 +58,16 @@ public class XmlDataChunk implements DataChunk<XmlDataContext> {
 		}
 		
 		public static XmlDataContext initializeXmlDoc(InputStream inputStream) throws XmlDataException {
-			Document doc = null;
-			XPath xPath = null;
 			try {
-				xPath = XPathFactory.newInstance().newXPath();
+				XPath xPath = XPathFactory.newInstance().newXPath();
 				DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
 			    DocumentBuilder builder = factory.newDocumentBuilder();
-			    doc = builder.parse(inputStream);
-			    doc.getDocumentElement().normalize();			    
+			    Document doc = builder.parse(inputStream);
+			    doc.getDocumentElement().normalize();
+				return new XmlDataContext(doc,xPath);
 			} catch (ParserConfigurationException | SAXException | IOException e) {
 				throw new XmlDataException(String.format("Failed to create XmlDataContext ... %s", e.getMessage()),e);
 			} 
-			return new XmlDataContext(doc,xPath);
 		}
 	
 		@Override

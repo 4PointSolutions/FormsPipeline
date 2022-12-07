@@ -23,24 +23,20 @@ import com._4point.aem.formspipeline.spring.chunks.XmlDataChunk;
  */
 public class XsltXmlDataTransformation implements DataTransformationOneToOne<XmlDataChunk, XmlDataChunk> {
 	
-	private final byte[] xsltBytes;
-	private Transformer transformer;
-
-	public XsltXmlDataTransformation(byte[] xsltBytes, Transformer transformer) throws IllegalArgumentException {
-		this.xsltBytes = xsltBytes;
-		this.transformer = transformer;
-	}
+	private final Transformer transformer;
 	
-	public XsltXmlDataTransformation(byte[] xsltBytes) throws IllegalArgumentException {
-		this(xsltBytes,null);
+	public XsltXmlDataTransformation(byte[] xsltBytes, TransformerFactory transformerFactory) throws IllegalArgumentException {
         try {
-            TransformerFactory transformerFactory = TransformerFactory.newInstance();
             transformerFactory.setAttribute(XMLConstants.ACCESS_EXTERNAL_DTD, "");
             transformerFactory.setAttribute(XMLConstants.ACCESS_EXTERNAL_STYLESHEET, "");
             this.transformer = transformerFactory.newTransformer(new StreamSource(new ByteArrayInputStream(xsltBytes)));
 		} catch (TransformerConfigurationException e) {
 			throw new IllegalArgumentException(String.format("Failed to instantiate XsltXmlDataTransformation.  %s", e.getMessage()));
 		}		        
+	}
+	
+	public XsltXmlDataTransformation(byte[] xsltBytes) throws IllegalArgumentException {
+		this(xsltBytes, TransformerFactory.newInstance());
 	}
 
 	@Override
