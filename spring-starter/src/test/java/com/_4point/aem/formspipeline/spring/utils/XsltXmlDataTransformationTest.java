@@ -6,13 +6,9 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.xmlunit.matchers.CompareMatcher.isIdenticalTo;
 
-import java.nio.charset.StandardCharsets;
-
 import javax.xml.transform.Result;
 import javax.xml.transform.Source;
-//import javax.xml.transform.Result;
 import javax.xml.transform.Transformer;
-//import javax.xml.transform.TransformerException;
 import javax.xml.transform.TransformerException;
 
 import org.junit.jupiter.api.BeforeEach;
