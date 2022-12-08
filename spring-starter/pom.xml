@@ -134,9 +134,19 @@
 			<groupId>org.xmlunit</groupId>
 			<artifactId>xmlunit-matchers</artifactId>
 			<scope>test</scope>
-		</dependency>
+		</dependency>	
+        <dependency>
+            <groupId>net.sf.saxon</groupId>
+            <artifactId>Saxon-HE</artifactId>
+            <version>11.4</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>xml-apis</groupId>
+                    <artifactId>xml-apis</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>	
 	</dependencies>
-
 	<repositories>
 		<repository>
 			<id>spring-milestones</id>

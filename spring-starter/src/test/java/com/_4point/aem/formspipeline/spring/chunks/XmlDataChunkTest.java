@@ -75,7 +75,7 @@ class XmlDataChunkTest {
     
     @Test
     void testGet_simpleXML_FoundRepeatItemUsingAttribute_returnValue() {
-    	String xpath = "/laptops/laptop[@name='Dell']/price";
+    	String xpath = TestHelper.VALID_XPATH_FOR_SIMPLE_XML;
     	byte[] fileContent = TestHelper.getFileBytesFromResource(TestHelper.SIMPLE_XML_DATA_FILE);
     	InputStream xmlStream = new ByteArrayInputStream(fileContent);
 
@@ -89,7 +89,7 @@ class XmlDataChunkTest {
     @Test
     //@Disabled ("Needs to be fixed, assertion is failing")
     void testGet_simpleXML_ObjectNotString_returnEmpty() {
-    	String xpath = "/laptops/laptop[@name='Dell']/price";
+    	String xpath = TestHelper.VALID_XPATH_FOR_SIMPLE_XML;
     	byte[] fileContent = TestHelper.getFileBytesFromResource(TestHelper.SIMPLE_XML_DATA_FILE);
     	InputStream xmlStream = new ByteArrayInputStream(fileContent);
 
@@ -125,7 +125,7 @@ class XmlDataChunkTest {
     	});
     	
     	XmlDataContext complexXML = getXmlDataContext(TestHelper.COMPLEX_XML_DATA_FILE);
-		String xpath3 = "/Output/XMLInvoices/XMLInvoice/DriverSection/DocumentType";
+		String xpath3 = TestHelper.REPEAT_SECTION_XPATH_EXP_FOR_COMPLEX_XML;
 			        
     	assertThrows(IllegalArgumentException.class, () -> {
     		complexXML.getString(xpath3);
@@ -138,7 +138,7 @@ class XmlDataChunkTest {
     	String EXPECTED_VALUE = "河南自贸试验区郑州片区（郑东）正光北街28号1号楼东3单元10层1001号";
     	
     	XmlDataContext xmlDataContext = getXmlDataContext(TestHelper.COMPLEX_XML_DATA_FILE_ASIAN);		
-		String xpath = "/Output/XMLInvoices/XMLInvoice[1]/DataSection/ShipTo/Address[1]";
+		String xpath = TestHelper.CHINESECHAR_XPATH_EXP_FOR_COMPLEX_XML;
 		        
 		Optional<String> actualValue = xmlDataContext.getString(xpath);
     	assertEquals(EXPECTED_VALUE,actualValue.orElseThrow());  
@@ -150,7 +150,7 @@ class XmlDataChunkTest {
     	String EXPECTED_VALUE = "Text from parentText from child"; 
     	
     	XmlDataContext xmlDataContext = getXmlDataContext(TestHelper.COMPLEX_XML_DATA_FILE);		
-		String xpath = "/Output/XMLInvoices/XMLInvoice[1]/DriverSection/MixContent";
+		String xpath = TestHelper.MIXCONTENT_XPATH_EXP_FOR_COMPLEX_XML;
 		        
 		Optional<String> actualValue = xmlDataContext.getString(xpath);
     	assertEquals(EXPECTED_VALUE,actualValue.orElseThrow());
@@ -168,7 +168,7 @@ class XmlDataChunkTest {
     							""";
     	
     	XmlDataContext xmlDataContext = getXmlDataContext(TestHelper.COMPLEX_XML_DATA_FILE);		
-		String xpath = "/Output/XMLInvoices/XMLInvoice[1]/DataSection/ShipTo";
+		String xpath = TestHelper.HASCHILDREN_XPATH_EXP_FOR_COMPLEX_XML;
 		
 		Optional<String> actualValue = xmlDataContext.getString(xpath);
 		assertEquals(EXPECTED_VALUE.replaceAll("\\s+",""), actualValue.get().replaceAll("\\s+",""));

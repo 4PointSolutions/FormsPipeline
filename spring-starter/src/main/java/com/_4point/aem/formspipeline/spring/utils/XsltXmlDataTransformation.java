@@ -7,12 +7,13 @@ import javax.xml.XMLConstants;
 import javax.xml.transform.Transformer;
 import javax.xml.transform.TransformerConfigurationException;
 import javax.xml.transform.TransformerException;
-import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.stream.StreamResult;
 import javax.xml.transform.stream.StreamSource;
 
 import com._4point.aem.formspipeline.api.DataTransformation.DataTransformationOneToOne;
 import com._4point.aem.formspipeline.spring.chunks.XmlDataChunk;
+
+import net.sf.saxon.TransformerFactoryImpl;
 
 /**
  * 
@@ -25,7 +26,7 @@ public class XsltXmlDataTransformation implements DataTransformationOneToOne<Xml
 	
 	private final Transformer transformer;
 	
-	public XsltXmlDataTransformation(byte[] xsltBytes, TransformerFactory transformerFactory) throws IllegalArgumentException {
+	public XsltXmlDataTransformation(byte[] xsltBytes, TransformerFactoryImpl transformerFactory) throws IllegalArgumentException {
         try {
             transformerFactory.setAttribute(XMLConstants.ACCESS_EXTERNAL_DTD, "");
             transformerFactory.setAttribute(XMLConstants.ACCESS_EXTERNAL_STYLESHEET, "");
@@ -36,7 +37,7 @@ public class XsltXmlDataTransformation implements DataTransformationOneToOne<Xml
 	}
 	
 	public XsltXmlDataTransformation(byte[] xsltBytes) throws IllegalArgumentException {
-		this(xsltBytes, TransformerFactory.newInstance());
+		this(xsltBytes, new TransformerFactoryImpl());
 	}
 
 	@Override
