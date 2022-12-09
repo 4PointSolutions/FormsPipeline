@@ -19,8 +19,7 @@ import com._4point.aem.formspipeline.spring.common.TestHelper;
 
 class XmlDataChunkTest {
 	
-	String xmlDataAsString;
-	    
+	//Helper method
 	private XmlDataContext getXmlDataContext(String xmlFileName) {
 		byte[] fileContent = TestHelper.getFileBytesFromResource(xmlFileName);
     	InputStream xmlStream = new ByteArrayInputStream(fileContent);
@@ -41,10 +40,10 @@ class XmlDataChunkTest {
     @Test
     void testDataContext() {    	
     	byte[] xmlBytes = TestHelper.getFileBytesFromResource(TestHelper.SIMPLE_XML_DATA_FILE);
-    	XmlDataChunk xmlDataChunk = new XmlDataChunk(xmlBytes);
-    	assertTrue(Arrays.equals(xmlBytes, xmlDataChunk.bytes()));    	
+    	XmlDataChunk underTest = new XmlDataChunk(xmlBytes);
+    	assertTrue(Arrays.equals(xmlBytes, underTest.bytes()));    	
     	
-    	XmlDataContext dataContext = xmlDataChunk.dataContext();
+    	XmlDataContext dataContext = underTest.dataContext();
     	assertNotNull(dataContext.getXmlDoc());
     	assertEquals("laptops",dataContext.getXmlDoc().getFirstChild().getNodeName());
     	assertEquals("laptop",dataContext.getXmlDoc().getFirstChild().getChildNodes().item(1).getNodeName());    	
@@ -54,8 +53,8 @@ class XmlDataChunkTest {
     void testGetString_simpleXML_returnEmpty() throws Exception{    	
     	byte[] fileContent = TestHelper.getFileBytesFromResource(TestHelper.SIMPLE_XML_DATA_FILE);
     	InputStream xmlStream = new ByteArrayInputStream(fileContent);
-    	XmlDataContext xmlDataContext = XmlDataChunk.XmlDataContext.initializeXmlDoc(xmlStream);
-    	Optional<String> actualValue = xmlDataContext.getString(TestHelper.NOTFOUND_XPATH_EXP_FOR_SIMPLE_XML);
+    	XmlDataContext underTest = XmlDataChunk.XmlDataContext.initializeXmlDoc(xmlStream);
+    	Optional<String> actualValue = underTest.getString(TestHelper.NOTFOUND_XPATH_EXP_FOR_SIMPLE_XML);
     	assertEquals("",actualValue.orElseThrow());   
     }
         
@@ -68,8 +67,8 @@ class XmlDataChunkTest {
 
     	String EXPECTED_VALUE = "1000";
 
-    	XmlDataContext xmlDataContext = XmlDataChunk.XmlDataContext.initializeXmlDoc(xmlStream);
-        Optional<String> actualValue = xmlDataContext.getString(xpath);
+    	XmlDataContext underTest = XmlDataChunk.XmlDataContext.initializeXmlDoc(xmlStream);
+        Optional<String> actualValue = underTest.getString(xpath);
     	assertEquals(EXPECTED_VALUE,actualValue.orElseThrow());   	
     }
     
@@ -81,66 +80,67 @@ class XmlDataChunkTest {
 
     	String EXPECTED_VALUE = "1000";
 
-    	XmlDataContext xmlDataContext = XmlDataChunk.XmlDataContext.initializeXmlDoc(xmlStream);
-        Optional<String> actualValue = xmlDataContext.get(xpath,String.class);
+    	XmlDataContext underTest = XmlDataChunk.XmlDataContext.initializeXmlDoc(xmlStream);
+        Optional<String> actualValue = underTest.get(xpath,String.class);
     	assertEquals(EXPECTED_VALUE,actualValue.orElseThrow()); 
     }
     
     @Test
-    //@Disabled ("Needs to be fixed, assertion is failing")
-    void testGet_simpleXML_ObjectNotString_returnEmpty() {
+    void testGet_simpleXML_CallFuncWithNonString_returnEmpty() {
     	String xpath = TestHelper.VALID_XPATH_FOR_SIMPLE_XML;
     	byte[] fileContent = TestHelper.getFileBytesFromResource(TestHelper.SIMPLE_XML_DATA_FILE);
     	InputStream xmlStream = new ByteArrayInputStream(fileContent);
 
-    	XmlDataContext xmlDataContext = XmlDataChunk.XmlDataContext.initializeXmlDoc(xmlStream);
-        Optional<List> actualValue = xmlDataContext.get(xpath,List.class);
+    	XmlDataContext underTest = XmlDataChunk.XmlDataContext.initializeXmlDoc(xmlStream);
+        Optional<List> actualValue = underTest.get(xpath,List.class);
     	assertEquals(Optional.empty(),actualValue); 
     }
 
     @Test
     void testGetString_complexXml_FoundRepeatItemUsingIndex_returnValue()throws Exception {
-    	XmlDataContext xmlDataContext = getXmlDataContext(TestHelper.COMPLEX_XML_DATA_FILE);	        
+    	XmlDataContext underTest = getXmlDataContext(TestHelper.COMPLEX_XML_DATA_FILE);	        
 		String xpath = "/Output/XMLInvoices/XMLInvoice[1]/DriverSection/DocumentType";		
 
     	String EXPECTED_VALUE = "LETTER";
     	
-		Optional<String> actualValue = xmlDataContext.getString(xpath);
+		Optional<String> actualValue = underTest.getString(xpath);
     	assertEquals(EXPECTED_VALUE,actualValue.orElseThrow());  
     }
     
     
     @Test
-    void testGetString_throwException()throws Exception {
-    	XmlDataContext simpleXML = getXmlDataContext(TestHelper.SIMPLE_XML_DATA_FILE);
+    void testGetString_simpleXML_throwException()throws Exception {
+    	XmlDataContext underTest = getXmlDataContext(TestHelper.SIMPLE_XML_DATA_FILE);
     	
     	String xpath = TestHelper.REPEAT_SECTION_XPATH_EXP_FOR_SIMPLE_XML;    	
     	assertThrows(IllegalArgumentException.class, () -> {
-    		simpleXML.getString(xpath);
+    		underTest.getString(xpath);
     	});    	
     	
     	String xpath2 = TestHelper.BAD_XPATH_EXPRESSION;    	
     	assertThrows(IllegalArgumentException.class, () -> {
-    		simpleXML.getString(xpath2);
-    	});
-    	
-    	XmlDataContext complexXML = getXmlDataContext(TestHelper.COMPLEX_XML_DATA_FILE);
+    		underTest.getString(xpath2);
+    	});    	
+    }
+    
+    @Test
+    void testGetString_complexXML_throwException()throws Exception {
+    	XmlDataContext underTest = getXmlDataContext(TestHelper.COMPLEX_XML_DATA_FILE);
 		String xpath3 = TestHelper.REPEAT_SECTION_XPATH_EXP_FOR_COMPLEX_XML;
 			        
     	assertThrows(IllegalArgumentException.class, () -> {
-    		complexXML.getString(xpath3);
+    		underTest.getString(xpath3);
     	});      	
-
     }
 
     @Test
     void testGetString_complexXML_FoundRepeatItem_ChineseCharacter_returnValue()throws Exception {
     	String EXPECTED_VALUE = "河南自贸试验区郑州片区（郑东）正光北街28号1号楼东3单元10层1001号";
     	
-    	XmlDataContext xmlDataContext = getXmlDataContext(TestHelper.COMPLEX_XML_DATA_FILE_ASIAN);		
+    	XmlDataContext underTest = getXmlDataContext(TestHelper.COMPLEX_XML_DATA_FILE_ASIAN);		
 		String xpath = TestHelper.CHINESECHAR_XPATH_EXP_FOR_COMPLEX_XML;
 		        
-		Optional<String> actualValue = xmlDataContext.getString(xpath);
+		Optional<String> actualValue = underTest.getString(xpath);
     	assertEquals(EXPECTED_VALUE,actualValue.orElseThrow());  
     }
     
@@ -149,10 +149,10 @@ class XmlDataChunkTest {
     void testGetString_complexXML_FoundMixContent_returnAllValue()throws Exception {
     	String EXPECTED_VALUE = "Text from parentText from child"; 
     	
-    	XmlDataContext xmlDataContext = getXmlDataContext(TestHelper.COMPLEX_XML_DATA_FILE);		
+    	XmlDataContext underTest = getXmlDataContext(TestHelper.COMPLEX_XML_DATA_FILE);		
 		String xpath = TestHelper.MIXCONTENT_XPATH_EXP_FOR_COMPLEX_XML;
 		        
-		Optional<String> actualValue = xmlDataContext.getString(xpath);
+		Optional<String> actualValue = underTest.getString(xpath);
     	assertEquals(EXPECTED_VALUE,actualValue.orElseThrow());
     }
     
@@ -167,10 +167,10 @@ class XmlDataChunkTest {
     							Canada
     							""";
     	
-    	XmlDataContext xmlDataContext = getXmlDataContext(TestHelper.COMPLEX_XML_DATA_FILE);		
+    	XmlDataContext underTest = getXmlDataContext(TestHelper.COMPLEX_XML_DATA_FILE);		
 		String xpath = TestHelper.HASCHILDREN_XPATH_EXP_FOR_COMPLEX_XML;
 		
-		Optional<String> actualValue = xmlDataContext.getString(xpath);
+		Optional<String> actualValue = underTest.getString(xpath);
 		assertEquals(EXPECTED_VALUE.replaceAll("\\s+",""), actualValue.get().replaceAll("\\s+",""));
     	//Below will fail due to white space differences
 		//assertEquals(EXPECTED_VALUE, actualValue.get());
