@@ -58,9 +58,7 @@ public class FolderOutputDestination<T extends Context, U extends Context> imple
 				String newFileName = getNewDefaultFileName(a,i++);
 				Files.move(a, a.resolveSibling(newFileName));						
 				newDestination = DEFAULT_FOLDER.resolve(a);
-				System.out.println("ProcessRename " + newDestination + " newFileName " + newFileName);
 				if(!Files.exists(newDestination)) {
-					System.out.println("ProcessRename " + newFileName + " doesn't exist continue with this file.");
 					return newDestination;
 				}
 			} catch (IOException e) {
@@ -70,51 +68,35 @@ public class FolderOutputDestination<T extends Context, U extends Context> imple
 		throw new IndexOutOfBoundsException(String.format("Maximum %s rename reached for %s.",RENAME_MAX_LIMIT,a.getFileName().toString()));
 	}
 	
-	//Intended to be used by the class itself and unit test
-	protected boolean doesFileExist(Path filepath) {
-		return Files.exists(filepath);
-	}
-
 
 	//Intended to be used by the class itself and unit test
 	//Rename the file with the new name added leading zero for less than 4 digit numbers.
-    protected static String getNewDefaultFileName(Path originalFile, int counter) {
+    private static String getNewDefaultFileName(Path originalFile, int counter) {
     	String suffix = String.format("%04d", counter); //4 digit number with leading zero format
 		String fileName = originalFile.getFileName().toString();								
 		int lastDotIndex = fileName.lastIndexOf('.');			
 		return fileName.substring(0, lastDotIndex ) + suffix + fileName.substring(lastDotIndex);
     }
-			
-	//Intended to be used by the class itself and unit test
-	public int getRenameCounter() {
-		return renameCounter;
-	}
-
-	//Intended to be used by the class itself and unit test
-	protected boolean hasReachedRenameLimit() {
-		return renameCounter>=RENAME_MAX_LIMIT;
-	}
 		
-	//Intended to be used by the class itself and unit test
-	protected boolean shouldRename(Path destination) {
-		return destination!=null && !Files.isDirectory(destination)&& doesFileExist(destination);	
+	private boolean shouldRename(Path destination) {
+		return destination!=null && !Files.isDirectory(destination)&& Files.exists(destination);	
 	}
 	
 	//Intended to be used by the class itself and unit test
-	protected Path getDestinationFolder(OutputChunk<T, U> outputChunk) {
+	private Path getDestinationFolder(OutputChunk<T, U> outputChunk) {
 		return destinationFolder.resolve(filenameFn.apply(outputChunk.dataContext(), outputChunk.outputContext()));
 	}	
 	
-	protected Path applyLimitedRename(Path destination) {
+	private Path applyLimitedRename(Path destination) {
 		Path newDestination = null;
-		while(!hasReachedRenameLimit()) {
+		while(renameCounter<RENAME_MAX_LIMIT) {
 			renameCounter++;
 			newDestination = renameFn.apply(destination);
 			if(!Files.exists(newDestination)) {
 				return newDestination;
 			}
 		}
-		throw new IndexOutOfBoundsException(String.format("In applyLimitedRename ... Maximum %s rename reached for %s.",RENAME_MAX_LIMIT,destination.toString()));	
+		throw new IndexOutOfBoundsException(String.format("Maximum %s rename reached for %s.",RENAME_MAX_LIMIT,destination.toString()));	
 	}
 
 	@Override

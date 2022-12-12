@@ -10,14 +10,11 @@ import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 import java.util.function.BiFunction;
-
-import javax.naming.LimitExceededException;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -56,31 +53,8 @@ class FolderOutputDestinationTest {
 					}
 					else return a;												
 				})
-		);		
+		);			
 	}
-	
-
-	@Test
-	void testApplyRename_success() throws LimitExceededException, IOException {
-		String fileName = "foo2.txt";
-		Path rfn = Path.of(fileName);
-		Path destination = spyOutputDestination.applyLimitedRename(rfn);
-		assertEquals(1,spyOutputDestination.getRenameCounter());
-		//assertEquals(testFolder.getFileSystem().+File.separator+fileName, 
-		//			destination.toAbsolutePath());
-	}
-	
-	@Test
-	void testApplyRename_throwsIndexOutOfBoundsException() { 		
-		Mockito.when(spyOutputDestination.hasReachedRenameLimit()).thenReturn(true);
-			
-		Path rfn = Path.of("foo2.txt");
-		IndexOutOfBoundsException ex = assertThrows(IndexOutOfBoundsException.class, ()->spyOutputDestination.applyLimitedRename(rfn));
-		String msg = ex.getMessage();
-		assertNotNull(msg);
-		assertThat(msg, allOf(containsString("Maximum 1000 rename reached")));
-	}
-		
 	
 	@Test
 	void testProcessSuccess() throws Exception {
@@ -138,37 +112,24 @@ class FolderOutputDestinationTest {
 	}
 	
 	@Test
-	void testGetNewDefaultFileName_success() {
-		final Path filename = Path.of("test.txt");		
-		String newFileName = FolderOutputDestination.getNewDefaultFileName(filename, 0);
-		assertEquals("test0000.txt", newFileName);
-			
-		newFileName = FolderOutputDestination.getNewDefaultFileName(filename, 3);
-		assertEquals("test0003.txt", newFileName);
-		
-		newFileName = FolderOutputDestination.getNewDefaultFileName(filename, 1000);
-		assertEquals("test1000.txt", newFileName);
-		
-		newFileName = FolderOutputDestination.getNewDefaultFileName(filename, 20000);
-		assertEquals("test20000.txt", newFileName);
-	}
-	
-	@Test
 	void testProcess_withDefaultRename_success() throws Exception {
-		final Path filename = Path.of("foo.txt");		
-		
 		Mockito.when(mockOutputChunk.bytes()).thenReturn(mockOutputBytes);
 		final FolderOutputDestination<EmptyContext, EmptyContext> underTest = new FolderOutputDestination<>(
 				testFolder, (a, b)->filename,FolderOutputDestination.DEFAULT_RENAME_FUNCTION);
 				
 		//Creates a file with the same name so that rename call is triggered when process is called
+		Path filename = Path.of("foo.txt");		
 		Path fileDestination = testFolder.resolve(filename);
+		Files.write(fileDestination, mockOutputChunk.bytes(), StandardOpenOption.WRITE,StandardOpenOption.CREATE_NEW);
+		filename = Path.of("foo0000.txt");		
+		fileDestination = testFolder.resolve(filename);
 		Files.write(fileDestination, mockOutputChunk.bytes(), StandardOpenOption.WRITE,StandardOpenOption.CREATE_NEW);
 
 		underTest.process(mockOutputChunk);
 
-		final Path fileRename = Path.of("foo0000.txt");
+		final Path fileRename = Path.of("foo0001.txt");
 		Path expectedFile = testFolder.resolve(fileRename);
 		assertTrue(Files.exists(expectedFile), "Expected file (" + expectedFile.toString() + ") to exist, but it didn't.");
+		assertEquals("foo0001.txt",fileRename.getFileName().toString());
 	}
 }
