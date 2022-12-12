@@ -1,26 +1,30 @@
 package com._4point.aem.formspipeline.destinations;
 
-import static org.hamcrest.MatcherAssert.assertThat; 
-import static org.hamcrest.Matchers.*;
-import static org.junit.jupiter.api.Assertions.*;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.allOf;
+import static org.hamcrest.Matchers.containsString;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
-import java.nio.file.LinkOption;
 import java.nio.file.Path;
+import java.nio.file.StandardOpenOption;
+import java.util.function.BiFunction;
 
 import javax.naming.LimitExceededException;
 
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.io.TempDir;
 import org.mockito.Mock;
 import org.mockito.Mockito;
-import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import com._4point.aem.formspipeline.api.OutputChunk;
@@ -29,11 +33,11 @@ import com._4point.aem.formspipeline.contexts.EmptyContext;
 
 @ExtendWith(MockitoExtension.class)
 class FolderOutputDestinationTest {
-	Path filename;// = Path.of("foo.txt");
-    Path fileRename;// = Path.of("foo2.txt");
+	Path filename = Path.of("foo.txt");
+    Path fileRename = Path.of("foo2.txt");
 
-    private String mockOutputString;// = "Test Bytes";
-	private byte[] mockOutputBytes;// = mockOutputString.getBytes(StandardCharsets.UTF_8); 
+    private String mockOutputString = "Test Bytes";
+	private byte[] mockOutputBytes = mockOutputString.getBytes(StandardCharsets.UTF_8); 
 
 	@TempDir
 	private Path testFolder;
@@ -44,12 +48,6 @@ class FolderOutputDestinationTest {
 		
 	@BeforeEach
 	void setup() {
-		filename = Path.of("foo.txt");
-	    fileRename = Path.of("foo2.txt");
-
-	    mockOutputString = "Test Bytes";
-		mockOutputBytes = mockOutputString.getBytes(StandardCharsets.UTF_8); 
-		
 		spyOutputDestination = Mockito.spy(new FolderOutputDestination<>(
 				testFolder, (a, b)->filename, 
 				(a)-> { 
@@ -58,41 +56,37 @@ class FolderOutputDestinationTest {
 					}
 					else return a;												
 				})
-		);
-		
+		);		
 	}
+	
 
 	@Test
 	void testApplyRename_success() throws LimitExceededException, IOException {
 		String fileName = "foo2.txt";
 		Path rfn = Path.of(fileName);
-		Path destination = spyOutputDestination.applyRename(rfn);
-		System.out.println(testFolder.toRealPath() + "\n" + 
-							testFolder.toRealPath(LinkOption.NOFOLLOW_LINKS) + "\n" +
-							testFolder.toAbsolutePath());
+		Path destination = spyOutputDestination.applyLimitedRename(rfn);
 		assertEquals(1,spyOutputDestination.getRenameCounter());
 		//assertEquals(testFolder.getFileSystem().+File.separator+fileName, 
 		//			destination.toAbsolutePath());
 	}
 	
 	@Test
-	void testApplyRename_ThrowsLimitExceededException() { 		
+	void testApplyRename_throwsIndexOutOfBoundsException() { 		
 		Mockito.when(spyOutputDestination.hasReachedRenameLimit()).thenReturn(true);
 			
 		Path rfn = Path.of("foo2.txt");
-		LimitExceededException ex = assertThrows(LimitExceededException.class, ()->spyOutputDestination.applyRename(rfn));
+		IndexOutOfBoundsException ex = assertThrows(IndexOutOfBoundsException.class, ()->spyOutputDestination.applyLimitedRename(rfn));
 		String msg = ex.getMessage();
-		System.out.println(msg);
 		assertNotNull(msg);
-		assertThat(msg, allOf(containsString("Maximum 1000 rename reached.")));
+		assertThat(msg, allOf(containsString("Maximum 1000 rename reached")));
 	}
 		
 	
 	@Test
 	void testProcessSuccess() throws Exception {
 		final Path filename = Path.of("foo.txt");
-		final Path fileRename = Path.of("foo2.txt");		
-		
+		final Path fileRename = Path.of("foo2.txt");	
+			
 		Mockito.when(mockOutputChunk.bytes()).thenReturn(mockOutputBytes);
 		final FolderOutputDestination<EmptyContext, EmptyContext> underTest = new FolderOutputDestination<>(
 				testFolder, (a, b)->filename,(a)-> fileRename);
@@ -109,36 +103,72 @@ class FolderOutputDestinationTest {
 	}
 	
 	@Test
-	void testProcessSuccess_throwsLimitExceeeded() throws Exception {		
-		//Mockito.when(mockOutputChunk.bytes()).thenReturn(mockOutputBytes);
-		Mockito.when(spyOutputDestination.hasReachedRenameLimit()).thenReturn(true);
-		Mockito.when(spyOutputDestination.getDestinationFolder(mockOutputChunk)).thenReturn(Path.of("foo.txt"));
-		Mockito.when(spyOutputDestination.shouldRename(Mockito.any())).thenReturn(true);
+	void testProcess_withRename_IndexOutOfBoundsException() throws Exception {
+		final Path filename = Path.of("foo.txt");
+		final Path fileRename = Path.of("foo2.txt");		
+		BiFunction<Path, Path, Path> nameFunc = ((a, b)->filename);	
 		
-		IllegalStateException ex = assertThrows(IllegalStateException.class, ()->spyOutputDestination.process(mockOutputChunk));
+		Mockito.when(mockOutputChunk.bytes()).thenReturn(mockOutputBytes);
+		final FolderOutputDestination<EmptyContext, EmptyContext> underTest = new FolderOutputDestination<>(
+				testFolder, (a, b)->filename,(a)-> fileRename);
+		
+		//Creates a file with the same name so that rename call is triggered when process is called
+		Path fileDestination = testFolder.resolve(filename);
+		Files.write(fileDestination, mockOutputChunk.bytes(), StandardOpenOption.WRITE,StandardOpenOption.CREATE_NEW);
+		
+		//Rename function keeps setting file to same name therefore reaches limit
+		IndexOutOfBoundsException ex = assertThrows(IndexOutOfBoundsException.class, ()->underTest.process(mockOutputChunk));
 		String msg = ex.getMessage();
 		assertNotNull(msg);		
 		assertThat(msg, allOf(containsString("exists rename attempted")));
 	}
-
+	
 	@Test
 	void testProcessFailure_throwsIllegalStateException() {
 		final Path filename = Path.of("");	// Intentionally invalid filename
 		final Path fileRename = Path.of("foo.txt");
 		Mockito.when(mockOutputChunk.bytes()).thenReturn(mockOutputBytes);
 		final FolderOutputDestination<EmptyContext, EmptyContext> underTest = new FolderOutputDestination<>(
-				testFolder, (a, b)->filename, (a)-> { 
-					if(Files.exists(a)) {
-						return testFolder.resolve(fileRename);
-					}
-					else return a;												
-				});
+				testFolder, (a, b)->filename, (a)->fileRename);
 		
 		IllegalStateException ex = assertThrows(IllegalStateException.class, ()->underTest.process(mockOutputChunk));
 		String msg = ex.getMessage();
-		assertNotNull(msg);
-		
+		assertNotNull(msg);		
 		assertThat(msg, allOf(containsString("Unable to write file"), containsString(testFolder.toAbsolutePath().toString())));
 	}
+	
+	@Test
+	void testGetNewDefaultFileName_success() {
+		final Path filename = Path.of("test.txt");		
+		String newFileName = FolderOutputDestination.getNewDefaultFileName(filename, 0);
+		assertEquals("test0000.txt", newFileName);
+			
+		newFileName = FolderOutputDestination.getNewDefaultFileName(filename, 3);
+		assertEquals("test0003.txt", newFileName);
+		
+		newFileName = FolderOutputDestination.getNewDefaultFileName(filename, 1000);
+		assertEquals("test1000.txt", newFileName);
+		
+		newFileName = FolderOutputDestination.getNewDefaultFileName(filename, 20000);
+		assertEquals("test20000.txt", newFileName);
+	}
+	
+	@Test
+	void testProcess_withDefaultRename_success() throws Exception {
+		final Path filename = Path.of("foo.txt");		
+		
+		Mockito.when(mockOutputChunk.bytes()).thenReturn(mockOutputBytes);
+		final FolderOutputDestination<EmptyContext, EmptyContext> underTest = new FolderOutputDestination<>(
+				testFolder, (a, b)->filename,FolderOutputDestination.DEFAULT_RENAME_FUNCTION);
+				
+		//Creates a file with the same name so that rename call is triggered when process is called
+		Path fileDestination = testFolder.resolve(filename);
+		Files.write(fileDestination, mockOutputChunk.bytes(), StandardOpenOption.WRITE,StandardOpenOption.CREATE_NEW);
 
+		underTest.process(mockOutputChunk);
+
+		final Path fileRename = Path.of("foo0000.txt");
+		Path expectedFile = testFolder.resolve(fileRename);
+		assertTrue(Files.exists(expectedFile), "Expected file (" + expectedFile.toString() + ") to exist, but it didn't.");
+	}
 }
