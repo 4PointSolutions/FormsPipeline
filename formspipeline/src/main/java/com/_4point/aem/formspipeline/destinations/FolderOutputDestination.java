@@ -26,7 +26,6 @@ public class FolderOutputDestination<T extends Context, U extends Context> imple
 	private final Path destinationFolder;
 	private final BiFunction<T, U, Path> filenameFn;
 	private UnaryOperator<Path> renameFn;
-	private int renameCounter=0;
 	
 	protected static final UnaryOperator<Path> DEFAULT_RENAME_FUNCTION =
 		(a)-> {
@@ -55,7 +54,7 @@ public class FolderOutputDestination<T extends Context, U extends Context> imple
 		Path DEFAULT_FOLDER = Path.of("C:\\TempPath");
 		while(i<RENAME_MAX_LIMIT) {
 			try {
-				String newFileName = getNewDefaultFileName(a,i++);
+				String newFileName = getNewFileNameWithSuffix(a,i++);
 				Files.move(a, a.resolveSibling(newFileName));						
 				newDestination = DEFAULT_FOLDER.resolve(a);
 				if(!Files.exists(newDestination)) {
@@ -71,7 +70,7 @@ public class FolderOutputDestination<T extends Context, U extends Context> imple
 
 	//Intended to be used by the class itself and unit test
 	//Rename the file with the new name added leading zero for less than 4 digit numbers.
-    private static String getNewDefaultFileName(Path originalFile, int counter) {
+    private static String getNewFileNameWithSuffix(Path originalFile, int counter) {
     	String suffix = String.format("%04d", counter); //4 digit number with leading zero format
 		String fileName = originalFile.getFileName().toString();								
 		int lastDotIndex = fileName.lastIndexOf('.');			
@@ -89,6 +88,7 @@ public class FolderOutputDestination<T extends Context, U extends Context> imple
 	
 	private Path applyLimitedRename(Path destination) {
 		Path newDestination = null;
+		int renameCounter=0;
 		while(renameCounter<RENAME_MAX_LIMIT) {
 			renameCounter++;
 			newDestination = renameFn.apply(destination);
@@ -111,7 +111,8 @@ public class FolderOutputDestination<T extends Context, U extends Context> imple
 			throw new IllegalStateException("Unable to write file (" + destination.toAbsolutePath().toString() + ").", e);
 		} catch (IndexOutOfBoundsException e) {
 			throw new IndexOutOfBoundsException(String.format("Unable to write file (%s). File %s exists rename attempted. %s", 
-					destination.toAbsolutePath().toString(), getDestinationFolder(outputChunk).toAbsolutePath().toString(), e));
+					(destination != null ?destination.toAbsolutePath().toString():""), 
+					getDestinationFolder(outputChunk).toAbsolutePath().toString(), e));
 		} 
 		return new SimpleResult<>(outputChunk.dataContext(), outputChunk.outputContext(), EmptyContext.emptyInstance());
 	}
