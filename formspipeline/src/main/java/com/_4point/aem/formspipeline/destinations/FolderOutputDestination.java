@@ -1,9 +1,11 @@
 package com._4point.aem.formspipeline.destinations;
 
+import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
+import java.util.Optional;
 import java.util.function.BiFunction;
 import java.util.function.UnaryOperator;
 
@@ -59,21 +61,38 @@ public class FolderOutputDestination<T extends Context, U extends Context> imple
 		return destinationFolder.resolve(filenameFn.apply(outputChunk.dataContext(), outputChunk.outputContext()));
 	}	
 	
-	private Path applyLimitedRename(Path destination) {		
-		Path newDestination = renameFn.apply(destination);
+	private static Optional<String> getExtension(String filename) {
+	    return Optional.ofNullable(filename)
+	      .filter(f -> f.contains("."))
+	      .map(f -> f.substring(filename.lastIndexOf(".") + 1));
+	}
+	
+	private Path applyLimitedRename(Path destination) {
+		String originalFilename = destination.getFileName().toString();
+		//Using the default rename has no file extension		
+		Path newDestination = getRenamedFile(originalFilename, destinationFolder.resolve(renameFn.apply(destination)));		
 		if(!Files.exists(newDestination)) {
 			return newDestination;			
 		}
 		
-		String originalFilename = destination.getFileName().toString();
-		for(int i=0;i<RENAME_MAX_LIMIT;i++) {
-			String renamedFile = getNewFileNameWithSuffix(Path.of(originalFilename), i);
+		for(int renameCounter=0;renameCounter<RENAME_MAX_LIMIT;renameCounter++) {
+			String renamedFile = getNewFileNameWithSuffix(Path.of(originalFilename), renameCounter);
 			Path rnFile = destination.getParent().resolve(Path.of(renamedFile));
 			if(!Files.exists(rnFile)) {
 				return rnFile;
 			} 
 		}
 		throw new IndexOutOfBoundsException(String.format("Maximum %s rename reached for %s.",RENAME_MAX_LIMIT,destination.toString()));	
+	}
+
+	//If the rename file is missing the extension than give it the same extension as the original file.
+	private static Path getRenamedFile(String originalFilename, Path newDestination) {
+		Optional<String> renameExtension = getExtension(newDestination.getFileName().toString());
+		Optional<String> origExtension = getExtension(originalFilename);
+		if(renameExtension.isPresent() || !origExtension.isPresent()) {
+			return newDestination;
+		}
+		return newDestination.resolve(Path.of(newDestination.toAbsolutePath().toString()+"."+origExtension.get()));			
 	}
 
 	@Override

@@ -15,7 +15,6 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
-import java.util.function.BiFunction;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -36,6 +35,7 @@ class FolderOutputDestinationTest {
 	@Mock private OutputChunk<EmptyContext, EmptyContext> mockOutputChunk;
 		
 	@Test
+	//Original file doesn't exist so writes successfully to destination on first pass through
 	void testProcessSuccess(@TempDir Path testFolder) throws Exception {
 		final Path filename = Path.of("foo.txt");
 		final Path fileRename = Path.of("foo2.txt");	
@@ -56,7 +56,33 @@ class FolderOutputDestinationTest {
 	}
 	
 	@Test
+	//Original file exist but rename file doesn't exist so writes successfully to destination upon rename
 	void testProcess_withRename_Success(@TempDir Path testFolder) throws Exception {
+		final Path filename = Path.of("foo.txt");
+		final Path fileRename = Path.of("foo2.txt");	
+		byte[] emptyBytes = "".getBytes(StandardCharsets.UTF_8); 
+		Mockito.when(mockOutputChunk.bytes()).thenReturn(mockOutputBytes);
+		final FolderOutputDestination<EmptyContext, EmptyContext> underTest = new FolderOutputDestination<>(
+				testFolder, (a, b)->filename,(a)-> fileRename);
+		
+		//Creates original file file so that rename call is triggered when process is called
+		Path fileDestination = testFolder.resolve(filename);
+		Files.write(fileDestination, emptyBytes, StandardOpenOption.WRITE,StandardOpenOption.CREATE_NEW);		
+		Result<EmptyContext, EmptyContext, EmptyContext> result = underTest.process(mockOutputChunk);
+		
+		final Path expectedFileRename = Path.of("foo2.txt");
+		Path expectedFile = testFolder.resolve(expectedFileRename);
+		assertTrue(Files.exists(expectedFile), "Expected file (" + expectedFile.toString() + ") to exist, but it didn't.");
+		assertEquals("foo2.txt",expectedFileRename.getFileName().toString());
+		assertEquals(mockOutputString, Files.readString(expectedFile));
+		
+		assertNull(result.dataContext());		// Should be null because the mock will not return anything
+		assertNull(result.outputContext());		// Should be null because the mock will not return anything
+		assertSame(EmptyContext.emptyInstance(), result.resultContext());
+	}
+	
+	@Test
+	void testProcess_withMultipleRename_Success(@TempDir Path testFolder) throws Exception {
 		final Path filename = Path.of("foo.txt");
 		final Path fileRename = Path.of("foo2.txt");		
 		Mockito.when(mockOutputChunk.bytes()).thenReturn(mockOutputBytes);
@@ -112,6 +138,29 @@ class FolderOutputDestinationTest {
 	
 	@Test
 	void testProcess_withDefaultRename_success(@TempDir Path testFolder) throws Exception {		
+		final Path filename = Path.of("foo.xml");	
+		Mockito.when(mockOutputChunk.bytes()).thenReturn(mockOutputBytes);
+		final FolderOutputDestination<EmptyContext, EmptyContext> underTest = new FolderOutputDestination<>(
+				testFolder, (a, b)->filename);
+				
+		//Creates a file with the same name so that rename call is triggered when process is called		
+		Path fileDestination = testFolder.resolve(filename);
+		Files.write(fileDestination, mockOutputChunk.bytes(), StandardOpenOption.WRITE,StandardOpenOption.CREATE_NEW);
+		Result<EmptyContext, EmptyContext, EmptyContext> result = underTest.process(mockOutputChunk);
+
+		final Path fileRename = Path.of("result.xml");
+		Path expectedFile = testFolder.resolve(fileRename);
+		assertTrue(Files.exists(expectedFile), "Expected file (" + expectedFile.toString() + ") to exist, but it didn't.");
+		assertEquals("result.xml",fileRename.getFileName().toString());
+		assertEquals(mockOutputString, Files.readString(expectedFile));
+		
+		assertNull(result.dataContext());		// Should be null because the mock will not return anything
+		assertNull(result.outputContext());		// Should be null because the mock will not return anything
+		assertSame(EmptyContext.emptyInstance(), result.resultContext());
+	}
+	
+	@Test
+	void testProcess_withDefaultRenameMultiple_success(@TempDir Path testFolder) throws Exception {		
 		final Path filename = Path.of("foo.txt");	
 		Mockito.when(mockOutputChunk.bytes()).thenReturn(mockOutputBytes);
 		final FolderOutputDestination<EmptyContext, EmptyContext> underTest = new FolderOutputDestination<>(
@@ -120,15 +169,15 @@ class FolderOutputDestinationTest {
 		//Creates a file with the same name so that rename call is triggered when process is called		
 		Path fileDestination = testFolder.resolve(filename);
 		Files.write(fileDestination, mockOutputChunk.bytes(), StandardOpenOption.WRITE,StandardOpenOption.CREATE_NEW);
-		fileDestination = testFolder.resolve(Path.of("foo0000.txt"));
+		fileDestination = testFolder.resolve(Path.of("result.txt"));
 		Files.write(fileDestination, mockOutputChunk.bytes(), StandardOpenOption.WRITE,StandardOpenOption.CREATE_NEW);
 
 		Result<EmptyContext, EmptyContext, EmptyContext> result = underTest.process(mockOutputChunk);
 
-		final Path fileRename = Path.of("foo0001.txt");
+		final Path fileRename = Path.of("foo0000.txt");
 		Path expectedFile = testFolder.resolve(fileRename);
 		assertTrue(Files.exists(expectedFile), "Expected file (" + expectedFile.toString() + ") to exist, but it didn't.");
-		assertEquals("foo0001.txt",fileRename.getFileName().toString());
+		assertEquals("foo0000.txt",fileRename.getFileName().toString());
 		assertEquals(mockOutputString, Files.readString(expectedFile));
 		
 		assertNull(result.dataContext());		// Should be null because the mock will not return anything
@@ -145,7 +194,7 @@ class FolderOutputDestinationTest {
 		fileDestination = testFolder.resolve(fileRename);
 		Files.write(fileDestination, emptyBytes, StandardOpenOption.WRITE,StandardOpenOption.CREATE_NEW);
 	
-		//Create all the renamed files
+		//Create default renamed files
 		String fileName = filename.getFileName().toString();	
 		for(int i=0; i<counter; i++) {
 	    	String suffix = String.format("%04d", i); //4 digit number with leading zero format									
