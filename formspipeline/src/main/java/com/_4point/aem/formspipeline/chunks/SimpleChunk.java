@@ -8,7 +8,7 @@ import com._4point.aem.formspipeline.api.Chunk;
  * Simple (i.e. minimal) implementation of a Chunk.
  *
  */
-record SimpleChunk(byte[] bytes) implements Chunk {
+public record SimpleChunk(byte[] bytes) implements Chunk {
 	/**
 	 * Constructor that stores a String's bytes.
 	 * 
