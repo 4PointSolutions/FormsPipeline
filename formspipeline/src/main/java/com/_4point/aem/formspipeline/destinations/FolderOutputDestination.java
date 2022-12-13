@@ -27,43 +27,19 @@ public class FolderOutputDestination<T extends Context, U extends Context> imple
 	private final BiFunction<T, U, Path> filenameFn;
 	private final UnaryOperator<Path> renameFn;
 	
-	protected static final UnaryOperator<Path> DEFAULT_RENAME_FUNCTION =
-		(a)-> {
-			if(a!=null && Files.exists(a)) {
-				return processDefaultRename(a);
-			} 
-			return a;
-		};
+	protected static final UnaryOperator<Path> DEFAULT_RENAME_FUNCTION = (a)-> Path.of("result");
 			
-	public FolderOutputDestination(Path destinationFolder,
-			 BiFunction<T, U, Path> filenameFn, UnaryOperator<Path> renameFn) {
-		
+	public FolderOutputDestination(Path destinationFolder, BiFunction<T, U, Path> filenameFn, UnaryOperator<Path> renameFn) {		
 		this.destinationFolder = destinationFolder;
 		this.filenameFn = filenameFn;
 		this.renameFn = renameFn; 
 	}
 	
-	//Intended to be used by the class itself and unit test
-	//Should use destinationFolder folder instead of DEFAULT_FOLDER	
-	protected static Path processDefaultRename(Path a) {
-		int i = 0;
-		Path newDestination;
-		Path DEFAULT_FOLDER = Path.of("C:\\TempPath");
-		while(i<RENAME_MAX_LIMIT) {
-			try {
-				String newFileName = getNewFileNameWithSuffix(a,i++);
-				Files.move(a, a.resolveSibling(newFileName));						
-				newDestination = DEFAULT_FOLDER.resolve(a);
-				if(!Files.exists(newDestination)) {
-					return newDestination;
-				}
-			} catch (IOException e) {
-				log.info(String.format("Rename %s to %s failed.", a.getFileName().toString(), e.getMessage()));
-			}
-		}	
-		throw new IndexOutOfBoundsException(String.format("Maximum %s rename reached for %s.",RENAME_MAX_LIMIT,a.getFileName().toString()));
+	public FolderOutputDestination(Path destinationFolder, BiFunction<T, U, Path> filenameFn) {		
+		this.destinationFolder = destinationFolder;
+		this.filenameFn = filenameFn;
+		this.renameFn = DEFAULT_RENAME_FUNCTION; 
 	}
-	
 
 	//Intended to be used by the class itself and unit test
 	//Rename the file with the new name added leading zero for less than 4 digit numbers.
@@ -83,12 +59,19 @@ public class FolderOutputDestination<T extends Context, U extends Context> imple
 		return destinationFolder.resolve(filenameFn.apply(outputChunk.dataContext(), outputChunk.outputContext()));
 	}	
 	
-	private Path applyLimitedRename(Path destination) {
-		for(int renameCounter=0;renameCounter<RENAME_MAX_LIMIT;renameCounter++) {
-			Path newDestination = renameFn.apply(destination);
-			if(!Files.exists(newDestination)) {
-				return newDestination;
-			}
+	private Path applyLimitedRename(Path destination) {		
+		Path newDestination = renameFn.apply(destination);
+		if(!Files.exists(newDestination)) {
+			return newDestination;			
+		}
+		
+		String originalFilename = destination.getFileName().toString();
+		for(int i=0;i<RENAME_MAX_LIMIT;i++) {
+			String renamedFile = getNewFileNameWithSuffix(Path.of(originalFilename), i);
+			Path rnFile = destination.getParent().resolve(Path.of(renamedFile));
+			if(!Files.exists(rnFile)) {
+				return rnFile;
+			} 
 		}
 		throw new IndexOutOfBoundsException(String.format("Maximum %s rename reached for %s.",RENAME_MAX_LIMIT,destination.toString()));	
 	}

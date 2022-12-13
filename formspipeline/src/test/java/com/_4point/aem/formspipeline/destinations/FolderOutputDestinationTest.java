@@ -10,6 +10,7 @@ import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -31,14 +32,11 @@ import com._4point.aem.formspipeline.contexts.EmptyContext;
 class FolderOutputDestinationTest {
     private String mockOutputString = "Test Bytes";
 	private byte[] mockOutputBytes = mockOutputString.getBytes(StandardCharsets.UTF_8); 
-
-	@TempDir
-	private Path testFolder;
 	
 	@Mock private OutputChunk<EmptyContext, EmptyContext> mockOutputChunk;
 		
 	@Test
-	void testProcessSuccess() throws Exception {
+	void testProcessSuccess(@TempDir Path testFolder) throws Exception {
 		final Path filename = Path.of("foo.txt");
 		final Path fileRename = Path.of("foo2.txt");	
 			
@@ -58,18 +56,38 @@ class FolderOutputDestinationTest {
 	}
 	
 	@Test
-	void testProcess_withRename_IndexOutOfBoundsException() throws Exception {
+	void testProcess_withRename_Success(@TempDir Path testFolder) throws Exception {
 		final Path filename = Path.of("foo.txt");
 		final Path fileRename = Path.of("foo2.txt");		
-		BiFunction<Path, Path, Path> nameFunc = ((a, b)->filename);	
-		
 		Mockito.when(mockOutputChunk.bytes()).thenReturn(mockOutputBytes);
 		final FolderOutputDestination<EmptyContext, EmptyContext> underTest = new FolderOutputDestination<>(
 				testFolder, (a, b)->filename,(a)-> fileRename);
 		
+		//Creates original file and renamed file so that rename call is triggered when process is called
+		writeFile(testFolder, filename, fileRename,999);		
+		Result<EmptyContext, EmptyContext, EmptyContext> result = underTest.process(mockOutputChunk);
+		
+		final Path expectedFileRename = Path.of("foo0999.txt");
+		Path expectedFile = testFolder.resolve(expectedFileRename);
+		assertTrue(Files.exists(expectedFile), "Expected file (" + expectedFile.toString() + ") to exist, but it didn't.");
+		assertEquals("foo0999.txt",expectedFileRename.getFileName().toString());
+		assertEquals(mockOutputString, Files.readString(expectedFile));
+		
+		assertNull(result.dataContext());		// Should be null because the mock will not return anything
+		assertNull(result.outputContext());		// Should be null because the mock will not return anything
+		assertSame(EmptyContext.emptyInstance(), result.resultContext());
+	}
+	
+	@Test
+	void testProcess_withRename_IndexOutOfBoundsException(@TempDir Path testFolder) throws Exception {
+		final Path filename = Path.of("foo.txt");
+		final Path fileRename = Path.of("foo2.txt");		
+		//Mockito.when(mockOutputChunk.bytes()).thenReturn(mockOutputBytes);
+		final FolderOutputDestination<EmptyContext, EmptyContext> underTest = new FolderOutputDestination<>(
+				testFolder, (a, b)->filename,(a)-> fileRename);
+		
 		//Creates a file with the same name so that rename call is triggered when process is called
-		Path fileDestination = testFolder.resolve(filename);
-		Files.write(fileDestination, mockOutputChunk.bytes(), StandardOpenOption.WRITE,StandardOpenOption.CREATE_NEW);
+		writeFile(testFolder, filename, fileRename,1000);
 		
 		//Rename function keeps setting file to same name therefore reaches limit
 		IndexOutOfBoundsException ex = assertThrows(IndexOutOfBoundsException.class, ()->underTest.process(mockOutputChunk));
@@ -79,7 +97,7 @@ class FolderOutputDestinationTest {
 	}
 	
 	@Test
-	void testProcessFailure_throwsIllegalStateException() {
+	void testProcessFailure_throwsIllegalStateException(@TempDir Path testFolder) {
 		final Path filename = Path.of("");	// Intentionally invalid filename
 		final Path fileRename = Path.of("foo.txt");
 		Mockito.when(mockOutputChunk.bytes()).thenReturn(mockOutputBytes);
@@ -93,14 +111,13 @@ class FolderOutputDestinationTest {
 	}
 	
 	@Test
-	void testProcess_withDefaultRename_success() throws Exception {		
+	void testProcess_withDefaultRename_success(@TempDir Path testFolder) throws Exception {		
 		final Path filename = Path.of("foo.txt");	
 		Mockito.when(mockOutputChunk.bytes()).thenReturn(mockOutputBytes);
 		final FolderOutputDestination<EmptyContext, EmptyContext> underTest = new FolderOutputDestination<>(
-				testFolder, (a, b)->filename,FolderOutputDestination.DEFAULT_RENAME_FUNCTION);
+				testFolder, (a, b)->filename);
 				
-		//Creates a file with the same name so that rename call is triggered when process is called
-			
+		//Creates a file with the same name so that rename call is triggered when process is called		
 		Path fileDestination = testFolder.resolve(filename);
 		Files.write(fileDestination, mockOutputChunk.bytes(), StandardOpenOption.WRITE,StandardOpenOption.CREATE_NEW);
 		fileDestination = testFolder.resolve(Path.of("foo0000.txt"));
@@ -118,4 +135,26 @@ class FolderOutputDestinationTest {
 		assertNull(result.outputContext());		// Should be null because the mock will not return anything
 		assertSame(EmptyContext.emptyInstance(), result.resultContext());
 	}
+	
+	//Helper method
+	private void writeFile(Path testFolder, final Path filename, final Path fileRename, int counter) throws IOException {
+		//Create original file and renamed file in same location to trigger rename
+		byte[] emptyBytes = "".getBytes(StandardCharsets.UTF_8); 
+		Path fileDestination = testFolder.resolve(filename);
+		Files.write(fileDestination, emptyBytes, StandardOpenOption.WRITE,StandardOpenOption.CREATE_NEW);
+		fileDestination = testFolder.resolve(fileRename);
+		Files.write(fileDestination, emptyBytes, StandardOpenOption.WRITE,StandardOpenOption.CREATE_NEW);
+	
+		//Create all the renamed files
+		String fileName = filename.getFileName().toString();	
+		for(int i=0; i<counter; i++) {
+	    	String suffix = String.format("%04d", i); //4 digit number with leading zero format									
+			int lastDotIndex = fileName.lastIndexOf('.');			
+			String newFileName = fileName.substring(0, lastDotIndex ) + suffix + fileName.substring(lastDotIndex);
+
+			Path newFile = Path.of(newFileName);
+			fileDestination = testFolder.resolve(newFile);			
+			Files.write(fileDestination, emptyBytes, StandardOpenOption.WRITE,StandardOpenOption.CREATE_NEW);			
+		}
+	}	
 }
