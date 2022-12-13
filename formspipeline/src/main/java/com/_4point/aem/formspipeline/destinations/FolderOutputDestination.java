@@ -100,7 +100,7 @@ public class FolderOutputDestination<T extends Context, U extends Context> imple
 	}
 
 	@Override
-	public Result<T, U, ?> process(OutputChunk<T, U> outputChunk) {
+	public Result<T, U, EmptyContext> process(OutputChunk<T, U> outputChunk) {
 		Path destination = getDestinationFolder(outputChunk);
 		try {
 			if(shouldRename(destination)) {
