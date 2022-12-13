@@ -9,6 +9,7 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import org.junit.jupiter.api.Tag;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -82,6 +83,7 @@ class FolderOutputDestinationTest {
 	}
 	
 	@Test
+	@Tag("slow")
 	void testProcess_withMultipleRename_Success(@TempDir Path testFolder) throws Exception {
 		final Path filename = Path.of("foo.txt");
 		final Path fileRename = Path.of("foo2.txt");		
@@ -105,6 +107,7 @@ class FolderOutputDestinationTest {
 	}
 	
 	@Test
+	@Tag("slow")
 	void testProcess_withRename_IndexOutOfBoundsException(@TempDir Path testFolder) throws Exception {
 		final Path filename = Path.of("foo.txt");
 		final Path fileRename = Path.of("foo2.txt");		
