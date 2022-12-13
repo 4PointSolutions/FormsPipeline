@@ -29,7 +29,7 @@ public class FolderOutputDestination<T extends Context, U extends Context> imple
 	private final BiFunction<T, U, Path> filenameFn;
 	private final UnaryOperator<Path> renameFn;
 	
-	protected static final UnaryOperator<Path> DEFAULT_RENAME_FUNCTION = (a)-> Path.of("result");
+	public static final UnaryOperator<Path> DEFAULT_RENAME_FUNCTION = (a)-> Path.of("result");
 			
 	public FolderOutputDestination(Path destinationFolder, BiFunction<T, U, Path> filenameFn, UnaryOperator<Path> renameFn) {		
 		this.destinationFolder = destinationFolder;
