@@ -16,7 +16,6 @@ import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 import java.util.function.BiFunction;
 
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.io.TempDir;
@@ -30,9 +29,6 @@ import com._4point.aem.formspipeline.contexts.EmptyContext;
 
 @ExtendWith(MockitoExtension.class)
 class FolderOutputDestinationTest {
-	Path filename = Path.of("foo.txt");
-    Path fileRename = Path.of("foo2.txt");
-
     private String mockOutputString = "Test Bytes";
 	private byte[] mockOutputBytes = mockOutputString.getBytes(StandardCharsets.UTF_8); 
 
@@ -40,22 +36,7 @@ class FolderOutputDestinationTest {
 	private Path testFolder;
 	
 	@Mock private OutputChunk<EmptyContext, EmptyContext> mockOutputChunk;
-	
-	private FolderOutputDestination<EmptyContext, EmptyContext> spyOutputDestination;
 		
-	@BeforeEach
-	void setup() {
-		spyOutputDestination = Mockito.spy(new FolderOutputDestination<>(
-				testFolder, (a, b)->filename, 
-				(a)-> { 
-					if(Files.exists(a)) {
-						return testFolder.resolve(fileRename);
-					}
-					else return a;												
-				})
-		);			
-	}
-	
 	@Test
 	void testProcessSuccess() throws Exception {
 		final Path filename = Path.of("foo.txt");
@@ -112,24 +93,29 @@ class FolderOutputDestinationTest {
 	}
 	
 	@Test
-	void testProcess_withDefaultRename_success() throws Exception {
+	void testProcess_withDefaultRename_success() throws Exception {		
+		final Path filename = Path.of("foo.txt");	
 		Mockito.when(mockOutputChunk.bytes()).thenReturn(mockOutputBytes);
 		final FolderOutputDestination<EmptyContext, EmptyContext> underTest = new FolderOutputDestination<>(
 				testFolder, (a, b)->filename,FolderOutputDestination.DEFAULT_RENAME_FUNCTION);
 				
 		//Creates a file with the same name so that rename call is triggered when process is called
-		Path filename = Path.of("foo.txt");		
+			
 		Path fileDestination = testFolder.resolve(filename);
 		Files.write(fileDestination, mockOutputChunk.bytes(), StandardOpenOption.WRITE,StandardOpenOption.CREATE_NEW);
-		filename = Path.of("foo0000.txt");		
-		fileDestination = testFolder.resolve(filename);
+		fileDestination = testFolder.resolve(Path.of("foo0000.txt"));
 		Files.write(fileDestination, mockOutputChunk.bytes(), StandardOpenOption.WRITE,StandardOpenOption.CREATE_NEW);
 
-		underTest.process(mockOutputChunk);
+		Result<EmptyContext, EmptyContext, EmptyContext> result = underTest.process(mockOutputChunk);
 
 		final Path fileRename = Path.of("foo0001.txt");
 		Path expectedFile = testFolder.resolve(fileRename);
 		assertTrue(Files.exists(expectedFile), "Expected file (" + expectedFile.toString() + ") to exist, but it didn't.");
 		assertEquals("foo0001.txt",fileRename.getFileName().toString());
+		assertEquals(mockOutputString, Files.readString(expectedFile));
+		
+		assertNull(result.dataContext());		// Should be null because the mock will not return anything
+		assertNull(result.outputContext());		// Should be null because the mock will not return anything
+		assertSame(EmptyContext.emptyInstance(), result.resultContext());
 	}
 }

@@ -25,14 +25,11 @@ public class FolderOutputDestination<T extends Context, U extends Context> imple
 	private static final int RENAME_MAX_LIMIT = 1000;
 	private final Path destinationFolder;
 	private final BiFunction<T, U, Path> filenameFn;
-	private UnaryOperator<Path> renameFn;
+	private final UnaryOperator<Path> renameFn;
 	
 	protected static final UnaryOperator<Path> DEFAULT_RENAME_FUNCTION =
 		(a)-> {
-			if(a!=null && !Files.isDirectory(a)){
-				if(!Files.exists(a)) {
-					return a;
-				}
+			if(a!=null && Files.exists(a)) {
 				return processDefaultRename(a);
 			} 
 			return a;
@@ -77,7 +74,7 @@ public class FolderOutputDestination<T extends Context, U extends Context> imple
 		return fileName.substring(0, lastDotIndex ) + suffix + fileName.substring(lastDotIndex);
     }
 		
-	private boolean shouldRename(Path destination) {
+	private static boolean shouldRename(Path destination) {
 		return destination!=null && !Files.isDirectory(destination)&& Files.exists(destination);	
 	}
 	
@@ -87,11 +84,8 @@ public class FolderOutputDestination<T extends Context, U extends Context> imple
 	}	
 	
 	private Path applyLimitedRename(Path destination) {
-		Path newDestination = null;
-		int renameCounter=0;
-		while(renameCounter<RENAME_MAX_LIMIT) {
-			renameCounter++;
-			newDestination = renameFn.apply(destination);
+		for(int renameCounter=0;renameCounter<RENAME_MAX_LIMIT;renameCounter++) {
+			Path newDestination = renameFn.apply(destination);
 			if(!Files.exists(newDestination)) {
 				return newDestination;
 			}
