@@ -65,7 +65,7 @@ class FolderOutputDestinationTest {
 		final FolderOutputDestination<EmptyContext, EmptyContext> underTest = new FolderOutputDestination<>(
 				testFolder, (a, b)->filename,(a)-> fileRename);
 		
-		Result<EmptyContext, EmptyContext, EmptyContext> result = underTest.process(mockOutputChunk);
+		Result<EmptyContext, EmptyContext, ?> result = underTest.process(mockOutputChunk);
 		
 		Path expectedFile = testFolder.resolve(filename);
 		assertTrue(Files.exists(expectedFile), "Expected file (" + expectedFile.toString() + ") to exist, but it didn't.");
