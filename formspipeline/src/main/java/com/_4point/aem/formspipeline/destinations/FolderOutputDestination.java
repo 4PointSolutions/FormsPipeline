@@ -1,5 +1,6 @@
 package com._4point.aem.formspipeline.destinations;
 
+import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -42,20 +43,26 @@ public class FolderOutputDestination<T extends Context, U extends Context> imple
     private static String getNewFileNameWithSuffix(Path originalFile, int counter) {
     	String suffix = String.format("%04d", counter); //4 digit number with leading zero format
 		String fileName = originalFile.getFileName().toString();								
-		int lastDotIndex = fileName.lastIndexOf('.');			
-		return fileName.substring(0, lastDotIndex ) + suffix + fileName.substring(lastDotIndex);
+		Optional<String> extension = getFileExtension(fileName);	
+		if(extension.isPresent()) {
+			return getFileNameExcludingExtension(fileName)+suffix+"."+extension.get();
+		}
+		return fileName + suffix;
     }
 		
 	private static boolean shouldRename(Path destination) {
 		return destination!=null && !Files.isDirectory(destination)&& Files.exists(destination);	
 	}
 	
-	//Intended to be used by the class itself and unit test
 	private Path getDestinationFolder(OutputChunk<T, U> outputChunk) {
 		return destinationFolder.resolve(filenameFn.apply(outputChunk.dataContext(), outputChunk.outputContext()));
 	}	
-	
-	private static Optional<String> getExtension(String filename) {
+
+	private static String getFileNameExcludingExtension(String filename) {
+	    return filename.substring(0, filename.lastIndexOf("."));	    		
+	}
+
+	private static Optional<String> getFileExtension(String filename) {
 	    return Optional.ofNullable(filename)
 	      .filter(f -> f.contains("."))
 	      .map(f -> f.substring(filename.lastIndexOf(".") + 1));
@@ -64,14 +71,14 @@ public class FolderOutputDestination<T extends Context, U extends Context> imple
 	private Path applyLimitedRename(Path destination) {
 		String originalFilename = destination.getFileName().toString();
 		//Using the default rename has no file extension		
-		Path newDestination = getRenamedFile(originalFilename, destinationFolder.resolve(renameFn.apply(destination)));		
+		Path newDestination = getRenamedFile(originalFilename, destinationFolder.resolve(renameFn.apply(destination)));
 		if(!Files.exists(newDestination)) {
 			return newDestination;			
 		}
 		
 		for(int renameCounter=0;renameCounter<RENAME_MAX_LIMIT;renameCounter++) {
 			String renamedFile = getNewFileNameWithSuffix(Path.of(originalFilename), renameCounter);
-			Path rnFile = destination.getParent().resolve(Path.of(renamedFile));
+			Path rnFile = destination.getParent().resolve(Path.of(renamedFile));			
 			if(!Files.exists(rnFile)) {
 				return rnFile;
 			} 
@@ -81,8 +88,8 @@ public class FolderOutputDestination<T extends Context, U extends Context> imple
 
 	//If the rename file is missing the extension than give it the same extension as the original file.
 	private static Path getRenamedFile(String originalFilename, Path newDestination) {
-		Optional<String> renameExtension = getExtension(newDestination.getFileName().toString());
-		Optional<String> origExtension = getExtension(originalFilename);
+		Optional<String> renameExtension = getFileExtension(newDestination.getFileName().toString());
+		Optional<String> origExtension = getFileExtension(originalFilename);
 		if(renameExtension.isPresent() || !origExtension.isPresent()) {
 			return newDestination;
 		}
