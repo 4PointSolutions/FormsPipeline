@@ -112,7 +112,6 @@ class XsltXmlDataTransformationTest {
 	}
 	
 	@Test
-	//Should fail with XSLT 1.0 but have not seen it failed.
 	//xsl:perform-sort available in XSLT 2.0 and newer
 	void testProcess_xsltVersion20_Sorting_success() {
 		XsltXmlDataTransformation underTest2 = new XsltXmlDataTransformation(xsltBytesV21);		
@@ -121,7 +120,6 @@ class XsltXmlDataTransformationTest {
 	}
 	
 	@Test
-	//Should fail with XSLT 1.0 but have not seen it fail.
 	//function current-group() available in XSLT 2.0 and newer
 	void testProcess_xsltVersion20_Grouping_success() throws TransformerException {  			
 		XsltXmlDataTransformation underTest = new XsltXmlDataTransformation(xsltBytesV20);		
