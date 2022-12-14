@@ -54,6 +54,7 @@ public class FolderOutputDestination<T extends Context, U extends Context> imple
 		return destination!=null && !Files.isDirectory(destination)&& Files.exists(destination);	
 	}
 	
+	//Intended to be used by the class itself and unit test
 	private Path getDestinationFolder(OutputChunk<T, U> outputChunk) {
 		return destinationFolder.resolve(filenameFn.apply(outputChunk.dataContext(), outputChunk.outputContext()));
 	}	
@@ -72,12 +73,15 @@ public class FolderOutputDestination<T extends Context, U extends Context> imple
 		String originalFilename = destination.getFileName().toString();
 		//Using the default rename has no file extension		
 		Path newDestination = getRenamedFile(originalFilename, destinationFolder.resolve(renameFn.apply(destination)));
+		System.out.println("applyLimitedRename newDestination " + newDestination);
 		if(!Files.exists(newDestination)) {
+			System.out.println("applyLimitedRename newDestination " + newDestination + " doesn't exist");
 			return newDestination;			
 		}
 		
 		for(int renameCounter=0;renameCounter<RENAME_MAX_LIMIT;renameCounter++) {
 			String renamedFile = getNewFileNameWithSuffix(Path.of(originalFilename), renameCounter);
+			System.out.println("applyLimitedRename renamedFile " + renamedFile);
 			Path rnFile = destination.getParent().resolve(Path.of(renamedFile));			
 			if(!Files.exists(rnFile)) {
 				return rnFile;
