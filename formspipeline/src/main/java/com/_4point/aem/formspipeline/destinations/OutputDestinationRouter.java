@@ -20,7 +20,7 @@ public class OutputDestinationRouter<T extends Context, U extends Context, R ext
 		outputDestinationList = Arrays.asList(destinations);
 	}	
 
-	public List<OutputDestination<OutputChunk<T, U>, Result<T, U, R>>> getOutputDestinationList() {
+	protected List<OutputDestination<OutputChunk<T, U>, Result<T, U, R>>> getOutputDestinationList() {
 		return outputDestinationList;
 	}
 		
