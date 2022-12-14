@@ -23,7 +23,6 @@ import org.xmlunit.builder.Input;
 
 import com._4point.aem.formspipeline.spring.chunks.XmlDataChunk;
 import com._4point.aem.formspipeline.spring.common.TestHelper;
-import com._4point.aem.formspipeline.spring.transformations.XsltXmlDataTransformation;
 import com._4point.aem.formspipeline.spring.transformations.XsltXmlDataTransformation.XmlTransformationException;
 
 import net.sf.saxon.TransformerFactoryImpl;
@@ -100,9 +99,7 @@ class XsltXmlDataTransformationTest {
     	XmlDataChunk xmlChunk = new XmlDataChunk(xmlBytes);
     	    	
     	XsltXmlDataTransformation underTest = new XsltXmlDataTransformation(xsltBytes,mockTransformerFactory);
-    	assertThrows(XmlTransformationException.class, () -> {
-    		underTest.process(xmlChunk);
-    	});
+    	assertThrows(XmlTransformationException.class, ()->underTest.process(xmlChunk));
     }
 	
 	@Test
@@ -113,7 +110,6 @@ class XsltXmlDataTransformationTest {
 	}
 	
 	@Test
-	//Should fail with XSLT 1.0 but have not seen it failed.
 	//xsl:perform-sort available in XSLT 2.0 and newer
 	void testProcess_xsltVersion20_Sorting_success() {
 		XsltXmlDataTransformation underTest2 = new XsltXmlDataTransformation(xsltBytesV21);		
@@ -122,7 +118,6 @@ class XsltXmlDataTransformationTest {
 	}
 	
 	@Test
-	//Should fail with XSLT 1.0 but have not seen it fail.
 	//function current-group() available in XSLT 2.0 and newer
 	void testProcess_xsltVersion20_Grouping_success() throws TransformerException {  			
 		XsltXmlDataTransformation underTest = new XsltXmlDataTransformation(xsltBytesV20);		
