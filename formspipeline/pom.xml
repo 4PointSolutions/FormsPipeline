@@ -11,6 +11,10 @@
 		<maven.compiler.target>${java.version}</maven.compiler.target>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 
+		<!-- Project dependecies -->
+		<fluentforms.version>0.0.2-SNAPSHOT</fluentforms.version>
+
+		<!-- Testing dependecies -->
 		<junit.version>5.9.1</junit.version>
 		<mockito.version>4.9.0</mockito.version>
 		<hamcrest.version>2.2</hamcrest.version>
@@ -21,11 +25,24 @@
 		<repository>
 			<id>github</id>
 			<name>GitHub 4PointSolutions Apache Maven Packages</name>
-			<url>https://maven.pkg.github.com/4PointSolutions/FormsPipeline</url>
+			<url>https://maven.pkg.github.com/4PointSolutions/*</url>
 		</repository>
 	</distributionManagement>
 
 	<dependencies>
+		<!-- AEM Dependencies -->
+		<dependency>
+			<groupId>com._4point.aem</groupId>
+			<artifactId>fluentforms.core</artifactId>
+			<version>${fluentforms.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>com._4point.aem.docservices</groupId>
+			<artifactId>rest-services.client</artifactId>
+			<version>${fluentforms.version}</version>
+		</dependency>
+
+		<!-- Testing Dependencies -->
 		<dependency>
 			<groupId>org.junit.jupiter</groupId>
 			<artifactId>junit-jupiter</artifactId>

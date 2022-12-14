@@ -9,7 +9,7 @@ import java.util.Optional;
 
 import org.junit.jupiter.api.Test;
 
-import com._4point.aem.formspipeline.contexts.HashMapContext;
+import com._4point.aem.formspipeline.contexts.MapContext;
 
 class HashMapContextTest {
 
@@ -20,7 +20,7 @@ class HashMapContextTest {
 
 	private final static Map<String, Object> testData = Map.of(KEY1, VALUE1, KEY2, VALUE2);
 	
-	private final HashMapContext underTest = new HashMapContext(testData);
+	private final MapContext underTest = new MapContext(testData);
 	
 	@Test
 	void testGetString() {

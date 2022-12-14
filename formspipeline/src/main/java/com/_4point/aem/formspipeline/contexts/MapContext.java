@@ -1,15 +1,18 @@
 package com._4point.aem.formspipeline.contexts;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import com._4point.aem.formspipeline.api.Context;
 
-public class HashMapContext implements Context {
+public class MapContext implements Context {
 	private Map<String, ? extends Object> contextMap;
 	
-	public HashMapContext(Map<String, ? extends Object> contextMap) {
+	public MapContext(Map<String, ? extends Object> contextMap) {
 		this.contextMap = Map.copyOf(contextMap);
 	}
 
@@ -38,12 +41,31 @@ public class HashMapContext implements Context {
 			return false;
 		if (getClass() != obj.getClass())
 			return false;
-		HashMapContext other = (HashMapContext) obj;
+		MapContext other = (MapContext) obj;
 		return Objects.equals(contextMap, other.contextMap);
 	}
 
 	@Override
 	public String toString() {
-		return "HashMapContext [contextMap=" + contextMap + "]";
+		return "MapContext [contextMap=" + contextMap + "]";
+	}
+	
+	public static MapContextBuilder builder() { return new MapContextBuilder(); }
+	
+	public static class MapContextBuilder {
+		private record Entry(String key, Object value) {}
+		
+		private final List<Entry> list = new ArrayList<>();
+		
+		public MapContextBuilder put(String key, Object value) {
+			// add this entry to our list
+			list.add(new Entry(key, value));
+			return this;
+		}
+		
+		public Context build() {
+			// Convert the list to a Map and then return a MapContext constructed with that map.
+			return new MapContext(list.stream().collect(Collectors.toMap(e->e.key(), e->e.value())));
+		}
 	}
 }
