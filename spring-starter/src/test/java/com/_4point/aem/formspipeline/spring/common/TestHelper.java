@@ -9,12 +9,17 @@ import java.util.List;
 
 public class TestHelper {
 	public static final String BAD_XML_DATA_FILE = "/transformations/InvalidXml.xml";
-	public static final String SIMPLE_XML_DATA_FILE = "/transformations/simpleXmlSample.xml";	
+	public static final String SIMPLE_XML_DATA_FILE = "/transformations/simpleXmlSample.xml";
 	public static final String COMPLEX_XML_DATA_FILE = "/transformations/English/complexXmlSample.xml";
 	public static final String COMPLEX_XML_DATA_FILE_ASIAN = "/transformations/Asian/complexXmlSample.xml";
 	
 	public static final String SIMPLE_XSLT_DATA_FILE = "/transformations/simpleXmlSample.xslt";
-	public static final String SIMPLE_XSLTV2_DATA_FILE = "/transformations/simpleTransformation2_0.xslt";
+	
+	public static final String XSLTV21_DATA_FILE = "/transformations/transformation2_1.xslt";
+	//public static final String XSLTV3_DATA_FILE = "/transformations/transformation3_0.xslt";
+	public static final String SIMPLE_XSLTV20_DATA_FILE = "/transformations/transformation2_0.xslt";
+	public static final String XSLTV20_DATA_FILE = "/transformations/country.xml";
+
 	public static final String INVALID_XSLT_DATA_FILE = "/transformations/invalidXmlSample.xslt";
 	
 	public static final String BAD_XPATH_EXPRESSION = "*laptops*laptop?price";

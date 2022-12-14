@@ -1,17 +1,19 @@
 package com._4point.aem.formspipeline.spring.utils;
 
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.xmlunit.matchers.CompareMatcher.isIdenticalTo;
+
+import java.nio.charset.StandardCharsets;
 
 import javax.xml.transform.Result;
 import javax.xml.transform.Source;
 import javax.xml.transform.Transformer;
 import javax.xml.transform.TransformerException;
 
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
@@ -28,13 +30,18 @@ import net.sf.saxon.TransformerFactoryImpl;
 @ExtendWith(MockitoExtension.class)
 class XsltXmlDataTransformationTest {
 	private final byte[] xmlBytes = TestHelper.getFileBytesFromResource(TestHelper.SIMPLE_XML_DATA_FILE);
-	private final byte[] xsltBytes = TestHelper.getFileBytesFromResource(TestHelper.SIMPLE_XSLT_DATA_FILE);
-	private final byte[] xsltBytesV2 = TestHelper.getFileBytesFromResource(TestHelper.SIMPLE_XSLTV2_DATA_FILE);
-	private byte[] invalidXsltBytes = TestHelper.getFileBytesFromResource(TestHelper.INVALID_XSLT_DATA_FILE);
+	private final byte[] xsltBytes = TestHelper.getFileBytesFromResource(TestHelper.SIMPLE_XSLT_DATA_FILE);	
+		
+	private final byte[] xsltBytesV21 = TestHelper.getFileBytesFromResource(TestHelper.XSLTV21_DATA_FILE);
+
+	private final byte[] dataBytes20 = TestHelper.getFileBytesFromResource(TestHelper.XSLTV20_DATA_FILE);
+	private final byte[] xsltBytesV20 = TestHelper.getFileBytesFromResource(TestHelper.SIMPLE_XSLTV20_DATA_FILE);
+	
+	private final byte[] invalidXsltBytes = TestHelper.getFileBytesFromResource(TestHelper.INVALID_XSLT_DATA_FILE);
 	
 	@Mock Transformer mockTransformer;
 	@Mock TransformerFactoryImpl mockTransformerFactory;
-
+	
 	private final String EXPECTED_ELEMENT_NAME_CHANGED_XML = """
 			<?xml version="1.0" encoding="UTF-8"?>
 			<laptops>
@@ -72,11 +79,8 @@ class XsltXmlDataTransformationTest {
 	</laptop></laptops>
 			"""; 	
 	
-	@BeforeEach
-	void setUp() throws Exception {
-	}
-
-    
+	private final String EXPECTED_XSLT20_TABLE = "<?xml version=\"1.0\" encoding=\"UTF-8\"?><table><tr><th>Position</th><th>Country</th><th>City List</th><th>Population</th></tr><tr><td>1</td><td>Italia</td><td>Milano, Venezia</td><td>6</td></tr><tr><td>2</td><td>France</td><td>Paris, Lyon</td><td>9</td></tr><tr><td>3</td><td>Deutschland</td><td>Munchen</td><td>4</td></tr></table>";
+	    
     @Test
     void testConstructor_throwException() {
     	Exception e = assertThrows(IllegalArgumentException.class, () -> {
@@ -94,24 +98,37 @@ class XsltXmlDataTransformationTest {
     			.transform(any(Source.class), any(Result.class));    	    	
     	XmlDataChunk xmlChunk = new XmlDataChunk(xmlBytes);
     	    	
-    	XsltXmlDataTransformation xmlTransformer = new XsltXmlDataTransformation(xsltBytes,mockTransformerFactory);
+    	XsltXmlDataTransformation underTest = new XsltXmlDataTransformation(xsltBytes,mockTransformerFactory);
     	assertThrows(XmlTransformationException.class, () -> {
-    		xmlTransformer.process(xmlChunk);
+    		underTest.process(xmlChunk);
     	});
     }
 	
 	@Test
 	void testProcess_success() {
-		XsltXmlDataTransformation xmlTransformer = new XsltXmlDataTransformation(xsltBytes);		
-		XmlDataChunk data = xmlTransformer.process(new XmlDataChunk(xmlBytes));
+		XsltXmlDataTransformation underTest = new XsltXmlDataTransformation(xsltBytes);		
+		XmlDataChunk data = underTest.process(new XmlDataChunk(xmlBytes));
 		assertThat(Input.fromByteArray(data.bytes()), isIdenticalTo(Input.fromString(EXPECTED_ELEMENT_NAME_CHANGED_XML)));
 	}
 	
 	@Test
-	void testProcess_xsltVersion20_success() {
-		//xsl:perform-sort available in XSLT 2.0 and newer
-		XsltXmlDataTransformation xmlTransformer = new XsltXmlDataTransformation(xsltBytesV2);		
-		XmlDataChunk data = xmlTransformer.process(new XmlDataChunk(xmlBytes));
-		assertThat(Input.fromByteArray(data.bytes()), isIdenticalTo(Input.fromString(EXPECTED_SORTED_XML)));
+	//Should fail with XSLT 1.0 but have not seen it failed.
+	//xsl:perform-sort available in XSLT 2.0 and newer
+	void testProcess_xsltVersion20_Sorting_success() {
+		XsltXmlDataTransformation underTest2 = new XsltXmlDataTransformation(xsltBytesV21);		
+		XmlDataChunk data2 = underTest2.process(new XmlDataChunk(xmlBytes));
+		assertThat(Input.fromByteArray(data2.bytes()), isIdenticalTo(Input.fromString(EXPECTED_SORTED_XML)));
+	}
+	
+	@Test
+	//Should fail with XSLT 1.0 but have not seen it fail.
+	//function current-group() available in XSLT 2.0 and newer
+	void testProcess_xsltVersion20_Grouping_success() throws TransformerException {  			
+		XsltXmlDataTransformation underTest = new XsltXmlDataTransformation(xsltBytesV20);		
+		XmlDataChunk data = underTest.process(new XmlDataChunk(dataBytes20));
+		
+		String s = new String(data.bytes(), StandardCharsets.UTF_8);
+		System.out.println("testProcess_xsltVersion31_success ... " +s);
+		assertEquals(EXPECTED_XSLT20_TABLE.trim(),s.trim());	
 	}
 }

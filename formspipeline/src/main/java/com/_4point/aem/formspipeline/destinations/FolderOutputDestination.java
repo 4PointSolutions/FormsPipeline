@@ -1,6 +1,5 @@
 package com._4point.aem.formspipeline.destinations;
 
-import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -16,13 +15,8 @@ import com._4point.aem.formspipeline.api.Result;
 import com._4point.aem.formspipeline.contexts.EmptyContext;
 import com._4point.aem.formspipeline.results.SimpleResult;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 public class FolderOutputDestination<T extends Context, U extends Context> implements OutputDestination<OutputChunk<T, U>, 
 															Result<T, U, ? extends Context>> {
-	
-	private static final Logger log = LoggerFactory.getLogger(FolderOutputDestination.class);
 	
 	private static final int RENAME_MAX_LIMIT = 1000;
 	private final Path destinationFolder;
