@@ -1,4 +1,4 @@
-package com._4point.aem.formspipeline.spring.utils;
+package com._4point.aem.formspipeline.spring.transformations;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;

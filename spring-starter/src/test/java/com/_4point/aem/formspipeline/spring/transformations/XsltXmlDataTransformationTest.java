@@ -1,4 +1,4 @@
-package com._4point.aem.formspipeline.spring.utils;
+package com._4point.aem.formspipeline.spring.transformations;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -23,7 +23,7 @@ import org.xmlunit.builder.Input;
 
 import com._4point.aem.formspipeline.spring.chunks.XmlDataChunk;
 import com._4point.aem.formspipeline.spring.common.TestHelper;
-import com._4point.aem.formspipeline.spring.utils.XsltXmlDataTransformation.XmlTransformationException;
+import com._4point.aem.formspipeline.spring.transformations.XsltXmlDataTransformation.XmlTransformationException;
 
 import net.sf.saxon.TransformerFactoryImpl;
 
@@ -99,9 +99,7 @@ class XsltXmlDataTransformationTest {
     	XmlDataChunk xmlChunk = new XmlDataChunk(xmlBytes);
     	    	
     	XsltXmlDataTransformation underTest = new XsltXmlDataTransformation(xsltBytes,mockTransformerFactory);
-    	assertThrows(XmlTransformationException.class, () -> {
-    		underTest.process(xmlChunk);
-    	});
+    	assertThrows(XmlTransformationException.class, ()->underTest.process(xmlChunk));
     }
 	
 	@Test
