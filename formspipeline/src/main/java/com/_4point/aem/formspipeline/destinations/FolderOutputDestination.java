@@ -1,6 +1,5 @@
 package com._4point.aem.formspipeline.destinations;
 
-import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -8,6 +7,9 @@ import java.nio.file.StandardOpenOption;
 import java.util.Optional;
 import java.util.function.BiFunction;
 import java.util.function.UnaryOperator;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com._4point.aem.formspipeline.api.Context;
 import com._4point.aem.formspipeline.api.OutputChunk;
@@ -18,7 +20,8 @@ import com._4point.aem.formspipeline.results.SimpleResult;
 
 public class FolderOutputDestination<T extends Context, U extends Context> implements OutputDestination<OutputChunk<T, U>, 
 															Result<T, U, ? extends Context>> {
-	
+	private static final Logger logger = LoggerFactory.getLogger(FolderOutputDestination.class);
+
 	private static final int RENAME_MAX_LIMIT = 1000;
 	private final Path destinationFolder;
 	private final BiFunction<T, U, Path> filenameFn;
@@ -73,15 +76,15 @@ public class FolderOutputDestination<T extends Context, U extends Context> imple
 		String originalFilename = destination.getFileName().toString();
 		//Using the default rename has no file extension		
 		Path newDestination = getRenamedFile(originalFilename, destinationFolder.resolve(renameFn.apply(destination)));
-		System.out.println("applyLimitedRename newDestination " + newDestination);
+		logger.debug("applyLimitedRename newDestination {}", newDestination);
 		if(!Files.exists(newDestination)) {
-			System.out.println("applyLimitedRename newDestination " + newDestination + " doesn't exist");
+			logger.debug("applyLimitedRename newDestination {} doesn't exist", newDestination);
 			return newDestination;			
 		}
 		
 		for(int renameCounter=0;renameCounter<RENAME_MAX_LIMIT;renameCounter++) {
 			String renamedFile = getNewFileNameWithSuffix(Path.of(originalFilename), renameCounter);
-			System.out.println("applyLimitedRename renamedFile " + renamedFile);
+			logger.debug("applyLimitedRename renamedFile {}.", renamedFile);
 			Path rnFile = destination.getParent().resolve(Path.of(renamedFile));			
 			if(!Files.exists(rnFile)) {
 				return rnFile;
