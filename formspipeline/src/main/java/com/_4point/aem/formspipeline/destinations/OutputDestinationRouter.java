@@ -15,14 +15,11 @@ public class OutputDestinationRouter<T extends Context, U extends Context, R ext
 	private final List<OutputDestination<OutputChunk<T,U>,Result<T,U,R>>> outputDestinationList;
 	private final Function<Context, Integer> aFunction;
 	
+	@SafeVarargs
 	public OutputDestinationRouter(Function<Context,Integer> aFunction, OutputDestination<OutputChunk<T,U>,Result<T,U,R>> ...destinations){
 		this.aFunction = aFunction;
 		outputDestinationList = Arrays.asList(destinations);
 	}	
-
-	protected List<OutputDestination<OutputChunk<T, U>, Result<T, U, R>>> getOutputDestinationList() {
-		return outputDestinationList;
-	}
 		
 	@Override
 	public Result<T, U, R> process(OutputChunk<T, U> outputChunk) {		
