@@ -2,6 +2,8 @@ package com._4point.aem.formspipeline.api;
 
 import java.util.Optional;
 
+import com._4point.aem.formspipeline.contexts.MapContext.MapContextBuilder;
+
 public interface Context {
 	public final static String FORMSPIPELINE_PROPERTY_PREFIX = "formspipeline.";
 	
@@ -54,4 +56,9 @@ public interface Context {
 	 * @return
 	 */
 	default Optional<Double> getDouble(String key) { return get(key, Double.class).or(()->get(key, String.class).map(Double::valueOf)); }
+	
+	public static interface ContextBuilder {
+		public ContextBuilder put(String key, Object value);
+		public Context build();
+	}
 }

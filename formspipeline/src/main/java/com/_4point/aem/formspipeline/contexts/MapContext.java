@@ -52,7 +52,7 @@ public class MapContext implements Context {
 	
 	public static MapContextBuilder builder() { return new MapContextBuilder(); }
 	
-	public static class MapContextBuilder {
+	public static class MapContextBuilder implements ContextBuilder {
 		private record Entry(String key, Object value) {}
 		
 		private final List<Entry> list = new ArrayList<>();

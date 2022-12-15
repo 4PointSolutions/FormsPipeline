@@ -1,6 +1,8 @@
 package com._4point.aem.formspipeline.transformations;
 
 import java.io.IOException;
+import java.net.URL;
+import java.nio.file.Path;
 import java.util.Optional;
 import java.util.function.Function;
 import java.util.function.Supplier;
@@ -22,11 +24,11 @@ import com._4point.aem.fluentforms.impl.UsageContext;
 import com._4point.aem.fluentforms.impl.output.OutputServiceImpl;
 import com._4point.aem.formspipeline.aem.AemConfigBuilder;
 import com._4point.aem.formspipeline.api.Context;
+import com._4point.aem.formspipeline.api.Context.ContextBuilder;
 import com._4point.aem.formspipeline.api.DataChunk;
 import com._4point.aem.formspipeline.api.OutputGeneration;
 import com._4point.aem.formspipeline.chunks.PdfOutputChunk;
 import com._4point.aem.formspipeline.contexts.MapContext;
-import com._4point.aem.formspipeline.contexts.MapContext.MapContextBuilder;
 import com.adobe.fd.output.api.AcrobatVersion;
 
 public class AemOutputServicePdfGeneration<D extends Context, T extends DataChunk<D>> implements OutputGeneration<T, PdfOutputChunk<D>> {
@@ -73,20 +75,23 @@ public class AemOutputServicePdfGeneration<D extends Context, T extends DataChun
 		private static final String ACROBAT_VERSION = AEM_OUTPUT_SERVICE_PDF_GEN_PREFIX + "acrobat_version";
 		private static final String TEMPLATE = AEM_OUTPUT_SERVICE_PDF_GEN_PREFIX + "template";
 		
+		public static ContextWriter contextWriter() 				{ return new ContextWriter(); }
+		public static ContextReader contextReader(Context context) 	{ return new ContextReader(context); }
+		
 		public static class ContextReader {
 			private final Context context;
 
-			public ContextReader(Context context) { this.context = context; }
+			private ContextReader(Context context) { this.context = context; }
 			
-			public Optional<PathOrUrl> contentRoot() 					{ return context.getString(CONTENT_ROOT).map(PathOrUrl::from); }
+			public Optional<PathOrUrl> contentRoot() 					{ return context.get(CONTENT_ROOT, PathOrUrl.class); }
 			public Optional<Boolean> embedFonts() 						{ return context.getBoolean(EMBED_FONTS);}
 			public Optional<Boolean> taggedPdf()						{ return context.getBoolean(TAGGED_PDF);}
 			public Optional<Boolean> linearizedPdf()					{ return context.getBoolean(LINEARIZED_PDF);}
 			public Optional<Boolean> retainPdfFormState()				{ return context.getBoolean(RETAIN_PDF_FORM_STATE);}
 			public Optional<Boolean> retainUnsignedSignatureFields()	{ return context.getBoolean(RETAIN_UNSIGNED_SIGANTURE_FIELDS);}
-			public Optional<AcrobatVersion> acrobatVersion()			{ return context.getString(ACROBAT_VERSION).map(AcrobatVersion::valueOf);}
-			public PathOrUrl template() 								{ return context.getString(TEMPLATE).map(PathOrUrl::from)
-																											.orElseThrow(()->new IllegalArgumentException("Template parameter (" + TEMPLATE + ") not found.")); }
+			public Optional<AcrobatVersion> acrobatVersion()			{ return context.get(ACROBAT_VERSION, AcrobatVersion.class);}
+			public PathOrUrl template() 								{ return context.get(TEMPLATE, PathOrUrl.class)
+																						.orElseThrow(()->new IllegalArgumentException("Template parameter (" + TEMPLATE + ") not found.")); }
 			
 			// Transfer all the settings that are present over to the builder.
 			private GeneratePdfOutputArgumentBuilder transferAllSettings(GeneratePdfOutputArgumentBuilder builder) {
@@ -108,16 +113,28 @@ public class AemOutputServicePdfGeneration<D extends Context, T extends DataChun
 		}
 
 		public static class ContextWriter {
-			private final MapContextBuilder builder = MapContext.builder();
+			private final ContextBuilder builder;
 			
+			private ContextWriter() 						{ this(MapContext.builder());}
+			private ContextWriter(ContextBuilder builder) 	{ this.builder = builder;}
+
 			public ContextWriter contentRoot(PathOrUrl value) 					{ builder.put(CONTENT_ROOT , value); return this;}
+			public ContextWriter contentRoot(String value) 						{ contentRoot(PathOrUrl.from(value)); return this;}
+			public ContextWriter contentRoot(Path value) 						{ contentRoot(PathOrUrl.from(value)); return this;}
+			public ContextWriter contentRoot(URL value) 						{ contentRoot(PathOrUrl.from(value)); return this;}
 			public ContextWriter embedFonts(Boolean value) 						{ builder.put(EMBED_FONTS , value); return this;}
 			public ContextWriter taggedPdf(Boolean value) 						{ builder.put(TAGGED_PDF , value); return this;}
 			public ContextWriter linearizedPdf(Boolean value) 					{ builder.put(LINEARIZED_PDF , value); return this;}
 			public ContextWriter retainPdfFormState(Boolean value) 				{ builder.put(RETAIN_PDF_FORM_STATE , value); return this;}
 			public ContextWriter retainUnsignedSignatureFields(Boolean value)	{ builder.put(RETAIN_UNSIGNED_SIGANTURE_FIELDS , value); return this;}
 			public ContextWriter acrobatVersion(AcrobatVersion value) 			{ builder.put(ACROBAT_VERSION , value); return this;}
+			public ContextWriter acrobatVersion(String value) 					{ acrobatVersion(AcrobatVersion.valueOf(value)); return this;}
 			public ContextWriter template(PathOrUrl value) 						{ builder.put(TEMPLATE , value); return this;}
+			public ContextWriter template(String value) 						{ template(PathOrUrl.from(value)); return this;}
+			public ContextWriter template(Path value) 							{ template(PathOrUrl.from(value)); return this;}
+			public ContextWriter template(URL value) 							{ template(PathOrUrl.from(value)); return this;}
+			
+			public Context build() 	{ return builder.build(); }
 		}
 		
 	}
