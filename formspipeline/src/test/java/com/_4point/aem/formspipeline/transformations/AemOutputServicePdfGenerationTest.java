@@ -230,7 +230,7 @@ class AemOutputServicePdfGenerationTest {
 			assertAll(
 					()->assertEquals(contentRoot, readerStr.contentRoot().orElseThrow()),
 					()->assertEquals(template, readerStr.template()),
-					()->assertEquals(acroVersion, readerStr.acrobatVersion()),
+					()->assertEquals(acroVersion, readerStr.acrobatVersion().orElseThrow()),
 					()->assertEquals(contentRoot, readerPath.contentRoot().orElseThrow()),
 					()->assertEquals(template, readerPath.template())
 					);
