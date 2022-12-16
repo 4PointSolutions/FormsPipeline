@@ -12,7 +12,6 @@ import java.util.List;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
@@ -35,7 +34,6 @@ import com.github.tomakehurst.wiremock.stubbing.StubMapping;
 class AemOutputServicePdfGenerationTest {
 	
 	private static final String TEST_CHUNK_DATA_STRING = "<root>data bytes</root>";
-	private static final byte[] TEST_CHUNK_DATA_BYTES = TEST_CHUNK_DATA_STRING.getBytes(StandardCharsets.UTF_8);
 
 	private class CustomDataChunk implements DataChunk<Context> {
 		private final SimpleChunk chunk;
@@ -89,7 +87,6 @@ class AemOutputServicePdfGenerationTest {
 		}
 	}
 
-//	@Disabled("This test is not yet complete.")
 	@Test
 	void testProcess() {
 		Context context = AemOutputServicePdfGenerationContext.contextWriter()
@@ -232,7 +229,9 @@ class AemOutputServicePdfGenerationTest {
 					()->assertEquals(template, readerStr.template()),
 					()->assertEquals(acroVersion, readerStr.acrobatVersion().orElseThrow()),
 					()->assertEquals(contentRoot, readerPath.contentRoot().orElseThrow()),
-					()->assertEquals(template, readerPath.template())
+					()->assertEquals(template, readerPath.template()),
+					()->assertEquals(PathOrUrl.from(contentRootUrl), readerUrl.contentRoot().orElseThrow()),
+					()->assertEquals(PathOrUrl.from(templateUrl), readerUrl.template())
 					);
 			
 			}
