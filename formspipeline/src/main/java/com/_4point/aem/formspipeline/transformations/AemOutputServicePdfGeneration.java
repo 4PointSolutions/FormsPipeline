@@ -31,6 +31,29 @@ import com._4point.aem.formspipeline.chunks.PdfOutputChunk;
 import com._4point.aem.formspipeline.contexts.MapContext;
 import com.adobe.fd.output.api.AcrobatVersion;
 
+/**
+ * This class is used to call AEM to generate a PDF.
+ * 
+ * The AEM PDF generation has many parameters.  This class looks for them in the incoming data chunk's context.  Typically,
+ * these parameters will be supplied from a process upstream in the pipeline or in a context that exposes the environment
+ * parameters (usually, the Spring environent will be made available in a Context that is added at the start of the
+ * pipeline - so all requests for parameters will default to the Spring environment if no steps in the pipeline otherwise
+ * provide a parameter).
+ * 
+ * This class provides helper classes for getting parameters it needs into and out of a Context.  These are available
+ * through the methods on the AemOutputServicePdfGenerationContext object.  contextWriter() (which produces a context with 
+ * AEMOutputServicePdfGenerator parameters in it) and contextReader() (which provides a view on an existing context).
+ * 
+ * Typically, some process upstream of the AemOutputServicePdfGeneration step will use the contextWriter() to create a context 
+ * with the parameters it knows about and then it will combine that context with the existing context using an AggregateContext object.
+ *
+ * When building an AemOutputServicePdfGeneration object, the client application will need to supply parameters (like the
+ * location of an AEM server, credentials to talk to that server, etc.).  This is done using a Builder object retrieved 
+ * by calling the static builder() method.
+ *
+ * @param <D>
+ * @param <T>
+ */
 public class AemOutputServicePdfGeneration<D extends Context, T extends DataChunk<D>> implements OutputGeneration<T, PdfOutputChunk<D>> {
 	private static final Logger logger = LoggerFactory.getLogger(AemOutputServicePdfGeneration.class);
 
@@ -139,6 +162,11 @@ public class AemOutputServicePdfGeneration<D extends Context, T extends DataChun
 		
 	}
 	
+	/**
+	 * Builder is a class that is used to build an AemOutputServicePdfGeneration object.  It allows a user to specify 
+	 * all the various parameters that may be required to instantiate a AemOutputServicePdfGeneration object.
+	 *
+	 */
 	public static class Builder extends AemConfigBuilder {
 
 		private Builder() {}
