@@ -38,7 +38,7 @@ class SpringEnvironmentContextTest {
 
 	@Test
 	void testGet_WrongType() {
-		ConversionFailedException ex = assertThrows(ConversionFailedException.class, ()->underTest.get("USERDOMAIN_ROAMINGPROFILE", Integer.class));
+		ConversionFailedException ex = assertThrows(ConversionFailedException.class, ()->underTest.get("java.vendor.url", Integer.class));
 		String msg = ex.getMessage();
 		assertNotNull(msg);		
 		assertThat(msg, allOf(containsString("Failed to convert from type [java.lang.String] to type [java.lang.Integer]")));		
@@ -47,14 +47,13 @@ class SpringEnvironmentContextTest {
 	@Test
 	void testGet_nonStringProperty_returnNonStringValues() throws MalformedURLException {	
 		assertEquals(false, underTest.get("spring.jmx.enabled", Boolean.class).get());		
-		assertEquals(new URL("https://adoptium.net/"), underTest.get("java.vendor.url", URL.class).get());
+		assertThat(underTest.get("java.vendor.url", URL.class).get(), is(instanceOf(URL.class)));
 		assertThat(underTest.get("os.version", Float.class).get(), is(instanceOf(Float.class)));
 		assertThat(underTest.get("java.vm.specification.version", Integer.class).get(), is(instanceOf(Integer.class)));  
 	}
 
 	@Test
 	void testGet_stringProperty_returnStringValue() {		
-		assertEquals("4PTSOLUTIONS", underTest.get("USERDOMAIN_ROAMINGPROFILE", String.class).get());
 		//Number can always be string as well
 		assertThat(underTest.get("java.specification.version", String.class).get(), is(instanceOf(String.class)));
 		assertEquals("UTF-8", underTest.get("file.encoding", String.class).get());
