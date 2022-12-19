@@ -127,4 +127,5 @@ class XsltXmlDataTransformationTest {
 		System.out.println("testProcess_xsltVersion31_success ... " +s);
 		assertEquals(EXPECTED_XSLT20_TABLE.trim(),s.trim());	
 	}
+	
 }
