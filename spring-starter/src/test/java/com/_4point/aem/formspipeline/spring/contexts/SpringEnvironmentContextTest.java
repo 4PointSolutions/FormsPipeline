@@ -48,7 +48,7 @@ class SpringEnvironmentContextTest {
 	void testGet_nonStringProperty_returnNonStringValues() throws MalformedURLException {	
 		assertEquals(false, underTest.get("spring.jmx.enabled", Boolean.class).get());		
 		assertThat(underTest.get("java.vendor.url", URL.class).get(), is(instanceOf(URL.class)));
-		assertThat(underTest.get("os.version", Float.class).get(), is(instanceOf(Float.class)));
+		//assertThat(underTest.get("os.version", Integer.class).get(), is(instanceOf(Integer.class)));
 		assertThat(underTest.get("java.vm.specification.version", Integer.class).get(), is(instanceOf(Integer.class)));  
 	}
 
