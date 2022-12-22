@@ -40,6 +40,7 @@
 
 		<formspipeline-version>0.0.1-SNAPSHOT</formspipeline-version>
 		<junit-addons.version>1.4</junit-addons.version>
+		<saxon-he.version>11.4</saxon-he.version>
 	</properties>
 
 
@@ -138,7 +139,7 @@
         <dependency>
             <groupId>net.sf.saxon</groupId>
             <artifactId>Saxon-HE</artifactId>
-            <version>11.4</version>
+            <version>${saxon-he.version}</version>
             <exclusions>
                 <exclusion>
                     <groupId>xml-apis</groupId>
