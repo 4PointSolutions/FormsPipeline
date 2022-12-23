@@ -88,7 +88,7 @@ class FolderOutputDestinationTest {
 		
 	@Test
 	//Original file doesn't exist so writes successfully to destination on first pass through
-	void testProcessSuccess(@TempDir Path testFolder) throws Exception {
+	void testProcess_success(@TempDir Path testFolder) throws Exception {
 		final Path filename = Path.of("foo.txt");
 		final Path fileRename = Path.of("foo2.txt");	
 			
@@ -103,7 +103,7 @@ class FolderOutputDestinationTest {
 	
 	@Test
 	//Original file exist but rename file doesn't exist so writes successfully to destination upon rename
-	void testProcess_withRename_Success(@TempDir Path testFolder) throws Exception {
+	void testProcess_withRename_success(@TempDir Path testFolder) throws Exception {
 		final Path filename = Path.of("foo.txt");
 		final Path fileRename = Path.of("foo2.txt");	
 		byte[] emptyBytes = "".getBytes(StandardCharsets.UTF_8); 
@@ -179,17 +179,14 @@ class FolderOutputDestinationTest {
 	}
 	
 	@Test
-	void testProcess_throwsIllegalStateException(@TempDir Path testFolder) {
+	void testProcess_missingFilename_success(@TempDir Path testFolder) throws IOException {
 		final Path filename = Path.of("");	// Intentionally invalid filename
-		final Path fileRename = Path.of("foo.txt");
 		Mockito.when(mockOutputChunk.bytes()).thenReturn(mockOutputBytes);
 		final FolderOutputDestination<EmptyContext, EmptyContext> underTest = new FolderOutputDestination<>(
-				testFolder, (a, b)->filename, (a)->fileRename);
+				testFolder, (a, b)->filename);
 		
-		IllegalStateException ex = assertThrows(IllegalStateException.class, ()->underTest.process(mockOutputChunk));
-		String msg = ex.getMessage();
-		assertNotNull(msg);		
-		assertThat(msg, allOf(containsString("Unable to write file"), containsString(testFolder.toAbsolutePath().toString())));
+		Result<EmptyContext, EmptyContext, EmptyContext> result = underTest.process(mockOutputChunk);
+		validateSuccessFileCreated(testFolder, result, "result");
 	}
 	
 	@Test

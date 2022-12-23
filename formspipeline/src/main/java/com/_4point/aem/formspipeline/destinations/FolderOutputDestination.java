@@ -54,7 +54,8 @@ public class FolderOutputDestination<T extends Context, U extends Context> imple
     }
 		
 	private static boolean shouldRename(Path destination) {
-		return destination!=null && !Files.isDirectory(destination)&& Files.exists(destination);	
+		//As long as destination exist whether it's a file or folder same logic applies
+		return destination!=null && Files.exists(destination);	
 	}
 	
 	//Intended to be used by the class itself and unit test
