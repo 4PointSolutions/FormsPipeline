@@ -6,7 +6,7 @@ name: formspipeline Spring Boot Starter automated build
 on:
   push:
     paths:
-    - 'spring-starter/**'
+    - 'formspipeline-spring-boot-starter/**'
     - '.github/workflows/formspipeline-spring-boot-starter-publish.yml'
 
 jobs:
@@ -25,11 +25,11 @@ jobs:
         settings-path: ${{ github.workspace }} # location for the settings.xml file
 
     - name: Build with Maven
-      run: mvn -B package -s $GITHUB_WORKSPACE/settings.xml --file spring-starter/pom.xml
+      run: mvn -B package -s $GITHUB_WORKSPACE/settings.xml --file formspipeline-spring-boot-starter/pom.xml
       env:
         GITHUB_TOKEN: ${{ github.token }}
 
     - name: Publish to GitHub Packages Apache Maven
-      run: mvn deploy -s $GITHUB_WORKSPACE/settings.xml --file spring-starter/pom.xml
+      run: mvn deploy -s $GITHUB_WORKSPACE/settings.xml --file formspipeline-spring-boot-starter/pom.xml
       env:
         GITHUB_TOKEN: ${{ github.token }}
