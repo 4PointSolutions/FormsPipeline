@@ -33,7 +33,7 @@ public class XsltXmlDataTransformation implements DataTransformationOneToOne<Xml
             transformerFactory.setAttribute(XMLConstants.ACCESS_EXTERNAL_STYLESHEET, "");
             this.transformer = transformerFactory.newTransformer(new StreamSource(new ByteArrayInputStream(xsltBytes)));
 		} catch (TransformerConfigurationException e) {
-			throw new IllegalArgumentException(String.format("Failed to instantiate XsltXmlDataTransformation.  %s", e.getMessage()));
+			throw new IllegalArgumentException(String.format("Failed to instantiate XsltXmlDataTransformation.  %s", e.getMessage()),e);
 		}		        
 	}
 	

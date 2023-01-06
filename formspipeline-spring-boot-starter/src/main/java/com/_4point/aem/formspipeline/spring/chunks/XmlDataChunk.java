@@ -86,7 +86,7 @@ public class XmlDataChunk implements DataChunk<XmlDataContext> {
 		        	}	            
 		        }
 			} catch (XPathExpressionException e) {			
-				throw new IllegalArgumentException(String.format("Failed to parse xml path %s. Error message: %s", xpath, e.getMessage()));
+				throw new IllegalArgumentException(String.format("Failed to parse xml path %s. Error message: %s", xpath, e.getMessage()),e);
 			} 		
 			return Optional.of(value);	 
 		}
