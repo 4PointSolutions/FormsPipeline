@@ -14,13 +14,14 @@ class AggregateContextTest {
 	private static final String KEY2 = "key2";
 	private static final String VALUE2 = "value2";
 	private static final String KEY3 = "key3";		// No associatedValue
+	private static final String KEY4 = "key4";		// Occurs in both contexts with different values
 
 	private final Context context1 = new Context() {
 		
 		@SuppressWarnings("unchecked")
 		@Override
 		public <T> Optional<T> get(String key, Class<T> target) {
-			return key.equalsIgnoreCase(KEY1) ? Optional.of((T)VALUE1) : Optional.empty();
+			return key.equalsIgnoreCase(KEY1) || key.equalsIgnoreCase(KEY4) ? Optional.of((T)VALUE1) : Optional.empty();
 		}
 	};
 	
@@ -29,7 +30,7 @@ class AggregateContextTest {
 		@SuppressWarnings("unchecked")
 		@Override
 		public <T> Optional<T> get(String key, Class<T> target) {
-			return key.equalsIgnoreCase(KEY2) ? Optional.of((T)VALUE2) : Optional.empty();
+			return key.equalsIgnoreCase(KEY2) || key.equalsIgnoreCase(KEY4) ? Optional.of((T)VALUE2) : Optional.empty();
 		}
 	};
 
@@ -50,4 +51,10 @@ class AggregateContextTest {
 		assertTrue(underTest.getString(KEY3).isEmpty(), ()->"Expected get{" + KEY3 + ") to be empty.");
 	}
 
+	@Test
+	void testGet_Both() {
+		assertEquals(VALUE1, underTest.getString(KEY4).orElseThrow());
+	}
+
+	
 }
