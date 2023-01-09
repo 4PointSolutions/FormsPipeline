@@ -3,7 +3,7 @@ package com._4point.aem.formspipeline.aem;
 import java.util.Objects;
 import java.util.function.Supplier;
 
-import javax.ws.rs.client.Client;
+import jakarta.ws.rs.client.Client;
 
 import com._4point.aem.docservices.rest_services.client.helpers.AemServerType;
 import com._4point.aem.docservices.rest_services.client.helpers.Builder;
