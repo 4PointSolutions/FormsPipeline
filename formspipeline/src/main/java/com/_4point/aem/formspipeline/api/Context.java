@@ -5,6 +5,12 @@ import java.util.Optional;
 
 import com._4point.aem.formspipeline.contexts.AggregateContext;
 
+/**
+ * Contexts are immutable collections of name/value pairs.  They are used to pass information between steps in a forms pipeline.
+ * 
+ * A Context is built using ContextBuilder objects that acquired from the implementing class.
+ *
+ */
 public interface Context {
 	public final static String FORMSPIPELINE_PROPERTY_PREFIX = "formspipeline.";
 	
