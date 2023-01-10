@@ -1,8 +1,9 @@
 package com._4point.aem.formspipeline.api;
 
+import java.util.List;
 import java.util.Optional;
 
-import com._4point.aem.formspipeline.contexts.MapContext.MapContextBuilder;
+import com._4point.aem.formspipeline.contexts.AggregateContext;
 
 public interface Context {
 	public final static String FORMSPIPELINE_PROPERTY_PREFIX = "formspipeline.";
@@ -56,6 +57,30 @@ public interface Context {
 	 * @return
 	 */
 	default Optional<Double> getDouble(String key) { return get(key, Double.class).or(()->get(key, String.class).map(Double::valueOf)); }
+	
+	/**
+	 * Incorporates (combines) this context with one or more other contexts. If the contexts have entries in 
+	 * common then contexts earlier in the argument list have precedence over later ones.  All contexts provided 
+	 * have precedence over this one.
+	 * 
+	 * @param contexts
+	 * @return
+	 */
+	default Context incorporate(Context... contexts) {
+		return AggregateContext.aggregate(List.of(contexts), this);
+	}
+	
+	/**
+	 * Incorporates (combines) this context with one or more other contexts. If the contexts have entries in 
+	 * common then contexts earlier in the list have precedence over later ones.  All contexts in the list 
+	 * have precedence over this one.
+	 * 
+	 * @param contexts
+	 * @return
+	 */
+	default Context incorporate(List<Context> contexts) {
+		return AggregateContext.aggregate(contexts, this);
+	}
 	
 	public static interface ContextBuilder {
 		public ContextBuilder put(String key, Object value);
