@@ -110,10 +110,13 @@ public class FolderOutputDestination<T extends Context, U extends Context> imple
 		try {
 			if(shouldRename(destination)) {
 				destination = applyLimitedRename(destination);
-			} 
+			} 		
+			if (logger.isDebugEnabled()) {
+				logger.debug("writing to destination {}", (destination != null?destination.toAbsolutePath().toString():null));					
+			}
 			Files.write(destination, outputChunk.bytes(), StandardOpenOption.WRITE,StandardOpenOption.CREATE_NEW);						
 		} catch (IOException e) {
-			throw new IllegalStateException("Unable to write file (" + destination.toAbsolutePath().toString() + ").", e);
+			throw new IllegalStateException("Unable to write file (" + (destination!=null?destination.toAbsolutePath().toString():null) + ").", e);
 		} catch (IndexOutOfBoundsException e) {
 			throw new IndexOutOfBoundsException(String.format("Unable to write file (%s). File %s exists rename attempted. %s", 
 					(destination != null ?destination.toAbsolutePath().toString():""), 

@@ -88,7 +88,7 @@ class FolderOutputDestinationTest {
 		
 	@Test
 	//Original file doesn't exist so writes successfully to destination on first pass through
-	void testProcess_success(@TempDir Path testFolder) throws Exception {
+	void testProcessSuccess(@TempDir Path testFolder) throws Exception {
 		final Path filename = Path.of("foo.txt");
 		final Path fileRename = Path.of("foo2.txt");	
 			
@@ -103,7 +103,7 @@ class FolderOutputDestinationTest {
 	
 	@Test
 	//Original file exist but rename file doesn't exist so writes successfully to destination upon rename
-	void testProcess_withRename_success(@TempDir Path testFolder) throws Exception {
+	void testProcess_withRename_Success(@TempDir Path testFolder) throws Exception {
 		final Path filename = Path.of("foo.txt");
 		final Path fileRename = Path.of("foo2.txt");	
 		byte[] emptyBytes = "".getBytes(StandardCharsets.UTF_8); 
@@ -118,6 +118,24 @@ class FolderOutputDestinationTest {
 				
 		validateSuccessFileCreated(testFolder, result, "foo2.txt");
 	}
+	
+	@Test
+	void testProcess_withRenameMissingExtension_Success(@TempDir Path testFolder) throws Exception {
+		final Path filename = Path.of("foo.txt");
+		final Path fileRename = Path.of("foo2");	
+		byte[] emptyBytes = "".getBytes(StandardCharsets.UTF_8); 
+		Mockito.when(mockOutputChunk.bytes()).thenReturn(mockOutputBytes);
+		final FolderOutputDestination<EmptyContext, EmptyContext> underTest = new FolderOutputDestination<>(
+				testFolder, (a, b)->filename,(a)-> fileRename);
+		
+		//Creates original file file so that rename call is triggered when process is called
+		Path fileDestination = testFolder.resolve(filename);
+		Files.write(fileDestination, emptyBytes, StandardOpenOption.WRITE,StandardOpenOption.CREATE_NEW);		
+		Result<EmptyContext, EmptyContext, EmptyContext> result = underTest.process(mockOutputChunk);
+				
+		validateSuccessFileCreated(testFolder, result, "foo2.txt");
+	}
+	
 	
 	@Test
 	@Tag("slow")
@@ -163,6 +181,23 @@ class FolderOutputDestinationTest {
 		Result<EmptyContext, EmptyContext, EmptyContext> result = underTest.process(mockOutputChunk);
 		
 		validateSuccessFileCreated(testFolder, result, "foo");
+	}
+	
+	@Test
+	@Tag("slow")
+	void testProcess_differentFileExtension_Success(@TempDir Path testFolder) throws Exception {
+		final Path filename = Path.of("foo.xml");
+		final Path fileRename = Path.of("foo2.txt");		
+		Mockito.when(mockOutputChunk.bytes()).thenReturn(mockOutputBytes);
+		final FolderOutputDestination<EmptyContext, EmptyContext> underTest = new FolderOutputDestination<>(
+				testFolder, (a, b)->filename,(a)-> fileRename);
+		
+		//Creates a file with the same name so that rename call is triggered when process is called		
+		Path fileDestination = testFolder.resolve(filename);
+		Files.write(fileDestination, mockOutputChunk.bytes(), StandardOpenOption.WRITE,StandardOpenOption.CREATE_NEW);
+		Result<EmptyContext, EmptyContext, EmptyContext> result = underTest.process(mockOutputChunk);
+		
+		validateSuccessFileCreated(testFolder, result, "foo2.txt");
 	}
 	
 	@Test
