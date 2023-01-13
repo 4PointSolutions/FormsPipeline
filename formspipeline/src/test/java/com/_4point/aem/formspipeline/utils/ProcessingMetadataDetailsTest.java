@@ -20,11 +20,8 @@ class ProcessingMetadataDetailsTest {
 	void test_timeCalculation() throws InterruptedException {
 		Instant testStart = Instant.now();
 		Thread.sleep(SLEEP_TIME);
-		ProcessingMetadataDetailBuilder metadataBuilder = ProcessingMetadataDetails.start();
+		ProcessingMetadataDetailBuilder metadataBuilder = ProcessingMetadataDetails.start(TEST_TRANSACTION_SIZE,STEP_NAME,STEP_DETAILS);
 		Thread.sleep(SLEEP_TIME);
-		metadataBuilder.setTransactionSize(TEST_TRANSACTION_SIZE);
-		metadataBuilder.setStepName(STEP_NAME);
-		metadataBuilder.setStepDetails(STEP_DETAILS);
 		metadataBuilder.setFileCreatedLocation(FILE_LOCATION);
 	
 		ProcessingMetadataDetails result = metadataBuilder.finish();

@@ -57,8 +57,8 @@ public class ProcessingMetadataDetails {
 		return String.format("%02d:%02d:%02d.%03d", hour, minute, second, (elapsedTimeMs % 1000));
 	}
 
-	public static ProcessingMetadataDetailBuilder start() {
-		return new ProcessingMetadataDetailBuilder();
+	public static ProcessingMetadataDetailBuilder start(int transactionSize, String stepName, String stepDetails) {
+		return new ProcessingMetadataDetailBuilder(transactionSize, stepName, stepDetails);
 	}
 	
 	@Override
@@ -77,6 +77,14 @@ public class ProcessingMetadataDetails {
 		private ProcessingMetadataDetailBuilder() {
 			super();
 			this.startTime = Instant.now();
+		}
+		
+		private ProcessingMetadataDetailBuilder(int transactionSize, String stepName, String stepDetails) {
+			super();
+			this.startTime = Instant.now();
+			this.transactionSize = transactionSize;
+			this.stepName = stepName;
+			this.stepDetails = stepDetails;
 		}
 
 		public ProcessingMetadataDetailBuilder setTransactionSize(int transactionSize) {

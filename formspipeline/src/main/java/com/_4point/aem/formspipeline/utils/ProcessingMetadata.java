@@ -7,7 +7,7 @@ public class ProcessingMetadata {
 	private final String correlationId;
 	private List<ProcessingMetadataDetails> dataDetails = new ArrayList<ProcessingMetadataDetails>();
 	
-	ProcessingMetadata(String correlationId){
+	public ProcessingMetadata(String correlationId){
 		super();
 		this.correlationId = correlationId;
 	}
