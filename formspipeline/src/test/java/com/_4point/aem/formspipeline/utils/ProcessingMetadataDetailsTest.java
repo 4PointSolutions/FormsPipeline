@@ -1,21 +1,29 @@
 package com._4point.aem.formspipeline.utils;
 
+import static org.hamcrest.MatcherAssert.assertThat; 
+import static org.hamcrest.Matchers.*;
 import static org.junit.jupiter.api.Assertions.*;
 
+import java.nio.file.Path;
 import java.time.Instant;
 
+import org.hamcrest.Matcher;
+import org.hamcrest.Matchers;
 import org.junit.jupiter.api.Test;
 
 import com._4point.aem.formspipeline.utils.ProcessingMetadataDetails.ProcessingMetadataDetailBuilder;
 
 class ProcessingMetadataDetailsTest {
 	Instant now = Instant.now();
-	private static final int SLEEP_TIME = 50;
+	private static final long SLEEP_TIME = 50;
 	private static final int TEST_TRANSACTION_SIZE = 23;
 	private static final String STEP_NAME = "UnitTest";
 	private static final String STEP_DETAILS = "UnitTestDetails";
-	private static final String FILE_LOCATION = "C:\\Temp";
-			
+	private static final Path FILE_LOCATION = Path.of("Temp");
+
+	private static Matcher<Instant> isAfter(Instant i) { return Matchers.greaterThan(i); }
+	private static Matcher<Instant> isBefore(Instant i) { return Matchers.lessThan(i); }
+	
 	@Test
 	void test_timeCalculation() throws InterruptedException {
 		Instant testStart = Instant.now();
@@ -28,25 +36,25 @@ class ProcessingMetadataDetailsTest {
 		Thread.sleep(SLEEP_TIME);
 		Instant testEnd = Instant.now();
 
-		System.out.println(result.getFormattedElapsedTime());
-		
 		assertAll(
-				()->assertTrue(result.getElapsedTimeMs() >= SLEEP_TIME),
-				()->assertEquals(TEST_TRANSACTION_SIZE, result.getTransactionSize()),
-				()->assertEquals(STEP_NAME, result.getStepName()),
-				()->assertEquals(STEP_DETAILS, result.getStepDetails()),
-				()->assertEquals(FILE_LOCATION, result.getFileCreatedLocation()),
-				()->assertTrue(testStart.isBefore(result.getStartTime())),
-				()->assertTrue(testEnd.isAfter(result.getStartTime())),
-				()->assertTrue(testStart.isBefore(result.getEndTime())),
-				()->assertTrue(testEnd.isAfter(result.getEndTime())),
-				()->assertFalse(result.getFormattedElapsedTime().isEmpty() || result.getFormattedElapsedTime().trim().isEmpty())
+				()->assertThat(result.getElapsedTimeMs(), greaterThanOrEqualTo(SLEEP_TIME)),
+				()->assertEquals(TEST_TRANSACTION_SIZE, result.transactionSize()),
+				()->assertEquals(STEP_NAME, result.stepName()),
+				()->assertEquals(STEP_DETAILS, result.stepDetails()),
+				()->assertEquals(FILE_LOCATION, result.fileCreatedLocation()),
+				()->assertThat(testEnd, isAfter(result.startTime())),
+				()->assertThat(testStart, isBefore(result.endTime())),
+				()->assertThat(testStart, isBefore(result.startTime())),
+				()->assertThat(testEnd, isAfter(result.startTime())),
+				()->assertThat(testStart, isBefore(result.endTime())),
+				()->assertThat(testEnd, isAfter(result.endTime())),
+				()->assertThat(result.getFormattedElapsedTime().trim(), not(emptyString()))
 				);
 	}
 	
 	@Test
 	void test_toString() throws InterruptedException{
-		String EXPECTED_TRANSACTION = "ProcessingMetadata [transactionSize=" + TEST_TRANSACTION_SIZE;		
+		String EXPECTED_TRANSACTION = "ProcessingMetadataDetails[transactionSize=" + TEST_TRANSACTION_SIZE;		
 		String EXPECTED_START_TIME = ", startTime=" + now;
 		String EXPECTED_STEP_NAME = ", stepName=" + STEP_NAME;
 		String EXPECTED_STEP_DETAILS = ", stepDetails=" + STEP_DETAILS;
@@ -57,16 +65,15 @@ class ProcessingMetadataDetailsTest {
 		ProcessingMetadataDetails underTest = new ProcessingMetadataDetails(TEST_TRANSACTION_SIZE, now, STEP_NAME, STEP_DETAILS,FILE_LOCATION);
 		Thread.sleep(SLEEP_TIME);
 		Instant testEnd = Instant.now();
-		
-		System.out.println(underTest.toString());
-		assertTrue(underTest.toString().contains(EXPECTED_TRANSACTION));
-		assertTrue(underTest.toString().contains(EXPECTED_START_TIME));
-		assertTrue(underTest.toString().contains(EXPECTED_STEP_NAME));
-		assertTrue(underTest.toString().contains(EXPECTED_STEP_DETAILS));
-		assertTrue(underTest.toString().contains(EXPECTED_FILE_LOCATION));	
-		assertTrue(testEnd.isAfter(underTest.getStartTime()));
-		assertTrue(testStart.isBefore(underTest.getEndTime()));
-		
-	}
 
+		assertAll(
+				()->assertThat(underTest.toString(), containsString(EXPECTED_TRANSACTION)),
+				()->assertThat(underTest.toString(), containsString(EXPECTED_START_TIME)),
+				()->assertThat(underTest.toString(), containsString(EXPECTED_STEP_NAME)),
+				()->assertThat(underTest.toString(), containsString(EXPECTED_STEP_DETAILS)),
+				()->assertThat(underTest.toString(), containsString(EXPECTED_FILE_LOCATION)),
+				()->assertThat(testEnd, isAfter(underTest.startTime())),
+				()->assertThat(testStart, isBefore(underTest.endTime()))
+				);
+	}
 }
