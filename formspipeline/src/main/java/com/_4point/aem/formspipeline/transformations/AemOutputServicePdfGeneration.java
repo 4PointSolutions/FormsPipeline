@@ -101,6 +101,13 @@ public class AemOutputServicePdfGeneration<D extends Context, T extends DataChun
 		public static ContextWriter contextWriter() 				{ return new ContextWriter(); }
 		public static ContextReader contextReader(Context context) 	{ return new ContextReader(context); }
 		
+		/**
+		 * AemOutputServicePdfGeneration.ContextReader can be used to read the parameters that the AemOutputServicePdfGeneration step
+		 * needs from a Context object.
+		 * 
+		 * It is used by the AemOutputServicePdfGeneration object to read the parameters from the dataContext of the incoming DataChunk.
+		 *
+		 */
 		public static class ContextReader {
 			private final Context context;
 
@@ -135,6 +142,14 @@ public class AemOutputServicePdfGeneration<D extends Context, T extends DataChun
 			}
 		}
 
+		/**
+		 * AemOutputServicePdfGeneration.ContextWriter can be used to build a context that contains parameters destined
+		 * for an AemOutputServicePdfGeneration step.
+		 * 
+		 * It is typically used by steps upstream of the AemOutputServicePdfGeneration step to set parameters that
+		 * will eventually be needed by a downstream AemOutputServicePdfGeneration step.
+		 *
+		 */
 		public static class ContextWriter {
 			private final ContextBuilder builder;
 			
