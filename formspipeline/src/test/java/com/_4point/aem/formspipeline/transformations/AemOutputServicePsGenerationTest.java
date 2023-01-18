@@ -117,7 +117,7 @@ class AemOutputServicePsGenerationTest {
 		String msg = ex.getMessage();
 		assertNotNull(msg);
 		
-		assertThat(msg, allOf(containsStringIgnoringCase("Error while generating PRINT document from template"), containsString(template)));
+		assertThat(msg, allOf(containsStringIgnoringCase("Error while generating PS document from template"), containsString(template)));
 	}
 	
 	@Test
