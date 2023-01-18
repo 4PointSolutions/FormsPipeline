@@ -25,10 +25,10 @@ import com._4point.aem.fluentforms.api.PathOrUrl;
 import com._4point.aem.fluentforms.api.output.PrintConfig;
 import com._4point.aem.formspipeline.api.Context;
 import com._4point.aem.formspipeline.api.DataChunk;
-import com._4point.aem.formspipeline.chunks.DocumentOutputChunk;
+import com._4point.aem.formspipeline.chunks.PsOutputChunk;
 import com._4point.aem.formspipeline.chunks.SimpleChunk;
 import com._4point.aem.formspipeline.contexts.EmptyContext;
-import com._4point.aem.formspipeline.transformations.AemOutputServicePrintGeneration.AemOutputServicePrintGenerationContext;
+import com._4point.aem.formspipeline.transformations.AemOutputServicePsGeneration.AemOutputServicePsGenerationContext;
 import com.adobe.fd.output.api.PaginationOverride;
 import com.github.tomakehurst.wiremock.client.WireMock;
 import com.github.tomakehurst.wiremock.http.ResponseDefinition;
@@ -38,7 +38,7 @@ import com.github.tomakehurst.wiremock.recording.SnapshotRecordResult;
 import com.github.tomakehurst.wiremock.stubbing.StubMapping;
 
 @WireMockTest
-class AemOutputServicePrintGenerationTest {
+class AemOutputServicePsGenerationTest {
 	
 	private static final String TEST_CHUNK_DATA_STRING = "<root>data bytes</root>";
 
@@ -62,13 +62,13 @@ class AemOutputServicePrintGenerationTest {
 		}
 	}
 	
-	private AemOutputServicePrintGeneration<Context, CustomDataChunk> underTest;
+	private AemOutputServicePsGeneration<Context, CustomDataChunk> underTest;
 	
 	private static final boolean WIREMOCK_RECORDING = false;
 	
 	@BeforeEach
 	void setUp(WireMockRuntimeInfo wmRuntimeInfo) throws Exception {
-		underTest = AemOutputServicePrintGeneration.builder()
+		underTest = AemOutputServicePsGeneration.builder()
 				.machineName("localhost")
 				.basicAuthentication("admin", "admin")
 				.port(wmRuntimeInfo.getHttpPort())
@@ -96,11 +96,11 @@ class AemOutputServicePrintGenerationTest {
 	
 	@Test
 	void testProcess() {
-		Context context = AemOutputServicePrintGenerationContext.contextWriter()
+		Context context = AemOutputServicePsGenerationContext.contextWriter()
 															  .template(Path.of("Foo.xdp"))
 															  .build();
 		
-		DocumentOutputChunk<Context> result = underTest.process(new CustomDataChunk(TEST_CHUNK_DATA_STRING, context));
+		PsOutputChunk<Context> result = underTest.process(new CustomDataChunk(TEST_CHUNK_DATA_STRING, context));
 		
 		assertNotNull(result);
 	}
@@ -108,7 +108,7 @@ class AemOutputServicePrintGenerationTest {
 	@Test
 	void testProcess_throwsException() {
 		String template = "ThrowsException.xdp";
-		Context context = AemOutputServicePrintGenerationContext.contextWriter()
+		Context context = AemOutputServicePsGenerationContext.contextWriter()
 															  .template(template)
 															  .build();
 		
@@ -147,7 +147,7 @@ class AemOutputServicePrintGenerationTest {
 			var printConfig = PrintConfig.DPL300;
 			var template = PathOrUrl.from("SomeXdp.xdp");
 
-			Context context = AemOutputServicePrintGenerationContext.contextWriter()
+			Context context = AemOutputServicePsGenerationContext.contextWriter()
 					.contentRoot(contentRoot)
 					.locale(local)
 					.copies(copies)
@@ -157,7 +157,7 @@ class AemOutputServicePrintGenerationTest {
 					.template(template)
 					.build();
 			
-			var reader = AemOutputServicePrintGenerationContext.contextReader(context);
+			var reader = AemOutputServicePsGenerationContext.contextReader(context);
 			assertAll(
 					()->assertEquals(contentRoot, reader.contentRoot().orElseThrow()),
 					()->assertEquals(local, reader.locale().orElseThrow()),
@@ -171,10 +171,10 @@ class AemOutputServicePrintGenerationTest {
 		
 		@Test
 		void testContextReaderWriter_unpopulatedValues() {
-			Context context = AemOutputServicePrintGenerationContext.contextWriter()
+			Context context = AemOutputServicePsGenerationContext.contextWriter()
 					.build();
 			
-			var reader = AemOutputServicePrintGenerationContext.contextReader(context);
+			var reader = AemOutputServicePsGenerationContext.contextReader(context);
 			assertAll(
 					()->assertTrue(reader.contentRoot().isEmpty(),"contentRoot is expected to be empty but is not empty"),
 					()->assertTrue(reader.copies().isEmpty(),"copies is expected to be empty but is not empty"),
@@ -202,23 +202,23 @@ class AemOutputServicePrintGenerationTest {
 			var contentRoot = PathOrUrl.from(contentRootStr);
 			var template = PathOrUrl.from(templateStr);
 				
-			Context contextStr = AemOutputServicePrintGenerationContext.contextWriter()
+			Context contextStr = AemOutputServicePsGenerationContext.contextWriter()
 					.contentRoot(contentRootStr)
 					.template(templateStr)
 					.build();
-			var readerStr = AemOutputServicePrintGenerationContext.contextReader(contextStr);
+			var readerStr = AemOutputServicePsGenerationContext.contextReader(contextStr);
 
-			Context contextPath = AemOutputServicePrintGenerationContext.contextWriter()
+			Context contextPath = AemOutputServicePsGenerationContext.contextWriter()
 					.contentRoot(contentRootPath)
 					.template(templatePath)
 					.build();
-			var readerPath = AemOutputServicePrintGenerationContext.contextReader(contextPath);
+			var readerPath = AemOutputServicePsGenerationContext.contextReader(contextPath);
 
-			Context contextUrl = AemOutputServicePrintGenerationContext.contextWriter()
+			Context contextUrl = AemOutputServicePsGenerationContext.contextWriter()
 					.contentRoot(contentRootUrl)
 					.template(templateUrl)
 					.build();
-			var readerUrl = AemOutputServicePrintGenerationContext.contextReader(contextUrl);
+			var readerUrl = AemOutputServicePsGenerationContext.contextReader(contextUrl);
 
 			assertAll(
 					()->assertEquals(contentRoot, readerStr.contentRoot().orElseThrow()),

@@ -27,7 +27,7 @@ import com._4point.aem.formspipeline.api.Context;
 import com._4point.aem.formspipeline.api.Context.ContextBuilder;
 import com._4point.aem.formspipeline.api.DataChunk;
 import com._4point.aem.formspipeline.api.OutputGeneration;
-import com._4point.aem.formspipeline.chunks.DocumentOutputChunk;
+import com._4point.aem.formspipeline.chunks.PsOutputChunk;
 import com._4point.aem.formspipeline.contexts.MapContext;
 import com.adobe.fd.output.api.PaginationOverride;
 
@@ -56,12 +56,12 @@ import jakarta.ws.rs.client.Client;
  * @param <D>
  * @param <T>
  */
-public class AemOutputServicePrintGeneration <D extends Context, T extends DataChunk<D>> implements OutputGeneration<T, DocumentOutputChunk<D>> {
-	private static final Logger logger = LoggerFactory.getLogger(AemOutputServicePrintGeneration.class);
+public class AemOutputServicePsGeneration <D extends Context, T extends DataChunk<D>> implements OutputGeneration<T, PsOutputChunk<D>> {
+	private static final Logger logger = LoggerFactory.getLogger(AemOutputServicePsGeneration.class);
 
 	private final OutputService outputService;
 	
-	private AemOutputServicePrintGeneration(OutputService outputService) {
+	private AemOutputServicePsGeneration(OutputService outputService) {
 		this.outputService = outputService;
 	}
 	
@@ -70,16 +70,16 @@ public class AemOutputServicePrintGeneration <D extends Context, T extends DataC
 	}
 	
 	@Override
-	public DocumentOutputChunk<D> process(T dataChunk) {
+	public PsOutputChunk<D> process(T dataChunk) {
 		D dataContext = dataChunk.dataContext();
-		var myContext = new AemOutputServicePrintGenerationContext.ContextReader(dataContext);
+		var myContext = new AemOutputServicePsGenerationContext.ContextReader(dataContext);
 		PathOrUrl template = myContext.template();
 		try {
 			Document result = myContext.transferAllSettings(outputService.generatePrintedOutput())
 											  .executeOn(template, dataChunk.asInputStream());
-			return DocumentOutputChunk.createSimple(dataContext, result.getInputStream().readAllBytes());
+			return PsOutputChunk.createSimple(dataContext, result.getInputStream().readAllBytes());
 		} catch (IOException | OutputServiceException  e) {
-			throw new IllegalStateException("Error while generating PRINT document from template (" + template.toString() + ").", e);
+			throw new IllegalStateException("Error while generating PS document from template (" + template.toString() + ").", e);
 		}
 	}
 	
@@ -87,7 +87,7 @@ public class AemOutputServicePrintGeneration <D extends Context, T extends DataC
 	 * Class that allows for setting and retrieving AemOutputServicePdfGeneration parameters to and from the Context.
 	 *
 	 */
-	public static class AemOutputServicePrintGenerationContext {
+	public static class AemOutputServicePsGenerationContext {
 		
 		private static final String AEM_OUTPUT_SERVICE_PRINT_GEN_PREFIX = Context.FORMSPIPELINE_PROPERTY_PREFIX + "aem_output_print_gen.";
 		private static final String CONTENT_ROOT = AEM_OUTPUT_SERVICE_PRINT_GEN_PREFIX + "content_root";
@@ -217,9 +217,9 @@ public class AemOutputServicePrintGeneration <D extends Context, T extends DataC
 			return this;
 		}
 		
-		public <D extends Context, T extends DataChunk<D>> AemOutputServicePrintGeneration<D,T> build() {
+		public <D extends Context, T extends DataChunk<D>> AemOutputServicePsGeneration<D,T> build() {
 			RestServicesOutputServiceAdapter adapter = setBuilderFields(RestServicesOutputServiceAdapter.builder()).build();
-			return new AemOutputServicePrintGeneration<>(new OutputServiceImpl(adapter, UsageContext.CLIENT_SIDE));
+			return new AemOutputServicePsGeneration<>(new OutputServiceImpl(adapter, UsageContext.CLIENT_SIDE));
 		}
 	}
 }
