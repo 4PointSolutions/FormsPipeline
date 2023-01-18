@@ -128,7 +128,7 @@ class AemOutputServicePsGenerationTest {
 		String msg = ex.getMessage();
 		assertNotNull(msg);
 		assertThat(msg, allOf(containsStringIgnoringCase("Template parameter"), 
-							  containsString("formspipeline.aem_output_print_gen.template"),
+							  containsString("formspipeline.aem_output_ps_gen.template"),
 							  containsStringIgnoringCase("not found")
 							  ));
 	}

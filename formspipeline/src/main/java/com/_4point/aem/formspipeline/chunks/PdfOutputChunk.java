@@ -7,25 +7,17 @@ import com._4point.aem.formspipeline.api.OutputChunk;
 import com._4point.aem.formspipeline.api.PagedContext;
 import com._4point.aem.formspipeline.contexts.AbstractPagedContext;
 import com._4point.aem.formspipeline.chunks.PdfOutputChunk.PdfOutputContext;
+import com._4point.aem.formspipeline.chunks.PsOutputChunk.PsOutputContext;
 
-public class PdfOutputChunk<D extends Context> extends AbstractInMemoryChunkImpl 
-											   implements OutputChunk<D, PdfOutputContext> 
+public class PdfOutputChunk<D extends Context> extends AbstractDocumentOutputChunk<D, PdfOutputContext> 
 											    {
-	private final D dataContext;
 	private final PdfOutputContext outputContext;
 	
 	private PdfOutputChunk(D dataContext, PdfOutputContext outputContext, byte[] bytes) {
-		super(bytes);
-		this.dataContext = dataContext;
+		super(dataContext, bytes);
 		this.outputContext = outputContext;
 	}
-
-	@Override
-	public D dataContext() {
-		return dataContext;
-	}
-
-	@Override
+	
 	public PdfOutputContext outputContext() {
 		return outputContext;
 	}

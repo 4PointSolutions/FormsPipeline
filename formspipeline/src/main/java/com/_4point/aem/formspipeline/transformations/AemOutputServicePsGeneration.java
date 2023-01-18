@@ -89,7 +89,7 @@ public class AemOutputServicePsGeneration <D extends Context, T extends DataChun
 	 */
 	public static class AemOutputServicePsGenerationContext {
 		
-		private static final String AEM_OUTPUT_SERVICE_PRINT_GEN_PREFIX = Context.FORMSPIPELINE_PROPERTY_PREFIX + "aem_output_print_gen.";
+		private static final String AEM_OUTPUT_SERVICE_PRINT_GEN_PREFIX = Context.FORMSPIPELINE_PROPERTY_PREFIX + "aem_output_ps_gen.";
 		private static final String CONTENT_ROOT = AEM_OUTPUT_SERVICE_PRINT_GEN_PREFIX + "content_root";
 		private static final String LOCALE = AEM_OUTPUT_SERVICE_PRINT_GEN_PREFIX + "locale";
 		private static final String COPIES = AEM_OUTPUT_SERVICE_PRINT_GEN_PREFIX + "copies";
