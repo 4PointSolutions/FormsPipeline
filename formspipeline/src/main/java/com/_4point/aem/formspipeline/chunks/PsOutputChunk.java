@@ -9,21 +9,13 @@ import com._4point.aem.formspipeline.chunks.PsOutputChunk.PsOutputContext;
 
 public class PsOutputChunk <D extends Context> extends AbstractDocumentOutputChunk<D, PsOutputContext> 
 {
-	private final D dataContext;
 	private final PsOutputContext outputContext;
 	
 	private PsOutputChunk(D dataContext, PsOutputContext outputContext, byte[] bytes) {
-		super(dataContext, outputContext, bytes);
-		this.dataContext = dataContext;
+		super(dataContext, bytes);
 		this.outputContext = outputContext;
 	}
-	
-	@Override
-	public D dataContext() {
-		return dataContext;
-	}
 
-	@Override
 	public PsOutputContext outputContext() {
 		return outputContext;
 	}
