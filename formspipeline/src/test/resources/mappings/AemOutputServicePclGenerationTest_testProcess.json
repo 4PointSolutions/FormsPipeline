@@ -5,7 +5,7 @@
     "url" : "/services/OutputService/GeneratePrintedOutput",
     "method" : "POST",
     "bodyPatterns" : [ {
-      "contains" : "SampleFormPcl.xdp"
+      "contains" : "SampleForPcl.xdp"
     } ]
   },
   "response" : {

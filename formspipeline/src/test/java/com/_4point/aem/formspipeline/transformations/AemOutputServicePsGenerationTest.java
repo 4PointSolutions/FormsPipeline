@@ -42,6 +42,7 @@ import com.github.tomakehurst.wiremock.stubbing.StubMapping;
 class AemOutputServicePsGenerationTest {
 	
 	private static final String TEST_CHUNK_DATA_STRING = "<root>data bytes</root>";
+	private static final Path RESOURCES_DIR = Path.of("src", "test", "resources");
 
 	private class CustomDataChunk implements DataChunk<Context> {
 		private final SimpleChunk chunk;
@@ -98,7 +99,7 @@ class AemOutputServicePsGenerationTest {
 	@Test
 	void testProcess() {
 		Context context = AemOutputServicePsGenerationContext.contextWriter()
-															  .template(Path.of("Foo.xdp"))
+															  .template(RESOURCES_DIR.resolve("sampleForms").resolve("SampleForPs.xdp").toAbsolutePath())
 															  .build();
 		
 		PsOutputChunk<Context> result = underTest.process(new CustomDataChunk(TEST_CHUNK_DATA_STRING, context));

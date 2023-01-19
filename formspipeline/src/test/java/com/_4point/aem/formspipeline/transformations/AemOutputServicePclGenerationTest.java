@@ -100,7 +100,7 @@ class AemOutputServicePclGenerationTest {
 	@Test
 	void testProcess() {
 		Context context = AemOutputServicePclGenerationContext.contextWriter()
-															  .template(RESOURCES_DIR.resolve("sampleForms").resolve("SampleFormPcl.xdp").toAbsolutePath())
+															  .template(RESOURCES_DIR.resolve("sampleForms").resolve("SampleForPcl.xdp").toAbsolutePath())
 															  .build();
 		
 		PclOutputChunk<Context> result = underTest.process(new CustomDataChunk(TEST_CHUNK_DATA_STRING, context));
@@ -109,9 +109,8 @@ class AemOutputServicePclGenerationTest {
 	}
 	
 	@Test
-	@Disabled
 	void testProcess_throwsException() {
-		String template = "ThrowsException.xdp";
+		String template = "ThrowsExceptionForPcl.xdp";
 		Context context = AemOutputServicePclGenerationContext.contextWriter()
 															  .template(template)
 															  .build();
@@ -125,7 +124,6 @@ class AemOutputServicePclGenerationTest {
 	}
 	
 	@Test
-	@Disabled
 	void testProcess_MissingTemplate() {
 		// No template argument in the context.
 		IllegalArgumentException ex = assertThrows(IllegalArgumentException.class, ()->underTest.process(new CustomDataChunk(TEST_CHUNK_DATA_STRING, EmptyContext.emptyInstance())));
@@ -133,7 +131,7 @@ class AemOutputServicePclGenerationTest {
 		String msg = ex.getMessage();
 		assertNotNull(msg);
 		assertThat(msg, allOf(containsStringIgnoringCase("Template parameter"), 
-							  containsString("formspipeline.aem_output_print_gen.template"),
+							  containsString("formspipeline.aem_output_pcl_gen.template"),
 							  containsStringIgnoringCase("not found")
 							  ));
 	}
@@ -143,7 +141,6 @@ class AemOutputServicePclGenerationTest {
 		// Make sure we can write and then read everything
 		
 		@Test
-		@Disabled
 		void testContextReaderWriter_populatedValues() {
 			var contentRoot = PathOrUrl.from("/foo/bar");
 			var local = Locale.CANADA_FRENCH;
@@ -179,7 +176,6 @@ class AemOutputServicePclGenerationTest {
 			}
 		
 		@Test
-		@Disabled
 		void testContextReaderWriter_unpopulatedValues() {
 			Context context = AemOutputServicePclGenerationContext.contextWriter()
 					.build();
@@ -192,14 +188,13 @@ class AemOutputServicePclGenerationTest {
 					()->assertTrue(reader.paginationOverride().isEmpty(),"paginationOverride is expected to be empty but is nott empty"),
 					()->assertTrue(reader.locale().isEmpty(),"locale is expected to be empty but is not empty"),
 					()->assertTrue(reader.debugDirectory().isEmpty(),"debugDirectory is expected to be empty but is not empty"),
-					()->assertEquals(PrintConfig.Generic_PS_L3 , reader.printConfig().orElseThrow(), "PrintConfig is not the default"),
+					()->assertEquals(PrintConfig.GenericColor_PCL_5c , reader.printConfig().orElseThrow(), "PrintConfig is not the default"),
 					()->assertTrue(reader.xci().isEmpty(),"xci document is expected to be empty but is not empty")
 					);
 		}
 		
 		// Test the convenience setters that convert to PathOrUrl
 		@Test
-		@Disabled
 		void testContextReaderWriter_convertedValues() throws Exception {
 			String filePrefix = "file:";
 			
