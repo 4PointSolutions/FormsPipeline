@@ -50,19 +50,13 @@ public class AemOutputServicePclGeneration  <D extends Context, T extends DataCh
 	
 	@Override
 	public PclOutputChunk<D> process(T dataChunk) {
-		ProcessingMetadataDetailBuilder pmdBuilder = ProcessingMetadataDetails.start(dataChunk.bytes().length,"AEM_CALL_OUTPUT_PCL","");
 		D dataContext = dataChunk.dataContext();
 		var myContext = new AemOutputServicePclGenerationContext.ContextReader(dataContext);
 		PathOrUrl template = myContext.template();
 		try {
 			Document result = myContext.transferAllSettings(outputService.generatePrintedOutput())
 											  .executeOn(template, dataChunk.asInputStream());
-			PclOutputChunk<D> pclOutputChunk = PclOutputChunk.createSimple(dataContext, result.getInputStream().readAllBytes());
-			ProcessingMetadataDetails pmd = pmdBuilder.finish(); //Put this into the context
-			if(logger.isDebugEnabled()) {
-				logger.info(String.format("AEM for Output PCL call completed time elapse %s", pmd.getFormattedElapsedTime()));	
-			}			
-			return pclOutputChunk;
+			return PclOutputChunk.createSimple(dataContext, result.getInputStream().readAllBytes());
 		} catch (IOException | OutputServiceException  e) {
 			throw new IllegalStateException("Error while generating PCL document from template (" + template.toString() + ").", e);
 		}
