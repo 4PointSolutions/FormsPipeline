@@ -43,6 +43,7 @@ import com.github.tomakehurst.wiremock.stubbing.StubMapping;
 class AemOutputServicePclGenerationTest {
 	
 	private static final String TEST_CHUNK_DATA_STRING = "<root>data bytes</root>";
+	private static final Path RESOURCES_DIR = Path.of("src", "test", "resources");
 
 	private class CustomDataChunk implements DataChunk<Context> {
 		private final SimpleChunk chunk;
@@ -66,7 +67,7 @@ class AemOutputServicePclGenerationTest {
 	
 	private AemOutputServicePclGeneration<Context, CustomDataChunk> underTest;
 	
-	private static final boolean WIREMOCK_RECORDING = true;
+	private static final boolean WIREMOCK_RECORDING = false;
 	
 	@BeforeEach
 	void setUp(WireMockRuntimeInfo wmRuntimeInfo) throws Exception {
@@ -97,10 +98,9 @@ class AemOutputServicePclGenerationTest {
 	}
 	
 	@Test
-	@Disabled
 	void testProcess() {
 		Context context = AemOutputServicePclGenerationContext.contextWriter()
-															  .template(Path.of("C:\\Users\\lien.ly\\git\\WLGore\\ReplacingOptio\\AEM\\Forms\\Invoice_A4.xdp"))
+															  .template(RESOURCES_DIR.resolve("sampleForms").resolve("SampleFormPcl.xdp").toAbsolutePath())
 															  .build();
 		
 		PclOutputChunk<Context> result = underTest.process(new CustomDataChunk(TEST_CHUNK_DATA_STRING, context));
