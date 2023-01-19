@@ -29,6 +29,8 @@ import com._4point.aem.formspipeline.api.DataChunk;
 import com._4point.aem.formspipeline.api.OutputGeneration;
 import com._4point.aem.formspipeline.chunks.PsOutputChunk;
 import com._4point.aem.formspipeline.contexts.MapContext;
+import com._4point.aem.formspipeline.utils.ProcessingMetadataDetails;
+import com._4point.aem.formspipeline.utils.ProcessingMetadataDetails.ProcessingMetadataDetailBuilder;
 import com.adobe.fd.output.api.PaginationOverride;
 
 import jakarta.ws.rs.client.Client;
@@ -71,13 +73,21 @@ public class AemOutputServicePsGeneration <D extends Context, T extends DataChun
 	
 	@Override
 	public PsOutputChunk<D> process(T dataChunk) {
+		logger.info("process PS file making AEM call");
+		ProcessingMetadataDetailBuilder pmdBuilder = ProcessingMetadataDetails.start(dataChunk.bytes().length,"AEM_CALL_OUTPUT_PS","");
 		D dataContext = dataChunk.dataContext();
 		var myContext = new AemOutputServicePsGenerationContext.ContextReader(dataContext);
 		PathOrUrl template = myContext.template();
 		try {
 			Document result = myContext.transferAllSettings(outputService.generatePrintedOutput())
 											  .executeOn(template, dataChunk.asInputStream());
-			return PsOutputChunk.createSimple(dataContext, result.getInputStream().readAllBytes());
+						
+			PsOutputChunk<D> psOutputChunk = PsOutputChunk.createSimple(dataContext, result.getInputStream().readAllBytes());
+			ProcessingMetadataDetails pmd = pmdBuilder.finish(); //Put this into the context
+			if(logger.isDebugEnabled()) {
+				logger.info(String.format("AEM for Output PS call completed time elapse %s", pmd.getFormattedElapsedTime()));	
+			}			
+			return psOutputChunk;
 		} catch (IOException | OutputServiceException  e) {
 			throw new IllegalStateException("Error while generating PS document from template (" + template.toString() + ").", e);
 		}
