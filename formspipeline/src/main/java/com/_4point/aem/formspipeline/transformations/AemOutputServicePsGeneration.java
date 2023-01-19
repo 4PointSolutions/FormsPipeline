@@ -118,7 +118,7 @@ public class AemOutputServicePsGeneration <D extends Context, T extends DataChun
 					return Optional.ofNullable(PrintConfig.Generic_PS_L3);
 				}
 				return context.get(PRINT_CONFIG, PrintConfig.class); }
-			public Optional<Document> xci()	 							{ return context.get(PRINT_CONFIG, Document.class); }
+			public Optional<Document> xci()	 							{ return context.get(DOCUMENT_XCI, Document.class); }
 			public PathOrUrl template() 								{ return context.get(TEMPLATE, PathOrUrl.class)
 																						.orElseThrow(()->new IllegalArgumentException("Template parameter (" + TEMPLATE + ") not found.")); }
 			
@@ -156,6 +156,7 @@ public class AemOutputServicePsGeneration <D extends Context, T extends DataChun
 			public ContextWriter debugDirectory(Path value)						{ builder.put(DEBUG_DIRECTORY , value); return this; }
 			public ContextWriter paginationOverride(PaginationOverride value)	{ builder.put(PAGINATION_OVERRIDE , value); return this; }
 			public ContextWriter printConfig(PrintConfig value)					{ builder.put(PRINT_CONFIG , value); return this; }
+			public ContextWriter xci(Document value)							{ builder.put(DOCUMENT_XCI , value); return this; }
 						
 			public ContextWriter template(PathOrUrl value) 						{ builder.put(TEMPLATE , value); return this;}
 			public ContextWriter template(String value) 						{ template(PathOrUrl.from(value)); return this;}

@@ -23,6 +23,7 @@ import org.junit.jupiter.api.Test;
 
 import com._4point.aem.fluentforms.api.PathOrUrl;
 import com._4point.aem.fluentforms.api.output.PrintConfig;
+import com._4point.aem.fluentforms.impl.SimpleDocumentFactoryImpl;
 import com._4point.aem.formspipeline.api.Context;
 import com._4point.aem.formspipeline.api.DataChunk;
 import com._4point.aem.formspipeline.chunks.PsOutputChunk;
@@ -146,6 +147,7 @@ class AemOutputServicePsGenerationTest {
 			var paginationOverride = PaginationOverride.duplexLongEdge;
 			var printConfig = PrintConfig.DPL300;
 			var template = PathOrUrl.from("SomeXdp.xdp");
+			var xciDocument = SimpleDocumentFactoryImpl.getFactory().create("TestData".getBytes());
 
 			Context context = AemOutputServicePsGenerationContext.contextWriter()
 					.contentRoot(contentRoot)
@@ -155,6 +157,7 @@ class AemOutputServicePsGenerationTest {
 					.paginationOverride(paginationOverride)
 					.printConfig(printConfig)
 					.template(template)
+					.xci(xciDocument)
 					.build();
 			
 			var reader = AemOutputServicePsGenerationContext.contextReader(context);
@@ -165,7 +168,8 @@ class AemOutputServicePsGenerationTest {
 					()->assertEquals(debugDirectory, reader.debugDirectory().orElseThrow()),
 					()->assertEquals(paginationOverride, reader.paginationOverride().orElseThrow()),
 					()->assertEquals(printConfig, reader.printConfig().orElseThrow()),
-					()->assertEquals(template, reader.template())
+					()->assertEquals(template, reader.template()),
+					()->assertEquals(xciDocument, reader.xci().orElseThrow())
 					);			
 			}
 		
@@ -182,7 +186,8 @@ class AemOutputServicePsGenerationTest {
 					()->assertTrue(reader.paginationOverride().isEmpty(),"paginationOverride is expected to be empty but is nott empty"),
 					()->assertTrue(reader.locale().isEmpty(),"locale is expected to be empty but is not empty"),
 					()->assertTrue(reader.debugDirectory().isEmpty(),"debugDirectory is expected to be empty but is not empty"),
-					()->assertEquals(PrintConfig.Generic_PS_L3 , reader.printConfig().orElseThrow(), "PrintConfig is not the default")  
+					()->assertEquals(PrintConfig.Generic_PS_L3 , reader.printConfig().orElseThrow(), "PrintConfig is not the default"),
+					()->assertTrue(reader.xci().isEmpty(), "XCI Document is not empty")  
 					);
 		}
 		
@@ -200,7 +205,8 @@ class AemOutputServicePsGenerationTest {
 			PathOrUrl templatePath = PathOrUrl.from("SomeXdp.xdp");
 			
 			var contentRoot = PathOrUrl.from(contentRootStr);
-			var template = PathOrUrl.from(templateStr);
+			var template = PathOrUrl.from(templateStr);			
+			var xciDocument = SimpleDocumentFactoryImpl.getFactory().create("TestData".getBytes());
 				
 			Context contextStr = AemOutputServicePsGenerationContext.contextWriter()
 					.contentRoot(contentRootStr)
