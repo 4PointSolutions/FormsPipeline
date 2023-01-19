@@ -73,7 +73,6 @@ public class AemOutputServicePsGeneration <D extends Context, T extends DataChun
 	
 	@Override
 	public PsOutputChunk<D> process(T dataChunk) {
-		logger.info("process PS file making AEM call");
 		ProcessingMetadataDetailBuilder pmdBuilder = ProcessingMetadataDetails.start(dataChunk.bytes().length,"AEM_CALL_OUTPUT_PS","");
 		D dataContext = dataChunk.dataContext();
 		var myContext = new AemOutputServicePsGenerationContext.ContextReader(dataContext);

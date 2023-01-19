@@ -29,6 +29,8 @@ import com._4point.aem.formspipeline.api.DataChunk;
 import com._4point.aem.formspipeline.api.OutputGeneration;
 import com._4point.aem.formspipeline.chunks.PdfOutputChunk;
 import com._4point.aem.formspipeline.contexts.MapContext;
+import com._4point.aem.formspipeline.utils.ProcessingMetadataDetails;
+import com._4point.aem.formspipeline.utils.ProcessingMetadataDetails.ProcessingMetadataDetailBuilder;
 import com.adobe.fd.output.api.AcrobatVersion;
 
 /**
@@ -65,6 +67,7 @@ public class AemOutputServicePdfGeneration<D extends Context, T extends DataChun
 
 	@Override
 	public PdfOutputChunk<D> process(T dataChunk) {
+		ProcessingMetadataDetailBuilder pmdBuilder = ProcessingMetadataDetails.start(dataChunk.bytes().length,"AEM_CALL_OUTPUT_PDF","");
 		D dataContext = dataChunk.dataContext();
 		var myContext = new AemOutputServicePdfGenerationContext.ContextReader(dataContext);
 		PathOrUrl template = myContext.template();
@@ -72,8 +75,12 @@ public class AemOutputServicePdfGeneration<D extends Context, T extends DataChun
 			Document pdfResult = myContext.transferAllSettings(outputService.generatePDFOutput())
 										  .executeOn(template, dataChunk.asInputStream());
 			
-			
-			return PdfOutputChunk.createSimple(dataContext, pdfResult.getInputStream().readAllBytes());
+			PdfOutputChunk<D> pdfOutputChunk = PdfOutputChunk.createSimple(dataContext, pdfResult.getInputStream().readAllBytes());
+			ProcessingMetadataDetails pmd = pmdBuilder.finish(); //Put this into the context
+			if(logger.isDebugEnabled()) {
+				logger.info(String.format("AEM for Output PDF call completed time elapse %s", pmd.getFormattedElapsedTime()));	
+			}			
+			return pdfOutputChunk;
 		} catch (IOException | OutputServiceException e) {
 			throw new IllegalStateException("Error while generating PDF from template (" + template.toString() + ").", e);
 		}
