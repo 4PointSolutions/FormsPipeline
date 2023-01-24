@@ -1,9 +1,11 @@
 package com._4point.aem.formspipeline.api;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
 import com._4point.aem.formspipeline.contexts.AggregateContext;
+import com._4point.aem.formspipeline.contexts.NamespacedContext;
 
 /**
  * Contexts are immutable collections of name/value pairs.  They are used to pass information between steps in a forms pipeline.
@@ -86,6 +88,34 @@ public interface Context {
 	 */
 	default Context incorporate(List<Context> contexts) {
 		return AggregateContext.aggregate(contexts, this);
+	}
+	
+	/**
+	 * Incorporates (combines) this context with one or more other contexts that will get namespaced to the provided namespace.
+	 * If the contexts have entries in common then contexts earlier in the argument list have precedence over later ones.
+	 * All contexts provided have precedence over this one.
+	 * 
+	 * @param namespace
+	 * @param contexts
+	 * @return
+	 */
+	default Context incorporate(String namespace, Context... contexts) {
+		List<Context> namespacedContexts = Arrays.stream(contexts).map(c->new NamespacedContext(namespace, c)).map(Context.class::cast).toList();
+		return AggregateContext.aggregate(namespacedContexts, this);
+	}
+	
+	/**
+	 * Incorporates (combines) this context with one or more other contexts that will get namespaced to the provided namespace.
+	 * If the contexts have entries in common then contexts earlier in the list have precedence over later ones.  
+	 * All contexts in the list have precedence over this one.
+	 * 
+	 * @param namespace
+	 * @param contexts
+	 * @return
+	 */
+	default Context incorporate(String namespace, List<Context> contexts) {
+		List<Context> namespacedContexts = contexts.stream().map(c->new NamespacedContext(namespace, c)).map(Context.class::cast).toList();
+		return AggregateContext.aggregate(namespacedContexts, this);
 	}
 	
 	public static interface ContextBuilder {
