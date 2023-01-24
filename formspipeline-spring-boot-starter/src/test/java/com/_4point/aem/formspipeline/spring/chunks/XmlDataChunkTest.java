@@ -55,7 +55,7 @@ class XmlDataChunkTest {
     	InputStream xmlStream = new ByteArrayInputStream(fileContent);
     	XmlDataContext underTest = XmlDataChunk.XmlDataContext.initializeXmlDoc(xmlStream);
     	Optional<String> actualValue = underTest.getString(TestHelper.NOTFOUND_XPATH_EXP_FOR_SIMPLE_XML);
-    	assertEquals("",actualValue.orElseThrow());   
+    	assertTrue(actualValue.isEmpty());   
     }
         
 

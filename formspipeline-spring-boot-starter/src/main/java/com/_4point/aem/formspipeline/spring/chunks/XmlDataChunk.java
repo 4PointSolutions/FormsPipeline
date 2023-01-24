@@ -13,8 +13,6 @@ import javax.xml.xpath.XPathExpression;
 import javax.xml.xpath.XPathExpressionException;
 import javax.xml.xpath.XPathFactory;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
@@ -71,24 +69,24 @@ public class XmlDataChunk implements DataChunk<XmlDataContext> {
 	
 		@Override
 		public Optional<String> getString(String xpath) {			
-			String value = ""; 
 			try {
 				NodeList nodes = getNodeListByXpath(xpath);	        
 		        if (nodes.getLength() > 1) {
 		        	//Multiple matches for the same xpath (i.e. repeated sections)9i
-		        	throw new IllegalArgumentException(String.format("Failed to parse xml path %s.", xpath));
+		        	throw new IllegalArgumentException(String.format("Failed to parse xml path %s to a single entry (Found %d entries).", xpath, nodes.getLength()));
 		        }
 		        
-		        for (int i = 0; i < nodes.getLength(); i++) {
-		        	Node node = nodes.item(i);
+		        if (nodes.getLength() == 1) {	// If it's exactly one result, then that's what we're looking for.
+		        	Node node = nodes.item(0);
 		        	if (node.getNodeType() == Node.ELEMENT_NODE) {
-	        			value = ((Element)node).getTextContent();	
+	        			return Optional.of(((Element)node).getTextContent());	
 		        	}	            
 		        }
+		        
+		        return Optional.empty();	 
 			} catch (XPathExpressionException e) {			
 				throw new IllegalArgumentException(String.format("Failed to parse xml path %s. Error message: %s", xpath, e.getMessage()),e);
 			} 		
-			return Optional.of(value);	 
 		}
 
 		private NodeList getNodeListByXpath(String xpath) throws XPathExpressionException {
