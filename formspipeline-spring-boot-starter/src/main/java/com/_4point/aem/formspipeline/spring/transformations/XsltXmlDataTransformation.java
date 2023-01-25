@@ -47,7 +47,7 @@ public class XsltXmlDataTransformation implements DataTransformationOneToOne<Xml
 			//Add correlation ID, processing time, size of dataChunk, which transformer is used
 			ByteArrayOutputStream output = new ByteArrayOutputStream();
 			transformer.transform(new StreamSource(dataChunk.asInputStream()), new StreamResult(output));
-			return XmlDataChunk.create(output.toByteArray());
+			return XmlDataChunk.create(output.toByteArray(), dataChunk.dataContext());	// Include previous context in this one.
 		} catch (TransformerException e) {
 			throw new XmlTransformationException(e);
 		}

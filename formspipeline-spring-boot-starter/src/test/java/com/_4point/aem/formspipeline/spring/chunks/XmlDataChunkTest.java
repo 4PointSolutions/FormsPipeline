@@ -13,6 +13,7 @@ import java.util.Optional;
 
 import org.junit.jupiter.api.Test;
 
+import com._4point.aem.formspipeline.api.Context;
 import com._4point.aem.formspipeline.spring.chunks.XmlDataChunk.XmlDataContext;
 import com._4point.aem.formspipeline.spring.chunks.XmlDataChunk.XmlDataContextImpl;
 import com._4point.aem.formspipeline.spring.chunks.XmlDataChunk.XmlDataException;
@@ -77,12 +78,30 @@ class XmlDataChunkTest {
     void testGetString_simpleXML_returnAttribute() throws Exception{
     	String xpath = "/laptops/laptop[1]/@name";
     	byte[] fileContent = TestHelper.getFileBytesFromResource(TestHelper.SIMPLE_XML_DATA_FILE);
-    	InputStream xmlStream = new ByteArrayInputStream(fileContent);
 
     	String EXPECTED_VALUE = "Lenonvo";
 
-    	XmlDataContextImpl underTest = XmlDataChunk.XmlDataContextImpl.initializeXmlDoc(xmlStream);
+    	XmlDataContext underTest = XmlDataChunk.create(fileContent).dataContext();
         Optional<String> actualValue = underTest.getString(xpath);
+    	assertEquals(EXPECTED_VALUE,actualValue.orElseThrow());   	
+    }
+    
+    @Test
+    void testGetString_simpleXML_returnDataFromPreviousContext() throws Exception{
+       	String prevKey = "some_key_value";
+       	String EXPECTED_VALUE = "some_value";
+       	Context prevContext = new Context() {	// Simple implementation of Context that has only one value in it.
+			@SuppressWarnings("unchecked")
+			public <T> Optional<T> get(String key, Class<T> target) {
+				return String.class.equals(target) && prevKey.equals(key) ? Optional.of((T)EXPECTED_VALUE) : Optional.empty();
+			}
+       		
+       	};
+    	byte[] fileContent = TestHelper.getFileBytesFromResource(TestHelper.SIMPLE_XML_DATA_FILE);
+
+    	XmlDataContext underTest = XmlDataChunk.create(fileContent, prevContext).dataContext();
+        Optional<String> actualValue = underTest.getString(prevKey);
+        
     	assertEquals(EXPECTED_VALUE,actualValue.orElseThrow());   	
     }
     

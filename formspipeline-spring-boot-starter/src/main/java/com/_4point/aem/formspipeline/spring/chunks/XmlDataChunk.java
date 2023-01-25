@@ -29,8 +29,25 @@ public interface XmlDataChunk extends DataChunk<XmlDataChunk.XmlDataContext>{
 
 	XmlDataContext dataContext();
 
-	public static XmlDataChunk create(byte[] pXmlBytes) { return new XmlDataChunkImpl(pXmlBytes); }
+	/**
+	 * Create a new XmlDataChunk from the xmlBytes parameter
+	 * 
+	 * @param xmlBytes
+	 * @return
+	 */
+	public static XmlDataChunk create(byte[] xmlBytes) { return new XmlDataChunkImpl(xmlBytes); }
 	
+	/**
+	 * Create a new XmlDataChunk from the xmlBytes parameter and a context.  The xmlDataContext resulting from
+	 * reading the xmlBytes is combined with the prevContext parameter.  New entries from the xmlBytes take
+	 * precedence over entries in the prevContext.
+	 * 
+	 * @param xmlBytes
+	 * @param prevContext
+	 * @return
+	 */
+	public static XmlDataChunk create(byte[] xmlBytes, Context prevContext) { return new XmlDataChunkImpl(xmlBytes, prevContext); }
+
 	public interface XmlDataContext extends Context {
 		public Document getXmlDoc();
 		
@@ -38,10 +55,17 @@ public interface XmlDataChunk extends DataChunk<XmlDataChunk.XmlDataContext>{
 	}
 
 	public class XmlDataChunkImpl implements XmlDataChunk {	
-		private final byte[] xmlBytes;  
+		private final byte[] xmlBytes;
+		private final Context prevContext;
 		
 		public XmlDataChunkImpl(byte[] pXmlBytes) {
-			xmlBytes = pXmlBytes;
+			this.xmlBytes = pXmlBytes;
+			this.prevContext = null;
+		}
+		
+		public XmlDataChunkImpl(byte[] pXmlBytes, Context prevContext) {
+			this.xmlBytes = pXmlBytes;
+			this.prevContext = prevContext;
 		}
 		
 		@Override
@@ -50,8 +74,9 @@ public interface XmlDataChunk extends DataChunk<XmlDataChunk.XmlDataContext>{
 		}
 		
 		@Override
-		public XmlDataContextImpl dataContext() {
-			return XmlDataContextImpl.initializeXmlDoc(this.asInputStream());
+		public XmlDataContext dataContext() {
+			XmlDataContextImpl newContext = XmlDataContextImpl.initializeXmlDoc(this.asInputStream());
+			return prevContext == null ? newContext : new XmlDataContextWithPrevContext(newContext, prevContext);
 		}
 	}
 
@@ -59,7 +84,7 @@ public interface XmlDataChunk extends DataChunk<XmlDataChunk.XmlDataContext>{
 		private final Document xmlDoc;
 		private final XPath xpathFactory;
 		
-		XmlDataContextImpl(Document pXmlDoc, XPath pXPathF) {
+		private XmlDataContextImpl(Document pXmlDoc, XPath pXPathF) {
 			xpathFactory = pXPathF;
 			xmlDoc = pXmlDoc;
 		}
@@ -118,6 +143,22 @@ public interface XmlDataChunk extends DataChunk<XmlDataChunk.XmlDataContext>{
 			}
 			return Optional.empty();
 		}
+	}
+
+	public static class XmlDataContextWithPrevContext implements XmlDataContext {
+		private final XmlDataContext xmlContext;
+		private final Context combinedContext;
+
+		public XmlDataContextWithPrevContext(XmlDataContext xmlContext, Context prevContext) {
+			this.xmlContext = xmlContext;
+			this.combinedContext = xmlContext.incorporate(prevContext);
+		}
+
+		@Override
+		public <T> Optional<T> get(String key, Class<T> target) { return combinedContext.get(key, target); }
+
+		@Override
+		public Document getXmlDoc() { return xmlContext.getXmlDoc(); }
 	}
 
 	@SuppressWarnings("serial")
