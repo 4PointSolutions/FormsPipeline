@@ -74,6 +74,19 @@ class XmlDataChunkTest {
     }
     
     @Test
+    void testGetString_simpleXML_returnAttribute() throws Exception{
+    	String xpath = "/laptops/laptop[1]/@name";
+    	byte[] fileContent = TestHelper.getFileBytesFromResource(TestHelper.SIMPLE_XML_DATA_FILE);
+    	InputStream xmlStream = new ByteArrayInputStream(fileContent);
+
+    	String EXPECTED_VALUE = "Lenonvo";
+
+    	XmlDataContextImpl underTest = XmlDataChunk.XmlDataContextImpl.initializeXmlDoc(xmlStream);
+        Optional<String> actualValue = underTest.getString(xpath);
+    	assertEquals(EXPECTED_VALUE,actualValue.orElseThrow());   	
+    }
+    
+    @Test
     void testGet_simpleXML_FoundRepeatItemUsingAttribute_returnValue() {
     	String xpath = TestHelper.VALID_XPATH_FOR_SIMPLE_XML;
     	byte[] fileContent = TestHelper.getFileBytesFromResource(TestHelper.SIMPLE_XML_DATA_FILE);

@@ -13,6 +13,7 @@ import javax.xml.xpath.XPathExpression;
 import javax.xml.xpath.XPathExpressionException;
 import javax.xml.xpath.XPathFactory;
 
+import org.w3c.dom.Attr;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
@@ -93,7 +94,9 @@ public interface XmlDataChunk extends DataChunk<XmlDataChunk.XmlDataContext>{
 		        	Node node = nodes.item(0);
 		        	if (node.getNodeType() == Node.ELEMENT_NODE) {
 	        			return Optional.of(((Element)node).getTextContent());	
-		        	}	            
+		        	} else if (node.getNodeType() == Node.ATTRIBUTE_NODE) {
+		        		return Optional.of(((Attr)node).getTextContent());
+		        	}
 		        }
 		        
 		        return Optional.empty();	 
