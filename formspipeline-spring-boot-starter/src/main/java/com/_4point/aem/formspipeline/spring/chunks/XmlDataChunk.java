@@ -151,7 +151,7 @@ public interface XmlDataChunk extends DataChunk<XmlDataChunk.XmlDataContext>{
 
 		public XmlDataContextWithPrevContext(XmlDataContext xmlContext, Context prevContext) {
 			this.xmlContext = xmlContext;
-			this.combinedContext = xmlContext.incorporate(prevContext);
+			this.combinedContext = prevContext.incorporate(xmlContext);
 		}
 
 		@Override

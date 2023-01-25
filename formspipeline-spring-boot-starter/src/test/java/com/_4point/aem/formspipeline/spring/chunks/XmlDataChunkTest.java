@@ -95,13 +95,30 @@ class XmlDataChunkTest {
 			public <T> Optional<T> get(String key, Class<T> target) {
 				return String.class.equals(target) && prevKey.equals(key) ? Optional.of((T)EXPECTED_VALUE) : Optional.empty();
 			}
-       		
        	};
     	byte[] fileContent = TestHelper.getFileBytesFromResource(TestHelper.SIMPLE_XML_DATA_FILE);
 
     	XmlDataContext underTest = XmlDataChunk.create(fileContent, prevContext).dataContext();
         Optional<String> actualValue = underTest.getString(prevKey);
         
+    	assertEquals(EXPECTED_VALUE,actualValue.orElseThrow());   	
+    }
+    
+    @Test
+    void testGetString_simpleXML_returnCorrectAttribute() throws Exception{
+    	String xpath = "/laptops/laptop[1]/@name";
+    	byte[] fileContent = TestHelper.getFileBytesFromResource(TestHelper.SIMPLE_XML_DATA_FILE);
+    	String EXPECTED_VALUE = "Lenonvo";
+    	String NOT_EXPECTED_VALUE = "NotLenonvo";
+       	Context prevContext = new Context() {	// Simple implementation of Context that has only one value in it.
+			@SuppressWarnings("unchecked")
+			public <T> Optional<T> get(String key, Class<T> target) {
+				return String.class.equals(target) && xpath.equals(key) ? Optional.of((T)NOT_EXPECTED_VALUE) : Optional.empty();
+			}
+       	};
+
+    	XmlDataContext underTest = XmlDataChunk.create(fileContent, prevContext).dataContext();
+        Optional<String> actualValue = underTest.getString(xpath);
     	assertEquals(EXPECTED_VALUE,actualValue.orElseThrow());   	
     }
     
