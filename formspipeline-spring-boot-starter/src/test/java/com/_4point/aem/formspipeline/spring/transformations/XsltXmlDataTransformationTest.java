@@ -96,7 +96,7 @@ class XsltXmlDataTransformationTest {
     	Mockito.doThrow(TransformerException.class)
     			.when(mockTransformer)    			
     			.transform(any(Source.class), any(Result.class));    	    	
-    	XmlDataChunk xmlChunk = new XmlDataChunk(xmlBytes);
+    	XmlDataChunk xmlChunk = XmlDataChunk.create(xmlBytes);
     	    	
     	XsltXmlDataTransformation underTest = new XsltXmlDataTransformation(xsltBytes,mockTransformerFactory);
     	assertThrows(XmlTransformationException.class, ()->underTest.process(xmlChunk));
@@ -105,7 +105,7 @@ class XsltXmlDataTransformationTest {
 	@Test
 	void testProcess_success() {
 		XsltXmlDataTransformation underTest = new XsltXmlDataTransformation(xsltBytes);		
-		XmlDataChunk data = underTest.process(new XmlDataChunk(xmlBytes));
+		XmlDataChunk data = underTest.process(XmlDataChunk.create(xmlBytes));
 		assertThat(Input.fromByteArray(data.bytes()), isIdenticalTo(Input.fromString(EXPECTED_ELEMENT_NAME_CHANGED_XML)));
 	}
 	
@@ -113,7 +113,7 @@ class XsltXmlDataTransformationTest {
 	//xsl:perform-sort available in XSLT 2.0 and newer
 	void testProcess_xsltVersion20_Sorting_success() {
 		XsltXmlDataTransformation underTest2 = new XsltXmlDataTransformation(xsltBytesV21);		
-		XmlDataChunk data2 = underTest2.process(new XmlDataChunk(xmlBytes));
+		XmlDataChunk data2 = underTest2.process(XmlDataChunk.create(xmlBytes));
 		assertThat(Input.fromByteArray(data2.bytes()), isIdenticalTo(Input.fromString(EXPECTED_SORTED_XML)));
 	}
 	
@@ -121,7 +121,7 @@ class XsltXmlDataTransformationTest {
 	//function current-group() available in XSLT 2.0 and newer
 	void testProcess_xsltVersion20_Grouping_success() throws TransformerException {  			
 		XsltXmlDataTransformation underTest = new XsltXmlDataTransformation(xsltBytesV20);		
-		XmlDataChunk data = underTest.process(new XmlDataChunk(dataBytes20));
+		XmlDataChunk data = underTest.process(XmlDataChunk.create(dataBytes20));
 		
 		String s = new String(data.bytes(), StandardCharsets.UTF_8);
 		System.out.println("testProcess_xsltVersion31_success ... " +s);

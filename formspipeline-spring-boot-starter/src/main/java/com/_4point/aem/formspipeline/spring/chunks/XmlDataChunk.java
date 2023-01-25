@@ -21,31 +21,44 @@ import org.xml.sax.SAXException;
 
 import com._4point.aem.formspipeline.api.Context;
 import com._4point.aem.formspipeline.api.DataChunk;
-import com._4point.aem.formspipeline.spring.chunks.XmlDataChunk.XmlDataContext;
 
+public interface XmlDataChunk extends DataChunk<XmlDataChunk.XmlDataContext>{
 
-public class XmlDataChunk implements DataChunk<XmlDataContext> {	
-	private final byte[] xmlBytes;  
+	byte[] bytes();
+
+	XmlDataContext dataContext();
+
+	public static XmlDataChunk create(byte[] pXmlBytes) { return new XmlDataChunkImpl(pXmlBytes); }
 	
-	public XmlDataChunk(byte[] pXmlBytes) {
-		xmlBytes = pXmlBytes;
-	}
-	
-	@Override
-	public byte[] bytes() {
-		return xmlBytes;		
-	}
-	
-	@Override
-	public XmlDataContext dataContext() {
-		return XmlDataContext.initializeXmlDoc(this.asInputStream());
-	}
+	public interface XmlDataContext extends Context {
+		public Document getXmlDoc();
 		
-	public static class XmlDataContext implements Context {
+		public static XmlDataContext create(Document pXmlDoc, XPath pXPathF) { return new XmlDataContextImpl(pXmlDoc, pXPathF); }
+	}
+
+	public class XmlDataChunkImpl implements XmlDataChunk {	
+		private final byte[] xmlBytes;  
+		
+		public XmlDataChunkImpl(byte[] pXmlBytes) {
+			xmlBytes = pXmlBytes;
+		}
+		
+		@Override
+		public byte[] bytes() {
+			return xmlBytes;		
+		}
+		
+		@Override
+		public XmlDataContextImpl dataContext() {
+			return XmlDataContextImpl.initializeXmlDoc(this.asInputStream());
+		}
+	}
+
+	public static class XmlDataContextImpl implements XmlDataContext {
 		private final Document xmlDoc;
 		private final XPath xpathFactory;
 		
-		XmlDataContext(Document pXmlDoc, XPath pXPathF) {
+		XmlDataContextImpl(Document pXmlDoc, XPath pXPathF) {
 			xpathFactory = pXPathF;
 			xmlDoc = pXmlDoc;
 		}
@@ -54,14 +67,14 @@ public class XmlDataChunk implements DataChunk<XmlDataContext> {
 			return xmlDoc;
 		}
 		
-		public static XmlDataContext initializeXmlDoc(InputStream inputStream) throws XmlDataException {
+		public static XmlDataContextImpl initializeXmlDoc(InputStream inputStream) throws XmlDataException {
 			try {
 				XPath xPath = XPathFactory.newInstance().newXPath();
 				DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
 			    DocumentBuilder builder = factory.newDocumentBuilder();
 			    Document doc = builder.parse(inputStream);
 			    doc.getDocumentElement().normalize();
-				return new XmlDataContext(doc,xPath);
+				return new XmlDataContextImpl(doc,xPath);
 			} catch (ParserConfigurationException | SAXException | IOException e) {
 				throw new XmlDataException(String.format("Failed to create XmlDataContext ... %s", e.getMessage()),e);
 			} 
@@ -103,7 +116,7 @@ public class XmlDataChunk implements DataChunk<XmlDataContext> {
 			return Optional.empty();
 		}
 	}
-		
+
 	@SuppressWarnings("serial")
 	public static class XmlDataException extends RuntimeException {
 
@@ -123,6 +136,4 @@ public class XmlDataChunk implements DataChunk<XmlDataContext> {
 			super(cause);
 		}
 	}
-
-
 }
