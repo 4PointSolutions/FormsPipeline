@@ -2,8 +2,6 @@ package com._4point.aem.formspipeline.spring.transformations;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
-import java.time.Duration;
-import java.time.Instant;
 
 import javax.xml.XMLConstants;
 import javax.xml.transform.Transformer;
@@ -11,9 +9,6 @@ import javax.xml.transform.TransformerConfigurationException;
 import javax.xml.transform.TransformerException;
 import javax.xml.transform.stream.StreamResult;
 import javax.xml.transform.stream.StreamSource;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import com._4point.aem.formspipeline.api.DataTransformation.DataTransformationOneToOne;
 import com._4point.aem.formspipeline.spring.chunks.XmlDataChunk;
@@ -29,8 +24,6 @@ import net.sf.saxon.TransformerFactoryImpl;
  *
  */
 public class XsltXmlDataTransformation implements DataTransformationOneToOne<XmlDataChunk, XmlDataChunk> {
-	
-	private static final Logger logger = LoggerFactory.getLogger(XsltXmlDataTransformation.class);
 	
 	private final Transformer transformer;
 	
@@ -48,17 +41,6 @@ public class XsltXmlDataTransformation implements DataTransformationOneToOne<Xml
 		this(xsltBytes, new TransformerFactoryImpl());
 	}
 	
-	public XmlDataChunk process(XmlDataChunk dataChunk, String correlationId) {
-		Instant start = Instant.now();
-		XmlDataChunk xmlDataChunk = process(dataChunk);
-		Instant finish = Instant.now();
-		long timeElapsed = Duration.between(start, finish).toMillis();
-		if(logger.isDebugEnabled()) {
-			logger.info(String.format("Transformation for correlationId(%s) Elapse time %s.  Transformation", correlationId, timeElapsed));	
-		}		
-		return xmlDataChunk;
-	}
-
 	@Override
 	public XmlDataChunk process(XmlDataChunk dataChunk) {
 		try {
