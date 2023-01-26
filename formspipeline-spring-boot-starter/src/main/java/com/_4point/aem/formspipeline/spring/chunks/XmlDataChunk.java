@@ -106,16 +106,16 @@ public interface XmlDataChunk extends DataChunk<XmlDataChunk.XmlDataContext>{
 			} 
 		}
 	
-		@Override
-		public Optional<String> getString(String xpath) {			
+		private Optional<String> internalGetString(String xpath) {			
 			try {
 				NodeList nodes = getNodeListByXpath(xpath);	        
-		        if (nodes.getLength() > 1) {
+		        int length = nodes.getLength();
+				if (length > 1) {
 		        	//Multiple matches for the same xpath (i.e. repeated sections)9i
-		        	throw new IllegalArgumentException(String.format("Failed to parse xml path %s to a single entry (Found %d entries).", xpath, nodes.getLength()));
+		        	throw new IllegalArgumentException(String.format("Failed to parse xml path %s to a single entry (Found %d entries).", xpath, length));
 		        }
 		        
-		        if (nodes.getLength() == 1) {	// If it's exactly one result, then that's what we're looking for.
+		        if (length == 1) {	// If it's exactly one result, then that's what we're looking for.
 		        	Node node = nodes.item(0);
 		        	if (node.getNodeType() == Node.ELEMENT_NODE) {
 	        			return Optional.of(((Element)node).getTextContent());	
@@ -139,7 +139,7 @@ public interface XmlDataChunk extends DataChunk<XmlDataChunk.XmlDataContext>{
 		@Override
 		public <T> Optional<T> get(String key, Class<T> type) {
 			if (type.equals(String.class)) {
-				return (Optional<T>) getString(key);
+				return (Optional<T>) internalGetString(key);
 			}
 			return Optional.empty();
 		}
