@@ -18,24 +18,24 @@ import com._4point.aem.formspipeline.api.Result;
 import com._4point.aem.formspipeline.contexts.EmptyContext;
 import com._4point.aem.formspipeline.results.SimpleResult;
 
-public class FolderOutputDestination<T extends Context, U extends Context> implements OutputDestination<OutputChunk<T, U>, 
-															Result<T, U, ? extends Context>> {
+public class FolderOutputDestination<D extends Context, O extends Context> implements OutputDestination<OutputChunk<D, O>, 
+															Result<D, O, ? extends Context>> {
 	private static final Logger logger = LoggerFactory.getLogger(FolderOutputDestination.class);
 
 	private static final int RENAME_MAX_LIMIT = 1000;
 	private final Path destinationFolder;
-	private final BiFunction<T, U, Path> filenameFn;
+	private final BiFunction<D, O, Path> filenameFn;
 	private final UnaryOperator<Path> renameFn;
 	
 	public static final UnaryOperator<Path> DEFAULT_RENAME_FUNCTION = (a)-> Path.of("result");
 			
-	public FolderOutputDestination(Path destinationFolder, BiFunction<T, U, Path> filenameFn, UnaryOperator<Path> renameFn) {		
+	public FolderOutputDestination(Path destinationFolder, BiFunction<D, O, Path> filenameFn, UnaryOperator<Path> renameFn) {		
 		this.destinationFolder = destinationFolder;
 		this.filenameFn = filenameFn;
 		this.renameFn = renameFn; 
 	}
 	
-	public FolderOutputDestination(Path destinationFolder, BiFunction<T, U, Path> filenameFn) {		
+	public FolderOutputDestination(Path destinationFolder, BiFunction<D, O, Path> filenameFn) {		
 		this.destinationFolder = destinationFolder;
 		this.filenameFn = filenameFn;
 		this.renameFn = DEFAULT_RENAME_FUNCTION; 
@@ -59,7 +59,7 @@ public class FolderOutputDestination<T extends Context, U extends Context> imple
 	}
 	
 	//Intended to be used by the class itself and unit test
-	private Path getDestinationFolder(OutputChunk<T, U> outputChunk) {
+	private Path getDestinationFolder(OutputChunk<D, O> outputChunk) {
 		return destinationFolder.resolve(filenameFn.apply(outputChunk.dataContext(), outputChunk.outputContext()));
 	}	
 
@@ -105,7 +105,7 @@ public class FolderOutputDestination<T extends Context, U extends Context> imple
 	}
 
 	@Override
-	public Result<T, U, EmptyContext> process(OutputChunk<T, U> outputChunk) {
+	public Result<D, O, EmptyContext> process(OutputChunk<D, O> outputChunk) {
 		Path destination = getDestinationFolder(outputChunk);
 		try {
 			if(shouldRename(destination)) {
