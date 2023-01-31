@@ -6,7 +6,6 @@ import static org.hamcrest.Matchers.containsString;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import org.junit.jupiter.api.Tag;
@@ -24,14 +23,15 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import com._4point.aem.formspipeline.api.Context;
 import com._4point.aem.formspipeline.api.OutputChunk;
 import com._4point.aem.formspipeline.api.Result;
 import com._4point.aem.formspipeline.contexts.EmptyContext;
 
 @ExtendWith(MockitoExtension.class)
 class FolderOutputDestinationTest {
-    private String mockOutputString = "Test Bytes";
-	private byte[] mockOutputBytes = mockOutputString.getBytes(StandardCharsets.UTF_8); 
+    private static String mockOutputString = "Test Bytes";
+	private static byte[] mockOutputBytes = mockOutputString.getBytes(StandardCharsets.UTF_8); 
 	
 	@Mock private OutputChunk<EmptyContext, EmptyContext> mockOutputChunk;
 	
@@ -63,20 +63,6 @@ class FolderOutputDestinationTest {
 	}	
 	
 	//Helper Method
-	private void validateSuccessFileCreated(Path testFolder, Result<EmptyContext, EmptyContext, EmptyContext> result, String expectedFileName)
-			throws IOException {
-		final Path expectedFileRename = Path.of(expectedFileName);
-		Path expectedFile = testFolder.resolve(expectedFileRename);
-		assertTrue(Files.exists(expectedFile), "Expected file (" + expectedFile.toString() + ") to exist, but it didn't.");
-		assertEquals(expectedFileName,expectedFileRename.getFileName().toString());
-		assertEquals(mockOutputString, Files.readString(expectedFile));
-		
-		assertNull(result.dataContext());		// Should be null because the mock will not return anything
-		assertNull(result.outputContext());		// Should be null because the mock will not return anything
-		assertSame(EmptyContext.emptyInstance(), result.resultContext());
-	}
-	
-	//Helper Method
 	private void validateIndexOutOfBoundException(final FolderOutputDestination<EmptyContext, EmptyContext> underTest) {
 		//Rename function keeps setting file to same name therefore reaches limit
 		IndexOutOfBoundsException ex = assertThrows(IndexOutOfBoundsException.class, ()->underTest.process(mockOutputChunk));
@@ -92,13 +78,10 @@ class FolderOutputDestinationTest {
 		final Path filename = Path.of("foo.txt");
 		final Path fileRename = Path.of("foo2.txt");	
 			
-		Mockito.when(mockOutputChunk.bytes()).thenReturn(mockOutputBytes);
-		final FolderOutputDestination<EmptyContext, EmptyContext> underTest = new FolderOutputDestination<>(
-				testFolder, (a, b)->filename,(a)-> fileRename);
-		
-		Result<EmptyContext, EmptyContext, EmptyContext> result = underTest.process(mockOutputChunk);
-
-		validateSuccessFileCreated(testFolder, result, "foo.txt");
+		tester(testFolder).setFilename(filename)
+						  .setFileRename(fileRename)
+						  .callProcess()
+						  .validateSuccessFileCreated("foo.txt");
 	}
 	
 	@Test
@@ -106,34 +89,24 @@ class FolderOutputDestinationTest {
 	void testProcess_withRename_Success(@TempDir Path testFolder) throws Exception {
 		final Path filename = Path.of("foo.txt");
 		final Path fileRename = Path.of("foo2.txt");	
-		byte[] emptyBytes = "".getBytes(StandardCharsets.UTF_8); 
-		Mockito.when(mockOutputChunk.bytes()).thenReturn(mockOutputBytes);
-		final FolderOutputDestination<EmptyContext, EmptyContext> underTest = new FolderOutputDestination<>(
-				testFolder, (a, b)->filename,(a)-> fileRename);
 		
-		//Creates original file file so that rename call is triggered when process is called
-		Path fileDestination = testFolder.resolve(filename);
-		Files.write(fileDestination, emptyBytes, StandardOpenOption.WRITE,StandardOpenOption.CREATE_NEW);		
-		Result<EmptyContext, EmptyContext, EmptyContext> result = underTest.process(mockOutputChunk);
-				
-		validateSuccessFileCreated(testFolder, result, "foo2.txt");
+		tester(testFolder).setFilename(filename)
+						  .setFileRename(fileRename)
+						  .createFilename()	//Creates original file file so that rename call is triggered when process is called
+						  .callProcess()
+						  .validateSuccessFileCreated("foo2.txt");
 	}
 	
 	@Test
 	void testProcess_withRenameMissingExtension_Success(@TempDir Path testFolder) throws Exception {
 		final Path filename = Path.of("foo.txt");
 		final Path fileRename = Path.of("foo2");	
-		byte[] emptyBytes = "".getBytes(StandardCharsets.UTF_8); 
-		Mockito.when(mockOutputChunk.bytes()).thenReturn(mockOutputBytes);
-		final FolderOutputDestination<EmptyContext, EmptyContext> underTest = new FolderOutputDestination<>(
-				testFolder, (a, b)->filename,(a)-> fileRename);
 		
-		//Creates original file file so that rename call is triggered when process is called
-		Path fileDestination = testFolder.resolve(filename);
-		Files.write(fileDestination, emptyBytes, StandardOpenOption.WRITE,StandardOpenOption.CREATE_NEW);		
-		Result<EmptyContext, EmptyContext, EmptyContext> result = underTest.process(mockOutputChunk);
-				
-		validateSuccessFileCreated(testFolder, result, "foo2.txt");
+		tester(testFolder).setFilename(filename)
+						  .setFileRename(fileRename)
+						  .createFilename()	//Creates original file file so that rename call is triggered when process is called
+						  .callProcess()
+						  .validateSuccessFileCreated("foo2.txt");
 	}
 	
 	
@@ -142,15 +115,14 @@ class FolderOutputDestinationTest {
 	void testProcess_withMultipleRename_Success(@TempDir Path testFolder) throws Exception {
 		final Path filename = Path.of("foo.txt");
 		final Path fileRename = Path.of("foo2.txt");		
-		Mockito.when(mockOutputChunk.bytes()).thenReturn(mockOutputBytes);
-		final FolderOutputDestination<EmptyContext, EmptyContext> underTest = new FolderOutputDestination<>(
-				testFolder, (a, b)->filename,(a)-> fileRename);
 		
 		//Creates original file and renamed file so that rename call is triggered when process is called
 		writeFile(testFolder, filename, fileRename,999);		
-		Result<EmptyContext, EmptyContext, EmptyContext> result = underTest.process(mockOutputChunk);
 		
-		validateSuccessFileCreated(testFolder, result, "foo0999.txt");
+		tester(testFolder).setFilename(filename)
+						  .setFileRename(fileRename)
+						  .callProcess()
+						  .validateSuccessFileCreated("foo0999.txt");
 	}
 
 
@@ -174,13 +146,11 @@ class FolderOutputDestinationTest {
 	void testProcess_missingFileExtension_Success(@TempDir Path testFolder) throws Exception {
 		final Path filename = Path.of("foo");
 		final Path fileRename = Path.of("foo2.txt");		
-		Mockito.when(mockOutputChunk.bytes()).thenReturn(mockOutputBytes);
-		final FolderOutputDestination<EmptyContext, EmptyContext> underTest = new FolderOutputDestination<>(
-				testFolder, (a, b)->filename,(a)-> fileRename);
 		
-		Result<EmptyContext, EmptyContext, EmptyContext> result = underTest.process(mockOutputChunk);
-		
-		validateSuccessFileCreated(testFolder, result, "foo");
+		tester(testFolder).setFilename(filename)
+						  .setFileRename(fileRename)
+						  .callProcess()
+						  .validateSuccessFileCreated("foo");
 	}
 	
 	@Test
@@ -188,16 +158,12 @@ class FolderOutputDestinationTest {
 	void testProcess_differentFileExtension_Success(@TempDir Path testFolder) throws Exception {
 		final Path filename = Path.of("foo.xml");
 		final Path fileRename = Path.of("foo2.txt");		
-		Mockito.when(mockOutputChunk.bytes()).thenReturn(mockOutputBytes);
-		final FolderOutputDestination<EmptyContext, EmptyContext> underTest = new FolderOutputDestination<>(
-				testFolder, (a, b)->filename,(a)-> fileRename);
 		
-		//Creates a file with the same name so that rename call is triggered when process is called		
-		Path fileDestination = testFolder.resolve(filename);
-		Files.write(fileDestination, mockOutputChunk.bytes(), StandardOpenOption.WRITE,StandardOpenOption.CREATE_NEW);
-		Result<EmptyContext, EmptyContext, EmptyContext> result = underTest.process(mockOutputChunk);
-		
-		validateSuccessFileCreated(testFolder, result, "foo2.txt");
+		tester(testFolder).setFilename(filename)
+						  .setFileRename(fileRename) //Creates a file with the same name so that rename call is triggered when process is called
+						  .createFilename()
+						  .callProcess()
+						  .validateSuccessFileCreated("foo2.txt");
 	}
 	
 	@Test
@@ -216,12 +182,10 @@ class FolderOutputDestinationTest {
 	@Test
 	void testProcess_missingFilename_success(@TempDir Path testFolder) throws IOException {
 		final Path filename = Path.of("");	// Intentionally invalid filename
-		Mockito.when(mockOutputChunk.bytes()).thenReturn(mockOutputBytes);
-		final FolderOutputDestination<EmptyContext, EmptyContext> underTest = new FolderOutputDestination<>(
-				testFolder, (a, b)->filename);
-		
-		Result<EmptyContext, EmptyContext, EmptyContext> result = underTest.process(mockOutputChunk);
-		validateSuccessFileCreated(testFolder, result, "result");
+
+		tester(testFolder).setFilename(filename)
+						  .callProcess()
+						  .validateSuccessFileCreated("result");
 	}
 	
 	@Test
@@ -229,52 +193,106 @@ class FolderOutputDestinationTest {
 	void testProcess_missingFileExtensionWithRename_success(@TempDir Path testFolder) throws Exception {
 		final Path filename = Path.of("foo");
 		final Path fileRename = Path.of("foo2");	
-		Mockito.when(mockOutputChunk.bytes()).thenReturn(mockOutputBytes);
-		final FolderOutputDestination<EmptyContext, EmptyContext> underTest = new FolderOutputDestination<>(
-				testFolder, (a, b)->filename,(a)-> fileRename);
 		
-		//Creates a file with the same name so that rename call is triggered when process is called		
-		Path fileDestination = testFolder.resolve(filename);
-		Files.write(fileDestination, mockOutputChunk.bytes(), StandardOpenOption.WRITE,StandardOpenOption.CREATE_NEW);
-		fileDestination = testFolder.resolve(fileRename);
-		Files.write(fileDestination, mockOutputChunk.bytes(), StandardOpenOption.WRITE,StandardOpenOption.CREATE_NEW);
-		
-		Result<EmptyContext, EmptyContext, EmptyContext> result = underTest.process(mockOutputChunk);
-		validateSuccessFileCreated(testFolder, result, "foo0000");
+		tester(testFolder).setFilename(filename)
+					   	  .setFileRename(fileRename)
+					   	  .createFilename()
+					   	  .createRename()
+					   	  .callProcess()
+					   	  .validateSuccessFileCreated("foo0000");
 	}
 	
 	@Test
 	void testProcess_withDefaultRename_success(@TempDir Path testFolder) throws Exception {		
 		final Path filename = Path.of("foo.xml");	
-		Mockito.when(mockOutputChunk.bytes()).thenReturn(mockOutputBytes);
-		final FolderOutputDestination<EmptyContext, EmptyContext> underTest = new FolderOutputDestination<>(
-				testFolder, (a, b)->filename);
 				
-		//Creates a file with the same name so that rename call is triggered when process is called		
-		Path fileDestination = testFolder.resolve(filename);
-		Files.write(fileDestination, mockOutputChunk.bytes(), StandardOpenOption.WRITE,StandardOpenOption.CREATE_NEW);
-		Result<EmptyContext, EmptyContext, EmptyContext> result = underTest.process(mockOutputChunk);
-		
-		validateSuccessFileCreated(testFolder, result, "result.xml");
+		tester(testFolder).setFilename(filename)
+						  .createFilename()
+						  .callProcess()
+						  .validateSuccessFileCreated("result.xml");
 	}
 	
 	@Test
 	void testProcess_withDefaultRenameMultiple_success(@TempDir Path testFolder) throws Exception {		
 		final Path filename = Path.of("foo.txt");	
-		Mockito.when(mockOutputChunk.bytes()).thenReturn(mockOutputBytes);
-		final FolderOutputDestination<EmptyContext, EmptyContext> underTest = new FolderOutputDestination<>(
-				testFolder, (a, b)->filename);
-				
-		//Creates a file with the same name so that rename call is triggered when process is called		
-		Path fileDestination = testFolder.resolve(filename);
-		Files.write(fileDestination, mockOutputChunk.bytes(), StandardOpenOption.WRITE,StandardOpenOption.CREATE_NEW);
-		fileDestination = testFolder.resolve(Path.of("result.txt"));
-		Files.write(fileDestination, mockOutputChunk.bytes(), StandardOpenOption.WRITE,StandardOpenOption.CREATE_NEW);
 
-		Result<EmptyContext, EmptyContext, EmptyContext> result = underTest.process(mockOutputChunk);
-		
-		validateSuccessFileCreated(testFolder, result, "foo0000.txt");
+				
+		tester(testFolder).setFilename(filename)
+						  .createFilename()
+						  .createFile(Path.of("result.txt")) //Create a file with the same name so that rename call is triggered when process is called
+						  .callProcess()
+						  .validateSuccessFileCreated("foo0000.txt");
 	}
 	
+	private Tester tester(Path testFolder) { return new Tester(testFolder); }
+	
+	private class Tester {
+		private static final byte[] EMPTY_BYTES = "".getBytes(StandardCharsets.UTF_8);
+		private final Path testFolder;
+		private Path filename = null;
+		private Path fileRename = null;
+		
+		public Tester(Path testFolder) {
+			this.testFolder = testFolder;
+		}
 
+		public Tester setFilename(Path filename) {
+			this.filename = filename;
+			return this;
+		}
+
+		public Tester setFileRename(Path fileRename) {
+			this.fileRename = fileRename;
+			return this;
+		}
+
+		public Tester createFilename() throws IOException {
+			createFile(this.filename);
+			return this;
+		}
+
+		public Tester createRename() throws IOException {
+			createFile(this.fileRename);
+			return this;
+		}
+
+		Asserter callProcess() {
+			Mockito.when(mockOutputChunk.bytes()).thenReturn(mockOutputBytes);
+			final FolderOutputDestination<EmptyContext, EmptyContext> underTest = fileRename == null 
+					? new FolderOutputDestination<>(testFolder, (a, b)->filename) 
+					: new FolderOutputDestination<>(testFolder, (a, b)->filename, (a)->fileRename);
+				 var result = underTest.process(mockOutputChunk);
+			 return new Asserter(result, testFolder);
+		}
+		
+		private static class Asserter {
+			private final Result<EmptyContext, EmptyContext, Context> result;
+			private final Path testFolder;
+
+			public Asserter(Result<EmptyContext, EmptyContext, Context> result, Path testFolder) {
+				this.result = result;
+				this.testFolder = testFolder;
+			}
+
+			//Helper Method
+			private void validateSuccessFileCreated(String expectedFileName)
+					throws IOException {
+				final Path expectedFileRename = Path.of(expectedFileName);
+				Path expectedFile = testFolder.resolve(expectedFileRename);
+				assertTrue(Files.exists(expectedFile), "Expected file (" + expectedFile.toString() + ") to exist, but it didn't.");
+				assertEquals(expectedFileName,expectedFileRename.getFileName().toString());
+				assertEquals(mockOutputString, Files.readString(expectedFile));
+				
+				assertNull(result.dataContext());		// Should be null because the mock will not return anything
+				assertNull(result.outputContext());		// Should be null because the mock will not return anything
+				assertEquals(expectedFile, FolderOutputDestination.reader(result.resultContext()).filenameWritten().get());
+			}
+		}
+		
+		public Tester createFile(Path filename) throws IOException {
+			Path fileDestination = testFolder.resolve(filename);
+			Files.write(fileDestination, EMPTY_BYTES, StandardOpenOption.WRITE,StandardOpenOption.CREATE_NEW);
+			return this;
+		}
+	}
 }

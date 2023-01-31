@@ -15,13 +15,15 @@ import com._4point.aem.formspipeline.api.Context;
 import com._4point.aem.formspipeline.api.OutputChunk;
 import com._4point.aem.formspipeline.api.OutputDestination;
 import com._4point.aem.formspipeline.api.Result;
-import com._4point.aem.formspipeline.contexts.EmptyContext;
+import com._4point.aem.formspipeline.contexts.SingletonContext;
 import com._4point.aem.formspipeline.results.SimpleResult;
 
 public class FolderOutputDestination<D extends Context, O extends Context> implements OutputDestination<OutputChunk<D, O>, 
 															Result<D, O, ? extends Context>> {
 	private static final Logger logger = LoggerFactory.getLogger(FolderOutputDestination.class);
 
+	private static final String CONTEXT_PREFIX = "com._4point.aem.formspipeline.destinations.FolderOutputDestination"; 
+	private static final String FILENAME_CONTEXT_KEY = CONTEXT_PREFIX + ".filename"; 
 	private static final int RENAME_MAX_LIMIT = 1000;
 	private final Path destinationFolder;
 	private final BiFunction<D, O, Path> filenameFn;
@@ -105,7 +107,7 @@ public class FolderOutputDestination<D extends Context, O extends Context> imple
 	}
 
 	@Override
-	public Result<D, O, EmptyContext> process(OutputChunk<D, O> outputChunk) {
+	public Result<D, O, Context> process(OutputChunk<D, O> outputChunk) {
 		Path destination = getDestinationFolder(outputChunk);
 		try {
 			if(shouldRename(destination)) {
@@ -114,7 +116,8 @@ public class FolderOutputDestination<D extends Context, O extends Context> imple
 			if (logger.isDebugEnabled()) {
 				logger.debug("writing to destination {}", (destination != null?destination.toAbsolutePath().toString():null));					
 			}
-			Files.write(destination, outputChunk.bytes(), StandardOpenOption.WRITE,StandardOpenOption.CREATE_NEW);						
+			Files.write(destination, outputChunk.bytes(), StandardOpenOption.WRITE,StandardOpenOption.CREATE_NEW);
+			return new SimpleResult<>(outputChunk.dataContext(), outputChunk.outputContext(), new SingletonContext(FILENAME_CONTEXT_KEY, destination.toString()));
 		} catch (IOException e) {
 			throw new IllegalStateException("Unable to write file (" + (destination!=null?destination.toAbsolutePath().toString():null) + ").", e);
 		} catch (IndexOutOfBoundsException e) {
@@ -122,7 +125,19 @@ public class FolderOutputDestination<D extends Context, O extends Context> imple
 					(destination != null ?destination.toAbsolutePath().toString():""), 
 					getDestinationFolder(outputChunk).toAbsolutePath().toString(), e));
 		} 
-		return new SimpleResult<>(outputChunk.dataContext(), outputChunk.outputContext(), EmptyContext.emptyInstance());
 	}
 
+	public static ContextReader reader(Context c) { return new ContextReader(c); }
+	
+	public static class ContextReader {
+		private final Optional<Path> filenameWritten;
+
+		public ContextReader(Context context) {
+			this.filenameWritten = context.getString(FILENAME_CONTEXT_KEY).map(Path::of);
+		}
+
+		public Optional<Path> filenameWritten() {
+			return filenameWritten;
+		}
+	}
 }
