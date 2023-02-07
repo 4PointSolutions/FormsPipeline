@@ -64,6 +64,10 @@ public class MapContext implements Context {
 		}
 		
 		public Context build() {
+			// Check for a couple of special cases and return specialized contexts instead.
+			if (list.size() == 0) { return EmptyContext.emptyInstance(); }
+			if (list.size() == 1) { var e = list.get(0); return SingletonContext.of(e.key(), e.value()); }
+			
 			// Convert the list to a Map and then return a MapContext constructed with that map.
 			return new MapContext(list.stream().collect(Collectors.toMap(e->e.key(), e->e.value())));
 		}

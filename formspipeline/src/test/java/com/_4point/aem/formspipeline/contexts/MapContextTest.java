@@ -74,6 +74,24 @@ class MapContextTest {
 	}
 
 	@Test
+	void testBuilder_NoEntries() {
+		Context underTest2 =  MapContext.builder()
+										.build();
+		
+		assertSame(EmptyContext.emptyInstance(), underTest2);
+	}
+
+	@Test
+	void testBuilder_OneEntry() {
+		Context underTest2 =  MapContext.builder()
+										.put(KEY1, VALUE1)
+										.build();
+		
+		assertEquals(VALUE1, underTest2.getString(KEY1).orElseThrow());
+		assertInstanceOf(SingletonContext.class, underTest2);
+	}
+
+	@Test
 	void testHashCode() {
 		Context underTestSame = MapContext.builder()
 										  .put(KEY1, VALUE1)

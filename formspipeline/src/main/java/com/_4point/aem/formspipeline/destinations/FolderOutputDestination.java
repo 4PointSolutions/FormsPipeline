@@ -117,7 +117,7 @@ public class FolderOutputDestination<D extends Context, O extends Context> imple
 				logger.debug("writing to destination {}", (destination != null?destination.toAbsolutePath().toString():null));					
 			}
 			Files.write(destination, outputChunk.bytes(), StandardOpenOption.WRITE,StandardOpenOption.CREATE_NEW);
-			return new SimpleResult<>(outputChunk.dataContext(), outputChunk.outputContext(), new SingletonContext(FILENAME_CONTEXT_KEY, destination.toString()));
+			return new SimpleResult<>(outputChunk.dataContext(), outputChunk.outputContext(), SingletonContext.of(FILENAME_CONTEXT_KEY, destination.toString()));
 		} catch (IOException e) {
 			throw new IllegalStateException("Unable to write file (" + (destination!=null?destination.toAbsolutePath().toString():null) + ").", e);
 		} catch (IndexOutOfBoundsException e) {

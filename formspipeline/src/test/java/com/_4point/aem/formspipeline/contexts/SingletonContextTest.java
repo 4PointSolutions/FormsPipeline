@@ -2,7 +2,6 @@ package com._4point.aem.formspipeline.contexts;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -12,7 +11,7 @@ class SingletonContextTest {
 
 	private static final String VALUE = "5";
 	private static final String KEY = "KEY";
-	private final Context underTest = new SingletonContext(KEY, VALUE);
+	private final Context underTest = SingletonContext.of(KEY, VALUE);
 
 	@DisplayName("get() with the correct class should return the value.")
 	@Test

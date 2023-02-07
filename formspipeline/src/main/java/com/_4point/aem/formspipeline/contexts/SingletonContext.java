@@ -13,7 +13,7 @@ public class SingletonContext implements Context {
 	private final String key;
 	private final Object value;
 
-	public SingletonContext(String key, Object value) {
+	private SingletonContext(String key, Object value) {
 		this.key = Objects.requireNonNull(key);
 		this.value = Objects.requireNonNull(value);
 	}
@@ -25,4 +25,6 @@ public class SingletonContext implements Context {
 		}
 		return Optional.empty();
 	}
+	
+	public static Context of(String key, Object value) { return new SingletonContext(key, value); } 
 }
