@@ -24,6 +24,10 @@ import javax.print.event.PrintJobEvent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com._4point.aem.formspipeline.chunks.PclOutputChunk;
+import com._4point.aem.formspipeline.chunks.PdfOutputChunk;
+import com._4point.aem.formspipeline.chunks.PsOutputChunk;
+
 /**
  * This class will send the output from AEM to a printer using a printerService.print() call.
  *
@@ -34,9 +38,9 @@ public class JavaPrinterService {
 	private final DocFlavor docFlavor;
 	
 	public enum PrinterLanguage {
-		Pcl(DocFlavor.BYTE_ARRAY.PCL, "application/vnd.hp-pcl"),
-		Postscript(DocFlavor.BYTE_ARRAY.POSTSCRIPT, "application/postscript"),
-		Pdf(DocFlavor.BYTE_ARRAY.AUTOSENSE, "application/pdf"),
+		Pcl(DocFlavor.BYTE_ARRAY.PCL, PclOutputChunk.CONTENT_TYPE),
+		Postscript(DocFlavor.BYTE_ARRAY.POSTSCRIPT, PsOutputChunk.CONTENT_TYPE),
+		Pdf(DocFlavor.BYTE_ARRAY.AUTOSENSE, PdfOutputChunk.CONTENT_TYPE),
 		Other(DocFlavor.BYTE_ARRAY.AUTOSENSE, "application/octet-stream")
 		;
 		

@@ -3,14 +3,13 @@ package com._4point.aem.formspipeline.chunks;
 import java.util.Optional;
 
 import com._4point.aem.formspipeline.api.Context;
-import com._4point.aem.formspipeline.api.OutputChunk;
 import com._4point.aem.formspipeline.api.PagedContext;
 import com._4point.aem.formspipeline.contexts.AbstractPagedContext;
 import com._4point.aem.formspipeline.chunks.PdfOutputChunk.PdfOutputContext;
-import com._4point.aem.formspipeline.chunks.PsOutputChunk.PsOutputContext;
 
-public class PdfOutputChunk<D extends Context> extends AbstractDocumentOutputChunk<D, PdfOutputContext> 
-											    {
+public final class PdfOutputChunk<D extends Context> extends AbstractDocumentOutputChunk<D, PdfOutputContext> {
+	public static final String CONTENT_TYPE = "application/pdf";
+	
 	private final PdfOutputContext outputContext;
 	
 	private PdfOutputChunk(D dataContext, PdfOutputContext outputContext, byte[] bytes) {
@@ -55,6 +54,11 @@ public class PdfOutputChunk<D extends Context> extends AbstractDocumentOutputChu
 		@Override
 		public <T> Optional<T> get(String key, Class<T> target) {
 			return Optional.empty();
+		}
+
+		@Override
+		public String contentType() {
+			return CONTENT_TYPE;
 		}
 	}
 	

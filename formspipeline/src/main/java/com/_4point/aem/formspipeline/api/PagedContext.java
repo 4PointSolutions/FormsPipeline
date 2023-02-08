@@ -12,4 +12,5 @@ import java.util.OptionalInt;
  */
 public interface PagedContext extends Context {
 	OptionalInt numPages();
+	String contentType();
 }
