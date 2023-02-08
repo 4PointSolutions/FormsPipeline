@@ -28,6 +28,14 @@ public class LocalPrintDestination<DC extends Context, OC extends PagedContext,
 		this.printerService = printerService;
 	}
 
+	public LocalPrintDestination(String printerName, String contentType) {
+		this(new JavaPrinterService(printerName, contentType));
+	}
+
+	public LocalPrintDestination(String printerName) {
+		this(new JavaPrinterService(printerName));
+	}
+
 	@Override
 	public Result<DC, OC, Context> process(O outputChunk) {
 		DC dataContext = outputChunk.dataContext();
