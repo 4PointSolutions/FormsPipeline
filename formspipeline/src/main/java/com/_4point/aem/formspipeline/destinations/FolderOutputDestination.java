@@ -18,6 +18,17 @@ import com._4point.aem.formspipeline.api.Result;
 import com._4point.aem.formspipeline.contexts.SingletonContext;
 import com._4point.aem.formspipeline.results.SimpleResult;
 
+/**
+ * FolderOutputDestination - Writes the output to a local file folder.
+ * 
+ * It will not overwrite an existing file, instead it will calls a provided rename function (or a default rename function
+ * if a rename function was not provided).  If the provided rename function does not produce a name that does not already
+ * exist, then this object will append a numerical value to the renamed name to try and create a file that does not yet
+ * exist.  After 9999 attempts at this, it will give up and throw an exception. 
+ *
+ * @param <D> - DataContext - The type of context created from the Data Transformation steps.
+ * @param <O> - OutputContext - The type of context created from the Output Generation step.
+ */
 public class FolderOutputDestination<D extends Context, O extends Context> implements OutputDestination<OutputChunk<D, O>, 
 															Result<D, O, ? extends Context>> {
 	private static final Logger logger = LoggerFactory.getLogger(FolderOutputDestination.class);
@@ -31,12 +42,27 @@ public class FolderOutputDestination<D extends Context, O extends Context> imple
 	
 	public static final UnaryOperator<Path> DEFAULT_RENAME_FUNCTION = (a)-> Path.of("result");
 			
+	/**
+	 * Constructor
+	 * 
+	 * @param destinationFolder - Folder to write to
+	 * @param filenameFn - Function that provides the initial filename
+	 * @param renameFn - Function that provides a new filename if the previous one exists.
+	 */
 	public FolderOutputDestination(Path destinationFolder, BiFunction<D, O, Path> filenameFn, UnaryOperator<Path> renameFn) {		
 		this.destinationFolder = destinationFolder;
 		this.filenameFn = filenameFn;
 		this.renameFn = renameFn; 
 	}
 	
+	/**
+	 * Constructor
+	 * 
+	 * Provides a default rename function.  The default function returns a filename of "result".
+	 * 
+	 * @param destinationFolder - Folder to write to
+	 * @param filenameFn - Function that provides the initial filename
+	 */
 	public FolderOutputDestination(Path destinationFolder, BiFunction<D, O, Path> filenameFn) {		
 		this.destinationFolder = destinationFolder;
 		this.filenameFn = filenameFn;
@@ -106,6 +132,11 @@ public class FolderOutputDestination<D extends Context, O extends Context> imple
 		return newDestination.resolve(Path.of(newDestination.toAbsolutePath().toString()+"."+origExtension.get()));			
 	}
 
+	/**
+	 * Process an OutputChunk and write the contents out to the destination folder.
+	 * 
+	 *
+	 */
 	@Override
 	public Result<D, O, Context> process(OutputChunk<D, O> outputChunk) {
 		Path destination = getDestinationFolder(outputChunk);
@@ -127,17 +158,41 @@ public class FolderOutputDestination<D extends Context, O extends Context> imple
 		} 
 	}
 
+	/**
+	 * Returns a ContextReader used for reading the result context from a FolderOutputDestination.
+	 * 
+	 * This is provided for standardization, but since the only thing written to the result context is
+	 * the filename, you can use the static getFilenameWritten() method instead and save some code.
+	 * 
+	 * @param c
+	 * @return
+	 */
 	public static ContextReader reader(Context c) { return new ContextReader(c); }
 	
+	/**
+	 * An object for reading the result Context from the FolderOutputDestination object. 
+	 *
+	 */
 	public static class ContextReader {
 		private final Optional<Path> filenameWritten;
 
 		public ContextReader(Context context) {
-			this.filenameWritten = context.getString(FILENAME_CONTEXT_KEY).map(Path::of);
+			this.filenameWritten = getFilenameWritten(context);
 		}
 
 		public Optional<Path> filenameWritten() {
 			return filenameWritten;
 		}
+	}
+	
+	/**
+	 * Convenience function to extract the filename written by a FolderOutputDestination from the 
+	 * result Context of the FolderOutputDestination process() step. 
+	 * 
+	 * @param context - Result Context from a FolderOutputDestination pipeline step. 
+	 * @return - Filename written.  It should always return a result if the FolderOutputDestination step worked.
+	 */
+	public static Optional<Path> getFilenameWritten(Context context) {
+		return context.getString(FILENAME_CONTEXT_KEY).map(Path::of);
 	}
 }

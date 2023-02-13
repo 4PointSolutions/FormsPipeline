@@ -286,6 +286,7 @@ class FolderOutputDestinationTest {
 				assertNull(result.dataContext());		// Should be null because the mock will not return anything
 				assertNull(result.outputContext());		// Should be null because the mock will not return anything
 				assertEquals(expectedFile, FolderOutputDestination.reader(result.resultContext()).filenameWritten().get());
+				assertEquals(expectedFile, FolderOutputDestination.getFilenameWritten(result.resultContext()).get());	// Test both ways of getting the filename.
 			}
 		}
 		
