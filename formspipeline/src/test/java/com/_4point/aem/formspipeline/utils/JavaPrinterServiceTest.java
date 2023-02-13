@@ -126,4 +126,22 @@ class JavaPrinterServiceTest {
 				);
 	}
 
+	@Test
+	void testJavaPrinterService_PrinterDoesntExistException() throws Exception {
+		String nonExistentPrinterName = "PrinterThatDoesntExist";
+		JavaPrinterServiceException ex = assertThrows(JavaPrinterServiceException.class, ()->new JavaPrinterService(nonExistentPrinterName));
+		String msg = ex.getLocalizedMessage();
+		assertNotNull(msg);
+
+		assertThat(msg, allOf(
+				containsString(nonExistentPrinterName), 
+				containsString("printer could not be found")
+				));
+	}
+	
+	@Test
+	void testExists_PrinterDoesntExistException() throws Exception {
+		final String nonExistentPrinterName = "PrinterThatDoesntExist";
+		assertFalse(JavaPrinterService.exists(nonExistentPrinterName), ()->"Expected JavaPrinterService.exists() to return false for printer '" + nonExistentPrinterName + "' but returned true.");
+	}
 }

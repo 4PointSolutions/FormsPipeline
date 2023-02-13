@@ -1,6 +1,7 @@
 package com._4point.aem.formspipeline.utils;
 
 import java.util.Locale;
+import java.util.Optional;
 
 import javax.print.Doc;
 import javax.print.DocFlavor;
@@ -70,14 +71,36 @@ public class JavaPrinterService {
 		this.docFlavor = docFlavor;
 	}
 
+	/**
+	 * Constructs a JavaPrinterService object.
+	 * 
+	 * If the printer does not support the content type specified, then a JavaPrinterService exception is thrown.
+	 * 
+	 * @param printerName - name of the local printer
+	 * @param contentType - content type we expect to send.
+	 */
 	public JavaPrinterService(String printerName, String contentType) {
-		this(locatePrintService(printerName), PrinterLanguage.fromContentType(contentType).docFlavor);
+		this(getPrintService(printerName), PrinterLanguage.fromContentType(contentType).docFlavor);
 	}
 
+	/**
+	 * Constructs a JavaPrinterService object.
+	 * 
+	 * The content type will be auto-sensed.
+	 * 
+	 * @param printerName - name of the local printer
+	 */
 	public JavaPrinterService(String printerName) {
-		this(locatePrintService(printerName), DocFlavor.BYTE_ARRAY.AUTOSENSE);
+		this(getPrintService(printerName), DocFlavor.BYTE_ARRAY.AUTOSENSE);
 	}
 
+	/**
+	 * Prints content to this printer.  It is expected that the content provided in printBytes will be compatible with
+	 * what that printer supports.
+	 * 
+	 * @param printBytes - bytes to be sent to the printer.
+	 * @param printFilename - name that will appear in the print queue.
+	 */
 	public void print(byte[] printBytes, String printFilename) {
 		DocPrintJob job = printService.createPrintJob();
 		job.addPrintJobListener(new PrintJobAdapter() {
@@ -102,6 +125,16 @@ public class JavaPrinterService {
 		}
 	}
 
+	/**
+	 * Tests to see if the provided printerName exists or not.  Returns true if it exists and false if it does not.
+	 * 
+	 * @param printerName
+	 * @return
+	 */
+	public static boolean exists(String printerName) {
+		return locatePrintService(printerName).isPresent();
+	}
+	
 	private static DocAttributeSet docAttributes(String printFilename) {
 		DocAttributeSet docAttrib = new HashDocAttributeSet();
 		docAttrib.add(new DocumentName(printFilename, Locale.getDefault()));
@@ -115,17 +148,22 @@ public class JavaPrinterService {
 		return attrib;
 	}
 
-	private static PrintService locatePrintService(String printerName) {
+	private static PrintService getPrintService(String printerName) {
+		return locatePrintService(printerName).orElseThrow(()->new JavaPrinterServiceException("An error occurred while locating printer '" + printerName + "'. The printer could not be found."));
+	}
+		
+	private static Optional<PrintService> locatePrintService(String printerName) {
 		HashPrintServiceAttributeSet attributeSet = new HashPrintServiceAttributeSet();
 		attributeSet.add(new PrinterName(printerName, null));
 		PrintService[] printServices = PrintServiceLookup.lookupPrintServices(null, attributeSet);
 
-		if (printServices.length > 0) {
-			return printServices[0];
-		}
-		throw new JavaPrinterServiceException("An error occurred while locating printer '" + printerName + "'. The printer could not be found.");
+		return printServices.length > 0 ?  Optional.of(printServices[0]) : Optional.empty();
 	}
 
+	/**
+	 * Exception that occurred in the JavaPrinterService.
+	 *
+	 */
 	@SuppressWarnings("serial")
 	public static class JavaPrinterServiceException extends RuntimeException {
 
