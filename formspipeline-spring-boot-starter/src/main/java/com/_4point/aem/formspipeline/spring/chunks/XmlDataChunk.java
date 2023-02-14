@@ -4,6 +4,7 @@ import org.w3c.dom.Document;
 
 import com._4point.aem.formspipeline.api.Context;
 import com._4point.aem.formspipeline.api.DataChunk;
+import com._4point.aem.formspipeline.contexts.AggregateContext;
 
 public interface XmlDataChunk extends DataChunk<Context>{
 
@@ -34,10 +35,10 @@ public interface XmlDataChunk extends DataChunk<Context>{
 	 * 
 	 * This routine produces a new XmlDataChunk that incorporates the new context while retaining the same XML data.
 	 * 
-	 * @param newContext
+	 * @param newContexts - one or more additional contexts.
 	 * @return
 	 */
-	public default XmlDataChunk updateContext(Context newContext) { return new XmlDataChunkImpl(this, newContext); }
+	public default XmlDataChunk updateContext(Context... newContexts) { return new XmlDataChunkImpl(this, AggregateContext.aggregate(newContexts)); }
 	
 	public interface XmlDataContext extends Context {
 		public Document getXmlDoc();
