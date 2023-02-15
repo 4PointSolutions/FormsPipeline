@@ -65,7 +65,7 @@ public class LocalPrintDestination<DC extends Context, OC extends PagedContext,
 	 * @param printJobName
 	 * @return
 	 */
-	public static Context addPrintJobNameToContext(Context context, String printJobName) { return context.incorporate(writer().printJobName(printJobName).build()); }
+	public static Context addPrintJobNameToContext(Context context, String printJobName) { return context.incorporate(contextWriter().printJobName(printJobName).build()); }
 	
 	/**
 	 * Create a ContextWriter to write values to a context that will be used by the LOcalPrintDestination.
@@ -75,7 +75,7 @@ public class LocalPrintDestination<DC extends Context, OC extends PagedContext,
 	 * 
 	 * @return
 	 */
-	public static ContextWriter writer() { return new ContextWriter(); }
+	public static ContextWriter contextWriter() { return new ContextWriter(); }
 	
 	/**
 	 * Retrieve a LocalPrintDestination print job name from a context.
@@ -96,7 +96,7 @@ public class LocalPrintDestination<DC extends Context, OC extends PagedContext,
 	 * @param context
 	 * @return
 	 */
-	public static ContextReader reader(Context context) { return new ContextReader(context); }
+	public static ContextReader contextReader(Context context) { return new ContextReader(context); }
 
 	/**
 	 * Class for reading values used by LocalPrintDestination from a Context object.
