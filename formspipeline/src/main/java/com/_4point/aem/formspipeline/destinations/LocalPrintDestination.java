@@ -14,6 +14,13 @@ import com._4point.aem.formspipeline.contexts.MapContext;
 import com._4point.aem.formspipeline.results.SimpleResult;
 import com._4point.aem.formspipeline.utils.JavaPrinterService;
 
+/**
+ * Destination step used to send output to a local printer queue.
+ *
+ * @param <DC>
+ * @param <OC>
+ * @param <O>
+ */
 public class LocalPrintDestination<DC extends Context, OC extends PagedContext,
 								  O extends AbstractDocumentOutputChunk<DC, OC>
 								  > implements OutputDestination<O, Result<DC, OC, Context>> {
@@ -50,13 +57,56 @@ public class LocalPrintDestination<DC extends Context, OC extends PagedContext,
 		return new SimpleResult<DC, OC, Context>(dataContext, outputContext, EmptyContext.emptyInstance());
 	}
 
-	public static ContextReader reader(Context c) { return new ContextReader(c); }
+	/**
+	 * Write a Print Job Name to a context.  If this is added to the context before the LocalPrintDestination step is
+	 * invoked, then the LocalPrintDestination step will set the name of the job in the print queue to the Print Job Name. 
+	 * 
+	 * @param context
+	 * @param printJobName
+	 * @return
+	 */
+	public static Context addPrintJobNameToContext(Context context, String printJobName) { return context.incorporate(writer().printJobName(printJobName).build()); }
 	
+	/**
+	 * Create a ContextWriter to write values to a context that will be used by the LOcalPrintDestination.
+	 * 
+	 * This exists for standardization (all steps have ContextReader/Writer implementations to communicate with them however
+	 * since there is only one value, addPrintJobNameToContext is a more concise choice.
+	 * 
+	 * @return
+	 */
+	public static ContextWriter writer() { return new ContextWriter(); }
+	
+	/**
+	 * Retrieve a LocalPrintDestination print job name from a context.
+	 * 
+	 * This unlikely to be used outside of LocalPrintDestination, however just in case someone wants to read the Print Job Name
+	 * set in a previous step, this is available.
+	 * 
+	 * @param context - Context that will be searched for the print job name.
+	 * @return
+	 */
+	public static Optional<String> getPrintJobName(Context context) { return context.getString(PRINTJOB_NAME_KEY); }
+	
+	/**
+	 * Retrieve values used by the LocalPrintDestination.
+	 * 
+	 * This currently consists of only the Printer Job Name, so using getPrintJobName() is a more concise choice.
+	 * 
+	 * @param context
+	 * @return
+	 */
+	public static ContextReader reader(Context context) { return new ContextReader(context); }
+
+	/**
+	 * Class for reading values used by LocalPrintDestination from a Context object.
+	 *
+	 */
 	public static class ContextReader {
 		private final Optional<String> printJobName;
 
-		public ContextReader(Context context) {
-			this.printJobName = context.getString(PRINTJOB_NAME_KEY);
+		private ContextReader(Context context) {
+			this.printJobName = getPrintJobName(context);
 		}
 
 		public Optional<String> printJobName() {
@@ -64,6 +114,10 @@ public class LocalPrintDestination<DC extends Context, OC extends PagedContext,
 		}
 	}
 
+	/**
+	 * Class for creating a context containing values used by LocalPrintDestination.
+	 *
+	 */
 	public static class ContextWriter {
 		private final ContextBuilder builder;
 		
@@ -74,4 +128,5 @@ public class LocalPrintDestination<DC extends Context, OC extends PagedContext,
 		
 		public Context build() 	{ return builder.build(); }
 	}
+	
 }

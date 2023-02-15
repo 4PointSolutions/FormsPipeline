@@ -72,7 +72,7 @@ class LocalPrintDestinationTest {
 		}
 
 		Asserter process() {
-			Context outputContext = printJobName.map(s->SingletonContext.of("com._4point.aem.formspipeline.destinations.local_print_destination.print_job_key", s))
+			Context outputContext = printJobName.map(s->LocalPrintDestination.addPrintJobNameToContext(EmptyContext.emptyInstance(), s))
 												.orElse(EmptyContext.emptyInstance());
 			PdfOutputChunk<Context> input = PdfOutputChunk.createSimple(outputContext, MOCK_PDF_DATA);
 			var underTest = new LocalPrintDestination(mockPrinterService);
