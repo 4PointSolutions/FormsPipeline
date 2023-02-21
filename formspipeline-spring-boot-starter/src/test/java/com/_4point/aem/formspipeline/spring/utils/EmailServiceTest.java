@@ -23,12 +23,12 @@ import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
 import jakarta.mail.internet.MimeMultipart;
 
-import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
+import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
 import org.junit.jupiter.api.function.Executable;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
@@ -41,45 +41,20 @@ import org.springframework.mail.javamail.JavaMailSenderImpl;
 import com._4point.aem.formspipeline.spring.utils.EmailService.SendEmailData;
 import com._4point.aem.formspipeline.spring.utils.EmailService.SendEmailData.BodyContentType;
 import com._4point.aem.formspipeline.spring.utils.EmailService.SimpleSendEmailData;
-import com.icegreen.greenmail.util.GreenMail;
+import com.icegreen.greenmail.junit5.GreenMailExtension;
 import com.icegreen.greenmail.util.ServerSetupTest;
 
 public class EmailServiceTest {
 
-	private static GreenMail greenMail;
+	@RegisterExtension
+	static GreenMailExtension greenMail = new GreenMailExtension(ServerSetupTest.SMTP).withPerMethodLifecycle(false);
 	
 	private static JavaMailSender javaMailSender;
 
 	@BeforeAll
+	@Order(Integer.MAX_VALUE)	// Must happen after GreenMail Extension starts
 	static void setUpBeforeClass() throws Exception {
-		/*
-		 * Defines a series of non-default ports for test purposes. The ports for the
-		 * various protocols are the default ones plus an offset which is 3000. i.e.
-		 * smtp 3025 pop3 3110 imap 3143
-		 */
-		greenMail = new GreenMail(ServerSetupTest.SMTP);
-		greenMail.start();
 		javaMailSender = createJavaMailSender();
-		
-	}
-
-	private static JavaMailSenderImpl createJavaMailSender() throws MessagingException {
-		var javaMailSenderImpl = new JavaMailSenderImpl();
-		javaMailSenderImpl.setPort(3025);
-		javaMailSenderImpl.setProtocol("smtp");
-		javaMailSenderImpl.setHost("localhost");
-
-		javaMailSenderImpl.testConnection();
-		return javaMailSenderImpl;
-	}
-
-	@AfterAll
-	static void tearDownAfterClass() throws Exception {
-		greenMail.stop();
-	}
-
-	@BeforeEach
-	void setUp() throws Exception {
 	}
 
 	@AfterEach
@@ -111,6 +86,15 @@ public class EmailServiceTest {
 			);
 	}
 
+	private static JavaMailSenderImpl createJavaMailSender() throws MessagingException {
+		var javaMailSenderImpl = new JavaMailSenderImpl();
+		javaMailSenderImpl.setPort(3025);
+		javaMailSenderImpl.setProtocol("smtp");
+		javaMailSenderImpl.setHost("localhost");
+
+		javaMailSenderImpl.testConnection();
+		return javaMailSenderImpl;
+	}
 
 	public static class MimeMessageContent {
 		private static final String MULTIPART_WILDCARD = "multipart/*";
@@ -153,7 +137,7 @@ public class EmailServiceTest {
 		    int count = mimeMultipart.getCount();
 		    for (int i = 0; i < count; i++) {
 		        BodyPart bodyPart = mimeMultipart.getBodyPart(i);
-		        //		        System.out.println("BodyPart ContentType = '" + bodyPart.getContentType() + "'.");
+//		        System.out.println("BodyPart ContentType = '" + bodyPart.getContentType() + "'.");
 //		        System.out.println("BodyPart Description = '" + bodyPart.getDescription() + "'.");
 //		        System.out.println("BodyPart Disposition = '" + bodyPart.getDisposition() + "'.");
 //		        System.out.println("BodyPart Filename = '" + bodyPart.getFileName() + "'.");
@@ -329,7 +313,7 @@ public class EmailServiceTest {
 	}
 
 	@Nested
-	class SimpleSendEmailDataTests {
+	static class SimpleSendEmailDataTests {
 		private static final String SAMPLE_TO = "foo@example.com";
 		private static final String SAMPLE_FROM = "bar@4point.com";
 		private static final String SAMPLE_CC = "cc@example.com";
