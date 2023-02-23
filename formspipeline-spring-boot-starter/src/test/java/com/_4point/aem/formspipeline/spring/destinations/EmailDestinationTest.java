@@ -24,6 +24,8 @@ import com._4point.aem.formspipeline.spring.utils.EmailService;
 import com._4point.aem.formspipeline.spring.utils.EmailService.EmailServiceException;
 import com._4point.aem.formspipeline.spring.utils.EmailService.SendEmailData;
 
+import jakarta.activation.DataSource;
+
 @ExtendWith(MockitoExtension.class)
 class EmailDestinationTest {
 	private static final byte[] MOCK_PDF_DATA = "Mock PDF Data".getBytes(StandardCharsets.UTF_8);
@@ -81,6 +83,16 @@ class EmailDestinationTest {
 				()->assertTrue(actualSendEmailData.bodyContentType().isEmpty())
 				);
 		
+		// Validate Attachments
+		List<DataSource> attachments = actualSendEmailData.attachments();
+		assertNotNull(attachments);
+		assertEquals(1, attachments.size(), "Should only have one attachment (i.e. the PDF)");
+		DataSource dataSource = attachments.get(0);
+		assertAll(
+				()->assertArrayEquals(MOCK_PDF_DATA, dataSource.getInputStream().readAllBytes()),
+				()->assertEquals("application/pdf", dataSource.getContentType()),
+				()->assertEquals("someFilename", dataSource.getName())
+				);
 	}
 
 	@Test

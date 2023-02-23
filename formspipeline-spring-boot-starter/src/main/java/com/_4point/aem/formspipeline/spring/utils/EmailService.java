@@ -1,10 +1,15 @@
 package com._4point.aem.formspipeline.spring.utils;
 
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.EnumSet;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -20,6 +25,10 @@ import jakarta.activation.DataSource;
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
 
+/**
+ * Generic service for sending Emails.  It relies on Spring's JavaMailSender to do this.
+ *
+ */
 public class EmailService {
 	private static final Logger logger = LoggerFactory.getLogger(EmailService.class);
 	
@@ -132,6 +141,32 @@ public class EmailService {
 		private static List<String> stripAll(List<String> list) {
 			list.replaceAll(String::strip); // strip whitespace from all the entries in the list.
 			return list;
+		}
+
+		public static DataSource toDataSource(String dsName, byte[] dataBytes, String contentType) {
+			Objects.requireNonNull(dataBytes);
+			return new DataSource() {
+				
+				@Override
+				public OutputStream getOutputStream() throws IOException {
+					throw new UnsupportedOperationException("This is a read-only DataSource.");
+				}
+				
+				@Override
+				public String getName() {
+					return dsName;
+				}
+				
+				@Override
+				public InputStream getInputStream() throws IOException {
+					return new ByteArrayInputStream(dataBytes);
+				}
+				
+				@Override
+				public String getContentType() {
+					return contentType;
+				}
+			};
 		}
 
 		private static String ValidateMandatory(String arg, String argName) {

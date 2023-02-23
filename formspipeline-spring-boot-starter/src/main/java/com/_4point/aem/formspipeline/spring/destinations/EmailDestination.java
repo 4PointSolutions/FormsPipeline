@@ -20,6 +20,16 @@ import com._4point.aem.formspipeline.spring.utils.EmailService.SendEmailData.Saf
 
 import jakarta.activation.DataSource;
 
+/**
+ * Sends an email based on data in the incoming OutputChunk (and its contexts).
+ * 
+ * This currently supports just one attachment (the data in the OutputChunk) and it assumes the data is a PDF.
+ * 
+ * In the future it may be helpful to allow other attachments to be pulled from the context to be sent alongside the PDF.
+ *
+ * @param <DC>  Data Context type
+ * @param <OC>  Output Context type
+ */
 public class EmailDestination<DC extends Context, OC extends Context> implements OutputDestination<OutputChunk<DC, OC>, 
 																								   Result<DC, OC, ? extends Context>> {
 
@@ -39,18 +49,20 @@ public class EmailDestination<DC extends Context, OC extends Context> implements
 
 	@Override
 	public Result<DC, OC, ? extends Context> process(OutputChunk<DC, OC> outputChunk) {
-		// TODO: Attach PDF.
+		final String attachmentFilename = "someFilename";	// TODO: Determine correct Filename
 		
 		Stream.of(outputChunk.dataContext())			// Get the data Context
 			  .map(EmailDestination::reader)			// Create a ContextReader
-			  .map(EmailDestination::toSendEmailData)	// Use that to create SendEmailData
+			  .map(cr->toSendEmailData(cr, outputChunk.bytes(), attachmentFilename))	// Use that to create SendEmailData
 			  .map(SafeSendEmailData::from)				// Make it a SafeSendEmailData
 			  .forEach(this::sendEmail);				// Use it to send Email.
 
 		return new SimpleResult<DC, OC, Context>(outputChunk.dataContext(), outputChunk.outputContext(), EmptyContext.emptyInstance());
 	}
 
-	private static SendEmailData toSendEmailData(ContextReader contextReader) {
+	// Creates a SendEmailData by pulling information from a context (via ContextReader).  Accepts one and only one attachment
+	// which it assumes is a PDF.
+	private static SendEmailData toSendEmailData(final ContextReader contextReader, final byte[] pdfAttachment, String attachmentFilename) {
 		return new SendEmailData() {
 			
 			@Override
@@ -90,11 +102,12 @@ public class EmailDestination<DC extends Context, OC extends Context> implements
 			
 			@Override
 			public List<DataSource> attachments() {
-				return List.of();
+				return List.of(SendEmailData.toDataSource(attachmentFilename, pdfAttachment, "application/pdf"));
 			}
 		};
 	}
 
+	// Sends the email and translates any exceptions to a IllegalStateException (runtime exception).
 	private void sendEmail(SendEmailData emailParameters) {
 		try {
 			emailService.sendMail(emailParameters );
@@ -104,10 +117,25 @@ public class EmailDestination<DC extends Context, OC extends Context> implements
 		}
 	}
 
+	/**
+	 * Creates a ContextReader so that you can read EmailDestination data from a Context.
+	 * 
+	 * @param context Context that where the data will be extracted from
+	 * @return
+	 */
 	public static ContextReader reader(Context context) { return new ContextReader(context); }
 	
+	/**
+	 * Creates a ContextWriter so that you can create a context containing EmailDestination data.
+	 * 
+	 * @return
+	 */
 	public static ContextWriter writer() { return new ContextWriter(); }
 	
+	/**
+	 * Class used to read EmailDestination data from a Context.
+	 *
+	 */
 	public static class ContextReader {
 		private final Context context;
 		
@@ -131,6 +159,10 @@ public class EmailDestination<DC extends Context, OC extends Context> implements
 		}
 	}
 	
+	/**
+	 * Class used to construct a Context that contains EmailDestination data.
+	 *
+	 */
 	public static class ContextWriter {
 		private final ContextBuilder builder;
 		
@@ -154,6 +186,10 @@ public class EmailDestination<DC extends Context, OC extends Context> implements
 		public Context build() 	{ return builder.build(); }
 	}
 	
+	/**
+	 * Custom Exception class for EmailDestination problems.
+	 *
+	 */
 	@SuppressWarnings("serial")
 	public static class EmailDestinationException extends IllegalArgumentException {
 

@@ -4,15 +4,12 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.hamcrest.CoreMatchers.*;
 import static org.hamcrest.MatcherAssert.assertThat;
 
-import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
-import java.util.Objects;
 import java.util.Optional;
 
 import jakarta.activation.DataSource;
@@ -187,8 +184,8 @@ public class EmailServiceTest {
 		final String xmlContentType = "application/xml";
 		final String submittedXmlName = "submittedData.xml";
 
-		final DataSource documentOfRecordContent = createDataSource(documentOfRecordData, dorContentType, dorName);
-		final DataSource submittedXmlDataContent = createDataSource(submittedXmlData, xmlContentType, submittedXmlName);
+		final DataSource documentOfRecordContent = SendEmailData.toDataSource(dorName, documentOfRecordData, dorContentType);
+		final DataSource submittedXmlDataContent = SendEmailData.toDataSource(submittedXmlName, submittedXmlData, xmlContentType);
 		
 		SendEmailData emailData = SimpleSendEmailData.getBuilder(toAddresses, fromAddress, subjectText, bodyText)
 				.cc(ccAddresses)
@@ -270,34 +267,7 @@ public class EmailServiceTest {
 	}
 
 	public static DataSource createDataSource(final InputStream submittedXmlStream, final String xmlContentType, final String submittedXmlName) throws IOException {
-		return createDataSource(submittedXmlStream.readAllBytes(), xmlContentType, submittedXmlName);
-	}
-
-	public static DataSource createDataSource(final byte[] submittedXmlData, final String xmlContentType, final String submittedXmlName) {
-		Objects.requireNonNull(submittedXmlData);
-//		int size = submittedXmlData.length;
-		return new DataSource() {
-
-			@Override
-			public InputStream getInputStream() throws IOException {
-				return new ByteArrayInputStream(submittedXmlData);
-			}
-
-			@Override
-			public String getContentType() {
-				return xmlContentType;
-			}
-
-			@Override
-			public String getName() {
-				return submittedXmlName;
-			}
-
-			@Override
-			public OutputStream getOutputStream() throws IOException {
-				throw new UnsupportedOperationException("Not implemented.");
-			}
-		};
+		return EmailService.SendEmailData.toDataSource(submittedXmlName, submittedXmlStream.readAllBytes(), xmlContentType);
 	}
 
 	private static void assertAttachmentEquals(DataSource expected, DataSource actual) {
@@ -350,7 +320,7 @@ public class EmailServiceTest {
 																		.cc(List.of(SAMPLE_CC))
 																		.bcc(List.of(SAMPLE_BCC))
 																		.bodyContentType(SAMPLE_CONTENT_TYPE.getContentTypeString())
-																		.attachment(createDataSource(attachmentBytes, attachmentContentType, attachmentFileName))
+																		.attachment(SendEmailData.toDataSource(attachmentFileName, attachmentBytes, attachmentContentType))
 																		.build();
 			
 			assertAll(
