@@ -11,7 +11,7 @@
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 
 		<!-- Plugin dependencies -->
-		<surefire-plugin.version>3.0.0-M7</surefire-plugin.version>
+		<surefire-plugin.version>3.0.0-M9</surefire-plugin.version>
 		
 		<!-- Project dependecies -->
 		<fluentforms.version>0.0.2-SNAPSHOT</fluentforms.version>
