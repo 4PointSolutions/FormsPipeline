@@ -1,5 +1,6 @@
 package com._4point.aem.formspipeline.spring.destinations;
 
+import java.nio.file.Path;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -40,6 +41,7 @@ public class EmailDestination<DC extends Context, OC extends Context> implements
 	private static final String EMAIL_FROM_KEY = EMAIL_DESTINATION_PREFIX + "from";
 	private static final String EMAIL_SUBJECT_KEY = EMAIL_DESTINATION_PREFIX + "subject";
 	private static final String EMAIL_BODY_KEY = EMAIL_DESTINATION_PREFIX + "body";
+	private static final String ATTACHMENT_FILENAME_KEY = EMAIL_DESTINATION_PREFIX + "attachment_filename";
 	
 	private final EmailService emailService;
 	
@@ -49,7 +51,7 @@ public class EmailDestination<DC extends Context, OC extends Context> implements
 
 	@Override
 	public Result<DC, OC, ? extends Context> process(OutputChunk<DC, OC> outputChunk) {
-		final String attachmentFilename = "someFilename";	// TODO: Determine correct Filename
+		final String attachmentFilename = "pdfAttachment";
 		
 		Stream.of(outputChunk.dataContext())			// Get the data Context
 			  .map(EmailDestination::reader)			// Create a ContextReader
@@ -102,7 +104,7 @@ public class EmailDestination<DC extends Context, OC extends Context> implements
 			
 			@Override
 			public List<DataSource> attachments() {
-				return List.of(SendEmailData.toDataSource(attachmentFilename, pdfAttachment, "application/pdf"));
+				return List.of(SendEmailData.toDataSource(contextReader.attachmentFilename().orElse(attachmentFilename), pdfAttachment, "application/pdf"));
 			}
 		};
 	}
@@ -149,6 +151,7 @@ public class EmailDestination<DC extends Context, OC extends Context> implements
 		public String from() { return getMandatory(EMAIL_FROM_KEY, "from"); } 
 		public String subject() { return getMandatory(EMAIL_SUBJECT_KEY, "subject"); } 
 		public String body() { return getMandatory(EMAIL_BODY_KEY, "body"); } 
+		public Optional<String> attachmentFilename() { return context.getString(ATTACHMENT_FILENAME_KEY); } 
 		
 		private String getMandatory(String key, String fieldName) {
 			return context.getString(key).orElseThrow(()->new EmailDestinationException("'" + fieldName + "' field not supplied, it is mandatory."));
@@ -175,11 +178,13 @@ public class EmailDestination<DC extends Context, OC extends Context> implements
 		public ContextWriter from(String from) { this.builder.put(EMAIL_FROM_KEY, from); return this;  } 
 		public ContextWriter subject(String subject) { this.builder.put(EMAIL_SUBJECT_KEY, subject); return this;  } 
 		public ContextWriter body(String body) { this.builder.put(EMAIL_BODY_KEY, body); return this;  } 
+		public ContextWriter attachmentFilename(String filename) { this.builder.put(ATTACHMENT_FILENAME_KEY, filename); return this;  } 
 		
 		// Convenience Functions
 		public ContextWriter to(List<String> to) { return to(toCommaSeparatedString(to)); } 
 		public ContextWriter cc(List<String> cc) { return cc(toCommaSeparatedString(cc)); } 
 		public ContextWriter bcc(List<String> bcc) { return bcc(toCommaSeparatedString(bcc)); } 
+		public ContextWriter attachmentFilename(Path filename) { return attachmentFilename(filename.getFileName().toString()); } 
 
 		private String toCommaSeparatedString(List<String> list) { return list.stream().collect(Collectors.joining(",")); } 
 		

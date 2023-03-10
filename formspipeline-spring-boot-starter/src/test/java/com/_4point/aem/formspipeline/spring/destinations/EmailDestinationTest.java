@@ -5,11 +5,15 @@ import static org.hamcrest.Matchers.*;
 import static org.junit.jupiter.api.Assertions.*;
 
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Path;
 import java.util.List;
+import java.util.function.Supplier;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.EnumSource;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
 import org.mockito.Mock;
@@ -20,6 +24,7 @@ import com._4point.aem.formspipeline.api.Context;
 import com._4point.aem.formspipeline.api.Result;
 import com._4point.aem.formspipeline.chunks.PdfOutputChunk;
 import com._4point.aem.formspipeline.contexts.EmptyContext;
+import com._4point.aem.formspipeline.spring.destinations.EmailDestination.ContextWriter;
 import com._4point.aem.formspipeline.spring.utils.EmailService;
 import com._4point.aem.formspipeline.spring.utils.EmailService.EmailServiceException;
 import com._4point.aem.formspipeline.spring.utils.EmailService.SendEmailData;
@@ -36,6 +41,7 @@ class EmailDestinationTest {
 	private static final String FROM_VALUE = "from_value";
 	private static final String SUBJECT_VALUE = "subject_value";
 	private static final String BODY_VALUE = "body_value";
+	private static final String ATTACHMENT_FILENAME_VALUE = "attachment_filename_value";
 	
 	
 	@Captor private ArgumentCaptor<SendEmailData> sendEmailData;
@@ -43,21 +49,54 @@ class EmailDestinationTest {
 	@BeforeEach
 	void setUp() throws Exception {
 	}
+	
+	private enum TestScenario {
+		ATTACHMENT_WITH_EXPLICIT_NAME(TestScenario::withName, ATTACHMENT_FILENAME_VALUE),
+		ATTACHMENT_WITH_DEFAULT_NAME(TestScenario::withoutName, "pdfAttachment")
+		;
+		
+		private final Supplier<Context> contextCreator;
+		private final String expectedName;
+		
+		private TestScenario(Supplier<Context> contextCreator, String expectedName) {
+			this.contextCreator = contextCreator;
+			this.expectedName = expectedName;
+		}
 
-	@Test
-	void testProcess(@Mock EmailService mockEmailService) throws Exception {
+		Context context() { return contextCreator.get(); }
+		public String expectedName() { return expectedName; }
+		
+		private static Context withName() {
+			return populateWriter()
+					  .attachmentFilename(Path.of(ATTACHMENT_FILENAME_VALUE))
+					  .build()
+					  ;
+		}
+
+		private static Context withoutName() {
+			return populateWriter()
+					  .build()
+					  ;
+		}
+
+		private static ContextWriter populateWriter() {
+			// Set up SendEmailData using all convenience functions (so that they are exercised as well)
+			return EmailDestination.writer()
+					  .to(TO_VALUES)
+					  .cc(CC_VALUES)
+					  .bcc(BCC_VALUES)
+					  .from(FROM_VALUE)
+					  .subject(SUBJECT_VALUE)
+					  .body(BODY_VALUE);
+		}
+	}
+
+	@ParameterizedTest
+	@EnumSource
+	void testProcess(TestScenario scenario, @Mock EmailService mockEmailService) throws Exception {
 		EmailDestination underTest = new EmailDestination<>(mockEmailService);
 		Mockito.when(mockEmailService.sendMail(sendEmailData.capture())).thenReturn(mockEmailService);
-		// Set up SendEmailData
-		Context dataContext = EmailDestination.writer()
-											  .to(TO_VALUES)
-											  .cc(CC_VALUES)
-											  .bcc(BCC_VALUES)
-											  .from(FROM_VALUE)
-											  .subject(SUBJECT_VALUE)
-											  .body(BODY_VALUE)
-											  .build()
-											  ;
+		Context dataContext = scenario.context();
 		PdfOutputChunk<Context> input = PdfOutputChunk.createSimple(dataContext, MOCK_PDF_DATA);
 		Result result = underTest.process(input);
 		assertNotNull(result);
@@ -91,7 +130,7 @@ class EmailDestinationTest {
 		assertAll(
 				()->assertArrayEquals(MOCK_PDF_DATA, dataSource.getInputStream().readAllBytes()),
 				()->assertEquals("application/pdf", dataSource.getContentType()),
-				()->assertEquals("someFilename", dataSource.getName())
+				()->assertEquals(scenario.expectedName(), dataSource.getName())
 				);
 	}
 
@@ -109,6 +148,7 @@ class EmailDestinationTest {
 											  .from(FROM_VALUE)
 											  .subject(SUBJECT_VALUE)
 											  .body(BODY_VALUE)
+											  .attachmentFilename(Path.of(ATTACHMENT_FILENAME_VALUE))
 											  .build()
 											  ;
 		PdfOutputChunk<Context> input = PdfOutputChunk.createSimple(dataContext, MOCK_PDF_DATA);
