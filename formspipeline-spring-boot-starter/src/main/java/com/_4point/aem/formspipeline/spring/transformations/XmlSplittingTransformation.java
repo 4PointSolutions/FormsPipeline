@@ -13,6 +13,9 @@ import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.events.XMLEvent;
 import javax.xml.transform.TransformerFactoryConfigurationError;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com._4point.aem.formspipeline.api.DataTransformation.DataTransformationOneToMany;
 import com._4point.aem.formspipeline.spring.chunks.XmlDataChunk;
 
@@ -22,11 +25,9 @@ import com._4point.aem.formspipeline.spring.chunks.XmlDataChunk;
  * Assumes that the root level will be discarded and one XmlChunk will be
  * created per element below the root.
  * 
- * code based on
- * https://stackoverflow.com/questions/5169978/split-1gb-xml-file-using-java
- *
  */
 public class XmlSplittingTransformation implements DataTransformationOneToMany<XmlDataChunk, XmlDataChunk> {
+	private static final Logger logger = LoggerFactory.getLogger(XmlSplittingTransformation.class);
 
 	private static final XMLInputFactory xmlInputFactory = XMLInputFactory.newInstance();
 	private static final XMLOutputFactory xmlOutputFactory = XMLOutputFactory.newInstance();
@@ -40,12 +41,14 @@ public class XmlSplittingTransformation implements DataTransformationOneToMany<X
 
 			Builder<XmlDataChunk> streamBuilder = Stream.builder();
 			while (event.isStartElement()) {
-				System.out.println("Found Tag " + event.asStartElement().getName().getLocalPart());
 				ByteArrayOutputStream os = new ByteArrayOutputStream();
 				XMLEventWriter ew = xmlOutputFactory.createXMLEventWriter(os);
 				event = copyTag(event, xsr, ew);
 				os.close();
 				streamBuilder.accept(XmlDataChunk.create(os.toByteArray(), dataChunk.dataContext()));
+				while(event.isCharacters()) {	
+					event = xsr.nextEvent();	// Eat all the characters until the next 
+				}
 			}
 			return streamBuilder.build();
 		} catch (XMLStreamException | TransformerFactoryConfigurationError | IOException e) {
@@ -54,6 +57,8 @@ public class XmlSplittingTransformation implements DataTransformationOneToMany<X
 	}
 
 	XMLEvent copyTag(XMLEvent currentEvent, XMLEventReader reader, XMLEventWriter writer) throws XMLStreamException {
+		String currentTagName = currentEvent.asStartElement().getName().getLocalPart();
+		logger.atTrace().log("Copying Start Tag {}", currentTagName);
 		writer.add(currentEvent);
 		for(currentEvent = reader.nextEvent();!currentEvent.isEndElement();currentEvent = reader.nextEvent()) {
 			if (currentEvent.isStartElement()) {
@@ -61,7 +66,9 @@ public class XmlSplittingTransformation implements DataTransformationOneToMany<X
 			}
 			writer.add(currentEvent);
 		}
+		logger.atTrace().log("Copying End Tag {}", currentTagName);
 		writer.add(currentEvent);	// Write out the endElement event
-		return reader.nextTag();
+
+		return reader.nextEvent();
 	}
 }

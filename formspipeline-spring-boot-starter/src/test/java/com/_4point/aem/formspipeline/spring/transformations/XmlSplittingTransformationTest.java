@@ -11,7 +11,6 @@ import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.xmlunit.builder.Input;
-import org.xmlunit.matchers.CompareMatcher;
 
 import com._4point.aem.formspipeline.spring.chunks.XmlDataChunk;
 
@@ -20,11 +19,21 @@ class XmlSplittingTransformationTest {
 			"""
 		   <statement account="123">
 		      ...stuff...
+		      <foo>bar</foo>
+		      <emptyTag />
+		      ...stuff...
 		   </statement>
 			""";
 	private static final String STATEMENT2 =
 			"""
 		   <statement account="456">
+		      <nested1>
+			     <nested2>
+			        <nested3_1>Some Data</nested3_1>
+			        <nested3_2/>
+			        <nested3_3>Some More Data</nested3_3>
+			     </nested2>
+		      </nested1>
 		      ...stuff...
 		   </statement>
 			""";
