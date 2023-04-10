@@ -131,8 +131,8 @@ public class XmlSplittingTransformation implements DataTransformationOneToMany<X
 						// We've completed a transaction, so store it away.
 						transactionList.add(eventList.subList(transactionStartIndex, i));
 						transactionStartIndex = i;
-					} else if ((currentState == State.EndTransaction || currentState == State.BetweenTransactions) && (newState == State.InPostamble || newState == State.BetweenTransactions)) {
-						// We are between transactions and so, ignore the incoming data
+					} else if ((currentState == State.EndTransaction || currentState == State.BetweenTransactions) && (newState == State.InPostamble || newState == State.BetweenTransactions|| newState == State.BeginTransaction)) {
+						// We are between transactions and so, store the incoming data
 						transactionStartIndex = i;
 					} else if (currentState == State.BetweenTransactions && newState == State.BeginTransaction) {
 						// We have started a new state, stop ignoring characters
