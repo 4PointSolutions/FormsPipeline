@@ -37,12 +37,12 @@ class XmlSplittingTransformationTest {
 		      ...stuff...
 		   </statement>
 			""";
-	private static final String TEST_INPUT = 
-			"<statements>" + STATEMENT1 + STATEMENT2 + "</statements>";
+	private static final String XML_WRAPPER_FMT_STRING = 
+			"<output><statements>%s</statements></output>\n";
 
-	private static final byte[] TEST_BYTES = TEST_INPUT.getBytes(StandardCharsets.UTF_8);
+	private static final byte[] TEST_BYTES = XML_WRAPPER_FMT_STRING.formatted(STATEMENT1 + STATEMENT2).getBytes(StandardCharsets.UTF_8);
 
-	private final XmlSplittingTransformation underTest = new XmlSplittingTransformation();
+	private final XmlSplittingTransformation underTest = new XmlSplittingTransformation(2);
 	
 	@BeforeEach
 	void setUp() throws Exception {
@@ -50,11 +50,12 @@ class XmlSplittingTransformationTest {
 
 	@Test
 	void testProcess() {
-		List<XmlDataChunk> result = underTest.process(XmlDataChunk.create(TEST_BYTES)).toList();
+		XmlDataChunk chunk = XmlDataChunk.create(TEST_BYTES);
+		List<XmlDataChunk> result = underTest.process(chunk).toList();
 		
 		assertEquals(2, result.size());
-		assertThat(Input.fromByteArray(result.get(0).bytes()), isIdenticalTo(Input.fromString(STATEMENT1)));
-		assertThat(Input.fromByteArray(result.get(1).bytes()), isIdenticalTo(Input.fromString(STATEMENT2)));
+		assertThat(Input.fromByteArray(result.get(0).bytes()), isIdenticalTo(Input.fromString(XML_WRAPPER_FMT_STRING.formatted(STATEMENT1))).ignoreWhitespace());
+		assertThat(Input.fromByteArray(result.get(1).bytes()), isIdenticalTo(Input.fromString(XML_WRAPPER_FMT_STRING.formatted(STATEMENT2))).ignoreWhitespace());
 	}
 
 }

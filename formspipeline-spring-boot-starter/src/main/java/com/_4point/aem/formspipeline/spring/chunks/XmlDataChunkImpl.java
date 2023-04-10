@@ -2,6 +2,7 @@ package com._4point.aem.formspipeline.spring.chunks;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.Optional;
 
 import javax.xml.parsers.DocumentBuilder;
@@ -13,6 +14,8 @@ import javax.xml.xpath.XPathExpression;
 import javax.xml.xpath.XPathExpressionException;
 import javax.xml.xpath.XPathFactory;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.w3c.dom.Attr;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -24,6 +27,8 @@ import com._4point.aem.formspipeline.api.Context;
 import com._4point.aem.formspipeline.contexts.AggregateContext;
 
 public class XmlDataChunkImpl implements XmlDataChunk {	
+	private static final Logger logger = LoggerFactory.getLogger(XmlDataChunkImpl.class);
+
 	private final byte[] xmlBytes;
 	private final Context context;
 	
@@ -74,6 +79,7 @@ public class XmlDataChunkImpl implements XmlDataChunk {
 			    doc.getDocumentElement().normalize();
 				return new XmlDataContextImpl(doc,xPath);
 			} catch (ParserConfigurationException | SAXException | IOException e) {
+				logger.atTrace().addArgument(()->new String(bytes, StandardCharsets.UTF_8)).log("XMLChunk Data = '{}'.");
 				throw new XmlDataException(String.format("Failed to create XmlDataContext ... %s", e.getMessage()),e);
 			} 
 		}
