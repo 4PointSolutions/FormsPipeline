@@ -3,6 +3,8 @@ package com._4point.aem.formspipeline.spring.transformations;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStreamWriter;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Stream;
@@ -55,7 +57,7 @@ public class XmlSplittingTransformation implements DataTransformationOneToMany<X
 			return streamBuilder.build();
 		} catch (XMLStreamException | TransformerFactoryConfigurationError | IOException e) {
 			throw new IllegalStateException("Failed to split XML file.  %s".formatted(e.getMessage()), e);
-		}
+		} 
 	}
 
 	private static List<EventInfo> readToList(XmlDataChunk dataChunk) throws XMLStreamException, IOException {
@@ -69,7 +71,8 @@ public class XmlSplittingTransformation implements DataTransformationOneToMany<X
 		
 		private byte[] replayTransactions(int transactionNumber) throws XMLStreamException, IOException {
 			ByteArrayOutputStream os = new ByteArrayOutputStream();
-			try (os; var ew = new AutoCloseableXmlEventWriter(xmlOutputFactory.createXMLEventWriter(os))) {
+			// Create ByteArrayOuputStream to capture output, OutputStreamWriter to force UTF-8 output, then XMLEventWriter that is AutoCloseable 
+			try (os; var osw = new OutputStreamWriter(os, StandardCharsets.UTF_8); var ew = new AutoCloseableXmlEventWriter(xmlOutputFactory.createXMLEventWriter(osw))) {
 				writePreamble(ew);
 				writeTransaction(ew, transactionNumber);
 				writePostamble(ew);

@@ -30,7 +30,7 @@ class XmlSplittingTransformationTest {
 			     <nested2>
 			        <nested3_1>Some Data</nested3_1>
 			        <nested3_2/>
-			        <nested3_3>Some More Data</nested3_3><nested3_4></nested3_4>
+			        <nested3_3>Some More Data with Unicode character ℃</nested3_3><nested3_4></nested3_4>
 			     </nested2>
 		      </nested1>
 		      ...stuff...
