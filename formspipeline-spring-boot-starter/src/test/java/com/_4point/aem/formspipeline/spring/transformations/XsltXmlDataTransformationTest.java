@@ -23,10 +23,19 @@ import org.xmlunit.builder.Input;
 
 import com._4point.aem.formspipeline.spring.chunks.XmlDataChunk;
 import com._4point.aem.formspipeline.spring.common.TestHelper;
-import com._4point.aem.formspipeline.spring.transformations.XsltXmlDataTransformation.XmlTransformationException;
+import com._4point.aem.formspipeline.spring.transformations.XsltNonXmlDataTransformation.XmlTransformationException;
 
 import net.sf.saxon.TransformerFactoryImpl;
 
+/**
+ * The tests in this class are a bit more extensive than the amount of code in the class under test would 
+ * seem to warrant.  This is because a) the class under test used to be bigger and b) this class is the 
+ * most common use case.
+ * 
+ * The end result is that this class tests not only XsltXmlDataTransformation but also tests
+ * XsltNonXmlDataTransformation as well.
+ *
+ */
 @ExtendWith(MockitoExtension.class)
 class XsltXmlDataTransformationTest {
 	private final byte[] xmlBytes = TestHelper.getFileBytesFromResource(TestHelper.SIMPLE_XML_DATA_FILE);
