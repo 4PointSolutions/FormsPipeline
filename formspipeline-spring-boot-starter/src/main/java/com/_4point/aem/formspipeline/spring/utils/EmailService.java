@@ -1,5 +1,7 @@
 package com._4point.aem.formspipeline.spring.utils;
 
+import static java.util.function.Predicate.not;
+
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -183,16 +185,7 @@ public class EmailService {
 			if (arg == null) {
 				throw new IllegalArgumentException(argName + " cannot be null.");
 			}
-			boolean needsSanitizing = false;
-			for (String entry : arg) {
-				if (entry == null || entry.isBlank()) { // Remove empty entries.
-					needsSanitizing = true;
-					break;
-				}
-			}
-			if (needsSanitizing) {
-				arg = sanitizeList(arg);
-			}
+			arg = sanitizeList(arg);
 			if (arg.isEmpty()) {
 				throw new IllegalArgumentException(argName + " cannot be empty.");
 			}
@@ -200,27 +193,19 @@ public class EmailService {
 		}
 
 		private static List<String> sanitizeList(List<String> values) {
-			List<String> newList = new ArrayList<>(values.size());
-
-			for (String entry : values) {
-				if (entry != null && !entry.isBlank()) { // Remove empty entries.
-					newList.add(entry.strip()); // strip any leading/trailing whitespace
-				}
-			}
-			return newList;
+			return values.stream()
+					  	 .filter(not(s->s == null || s.isBlank()))	// Remove blank entries
+					  	 .map(String::strip)
+					  	 .toList();
 		}
 
 		private static List<String> normalizeOptional(List<String> arg) {
 			if (arg == null) {
 				return Collections.emptyList();
 			}
-			for (int i = 0; i < arg.size(); i++) {
-				String entry = arg.get(i);
-				if (entry == null || entry.isBlank()) { // Remove empty entries.
-					arg.remove(i);
-				}
-			}
-			return arg;
+			return arg.stream()
+					  .filter(not(s->s == null || s.isBlank()))	// Remove blank entries
+					  .toList();
 		}
 
 		/**
@@ -236,7 +221,6 @@ public class EmailService {
 			SendEmailData original;
 
 			private SafeSendEmailData(SendEmailData original) {
-				super();
 				this.original = original;
 			}
 

@@ -1,6 +1,7 @@
 package com._4point.aem.formspipeline.spring.utils;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static java.util.function.Predicate.not;
 import static org.hamcrest.CoreMatchers.*;
 import static org.hamcrest.MatcherAssert.assertThat;
 
@@ -174,8 +175,8 @@ public class EmailServiceTest {
 		final List<String> toAddresses = List.of("ToAddress1@example.com", "ToAddress2@example.com", "ToAddress3@example.com");
 		final String subjectText = "Test email Subject";
 		final String bodyText = "<html><head><meta http-equiv=Content-Type content=\"text/html; charset=utf-8\"></head><body><p>Test email body text.</p></body></html>";
-		final List<String> ccAddresses = List.of("CcAddress1@example.com", "CcAddress2@example.com");
-		final List<String> bccAddresses = List.of("BccAddress1@example.com", "BccAddress2@example.com", "BccAddress3@example.com");
+		final List<String> ccAddresses = List.of("CcAddress1@example.com", "CcAddress2@example.com", "");
+		final List<String> bccAddresses = List.of("BccAddress1@example.com", "BccAddress2@example.com", "", "BccAddress3@example.com");
 		final String bodyContentType = "text/html";
 		final byte[] documentOfRecordData = "DocumentOfRecordData".getBytes();
 		final String dorContentType = "application/pdf";
@@ -201,14 +202,14 @@ public class EmailServiceTest {
 		emailService.sendMail(emailData);
 
 		final MimeMessage[] receivedMessages = greenMail.getReceivedMessages();
-		assertEquals(toAddresses.size() + ccAddresses.size() + bccAddresses.size(), receivedMessages.length);
+		assertEquals(toAddresses.size() + ccAddresses.size() + bccAddresses.size() - 2 /* - 2 blank addresses*/, receivedMessages.length);
 		final MimeMessage receivedMessage = receivedMessages[0];
 		List<String> allVisibleAddresses = new ArrayList<>(toAddresses);
-		allVisibleAddresses.addAll(ccAddresses);
+		allVisibleAddresses.addAll(ccAddresses.stream().filter(not(String::isBlank)).toList());
 		assertAll(
 				()->assertArrayEquals(new String[] { fromAddress }, convertAddressArrayToStringArray(receivedMessage.getFrom())),
 				()->assertEquals(subjectText, receivedMessage.getSubject()),
-				()->assertArrayEquals(allVisibleAddresses .toArray(), convertAddressArrayToStringArray(receivedMessage.getAllRecipients())),
+				()->assertArrayEquals(allVisibleAddresses.toArray(), convertAddressArrayToStringArray(receivedMessage.getAllRecipients())),
 //				()->assertThat(receivedMessage.getContentType(), containsString(bodyContentType)),
 				()->{
 					// Make sure all the attachments match.
