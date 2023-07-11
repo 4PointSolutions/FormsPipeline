@@ -1,5 +1,7 @@
 package com._4point.aem.formspipeline.spring.transformations;
 
+import java.nio.file.Path;
+
 import com._4point.aem.formspipeline.api.Context;
 import com._4point.aem.formspipeline.api.DataChunk;
 import com._4point.aem.formspipeline.api.DataTransformation.DataTransformationOneToOne;
@@ -23,8 +25,16 @@ public class XsltXmlDataTransformation implements DataTransformationOneToOne<Xml
 		this.transformer = transformer;
 	}
 	
+	public XsltXmlDataTransformation(byte[] xsltBytes, TransformerFactoryImpl transformerFactory, Path xsltLocation) throws IllegalArgumentException {
+		this(new XsltNonXmlDataTransformation(xsltBytes, transformerFactory, xsltLocation));
+	}
+	
 	public XsltXmlDataTransformation(byte[] xsltBytes, TransformerFactoryImpl transformerFactory) throws IllegalArgumentException {
 		this(new XsltNonXmlDataTransformation(xsltBytes, transformerFactory));
+	}
+	
+	public XsltXmlDataTransformation(byte[] xsltBytes, Path xsltLocation) throws IllegalArgumentException {
+		this(xsltBytes, new TransformerFactoryImpl(), xsltLocation);
 	}
 	
 	public XsltXmlDataTransformation(byte[] xsltBytes) throws IllegalArgumentException {

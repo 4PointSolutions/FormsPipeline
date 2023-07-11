@@ -47,7 +47,8 @@ class XsltXmlDataTransformationTest {
 	private final byte[] xsltBytesV20 = TestHelper.getFileBytesFromResource(TestHelper.SIMPLE_XSLTV20_DATA_FILE);
 	
 	private final byte[] invalidXsltBytes = TestHelper.getFileBytesFromResource(TestHelper.INVALID_XSLT_DATA_FILE);
-	
+	private final byte[] xsltIncludeBytes = TestHelper.getFileBytesFromResource(TestHelper.SIMPLE_XSLT_INCLUDE_FILE);
+		
 	@Mock Transformer mockTransformer;
 	@Mock TransformerFactoryImpl mockTransformerFactory;
 	
@@ -114,6 +115,13 @@ class XsltXmlDataTransformationTest {
 	@Test
 	void testProcess_success() {
 		XsltXmlDataTransformation underTest = new XsltXmlDataTransformation(xsltBytes);		
+		XmlDataChunk data = underTest.process(XmlDataChunk.create(xmlBytes));
+		assertThat(Input.fromByteArray(data.bytes()), isIdenticalTo(Input.fromString(EXPECTED_ELEMENT_NAME_CHANGED_XML)));
+	}
+	
+	@Test
+	void testProcess_withInclude() throws Exception {
+		XsltXmlDataTransformation underTest = new XsltXmlDataTransformation(xsltIncludeBytes, TestHelper.getPathFromResource(TestHelper.SIMPLE_XSLT_INCLUDE_FILE).getParent());		
 		XmlDataChunk data = underTest.process(XmlDataChunk.create(xmlBytes));
 		assertThat(Input.fromByteArray(data.bytes()), isIdenticalTo(Input.fromString(EXPECTED_ELEMENT_NAME_CHANGED_XML)));
 	}

@@ -2,6 +2,7 @@ package com._4point.aem.formspipeline.spring.transformations;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.nio.file.Path;
 
 import javax.xml.XMLConstants;
 import javax.xml.transform.Transformer;
@@ -29,18 +30,30 @@ public class XsltNonXmlDataTransformation implements DataTransformationOneToOne<
 	
 	private final Transformer transformer;
 	
-	public XsltNonXmlDataTransformation(byte[] xsltBytes, TransformerFactoryImpl transformerFactory) throws IllegalArgumentException {
+	public XsltNonXmlDataTransformation(byte[] xsltBytes, TransformerFactoryImpl transformerFactory, Path xsltLocation) throws IllegalArgumentException {
         try {
             transformerFactory.setAttribute(XMLConstants.ACCESS_EXTERNAL_DTD, "");
-            transformerFactory.setAttribute(XMLConstants.ACCESS_EXTERNAL_STYLESHEET, "");
-            this.transformer = transformerFactory.newTransformer(new StreamSource(new ByteArrayInputStream(xsltBytes)));
+            transformerFactory.setAttribute(XMLConstants.ACCESS_EXTERNAL_STYLESHEET, "file");
+            StreamSource source = new StreamSource(new ByteArrayInputStream(xsltBytes));
+            if (xsltLocation != null) {
+            	source.setSystemId(xsltLocation.toFile());
+            }
+			this.transformer = transformerFactory.newTransformer(source);
 		} catch (TransformerConfigurationException e) {
 			throw new IllegalArgumentException(String.format("Failed to instantiate XsltXmlDataTransformation.  %s", e.getMessage()),e);
 		}		        
 	}
 	
+	public XsltNonXmlDataTransformation(byte[] xsltBytes, Path xsltLocation) throws IllegalArgumentException {
+		this(xsltBytes, new TransformerFactoryImpl(), xsltLocation);
+	}
+	
+	public XsltNonXmlDataTransformation(byte[] xsltBytes, TransformerFactoryImpl transformerFactory) throws IllegalArgumentException {
+		this(xsltBytes, transformerFactory, null);
+	}
+
 	public XsltNonXmlDataTransformation(byte[] xsltBytes) throws IllegalArgumentException {
-		this(xsltBytes, new TransformerFactoryImpl());
+		this(xsltBytes, new TransformerFactoryImpl(), null);
 	}
 	
 	@Override
