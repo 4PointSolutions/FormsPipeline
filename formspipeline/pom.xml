@@ -14,7 +14,7 @@
 		<surefire-plugin.version>3.0.0-M9</surefire-plugin.version>
 		
 		<!-- Project dependecies -->
-		<fluentforms.version>0.0.2-SNAPSHOT</fluentforms.version>
+		<fluentforms.version>0.0.3-SNAPSHOT</fluentforms.version>
 		<slf4j-api.version>1.7.21</slf4j-api.version>
 
 		<!-- Testing dependecies -->
