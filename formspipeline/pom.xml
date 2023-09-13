@@ -18,11 +18,11 @@
 		<slf4j-api.version>1.7.21</slf4j-api.version>
 
 		<!-- Testing dependecies -->
-		<junit.version>5.9.2</junit.version>
-		<mockito.version>5.1.1</mockito.version>
+		<junit.version>5.10.0</junit.version>
+		<mockito.version>5.5.0</mockito.version>
 		<hamcrest.version>2.2</hamcrest.version>
 		<junit-addons.version>1.4</junit-addons.version>
-		<wiremock.version>2.35.0</wiremock.version>
+		<wiremock.version>3.0.3</wiremock.version>
 	</properties>
 
 	<distributionManagement>
@@ -122,8 +122,8 @@
 			<scope>provided</scope>
 		</dependency>
 		<dependency>
-			<groupId>com.github.tomakehurst</groupId>
-			<artifactId>wiremock-jre8</artifactId>
+			<groupId>org.wiremock</groupId>
+			<artifactId>wiremock</artifactId>
 			<version>${wiremock.version}</version>
 			<scope>test</scope>
 		</dependency>
