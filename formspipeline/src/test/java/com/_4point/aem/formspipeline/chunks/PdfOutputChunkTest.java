@@ -7,8 +7,10 @@ import java.nio.charset.StandardCharsets;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import com._4point.aem.formspipeline.api.Context;
 import com._4point.aem.formspipeline.chunks.PdfOutputChunk.PdfOutputContext;
 import com._4point.aem.formspipeline.contexts.EmptyContext;
+import com._4point.aem.formspipeline.contexts.SingletonContext;
 
 class PdfOutputChunkTest {
 	
@@ -49,6 +51,23 @@ class PdfOutputChunkTest {
 		PdfOutputContext outputContextPages = underTestPages.outputContext();
 		assertEquals(NUM_PAGES, outputContextPages.numPages().getAsInt());
 		assertTrue(outputContextPages.get("Key", String.class).isEmpty());
+	}
+
+	@Test
+	void testUpdateOutputContext() {
+		String NEW_CONTEXT_KEY = "newkey";
+		String NEW_CONTEXT_VALUE = "value";
+		Context newContext = SingletonContext.of(NEW_CONTEXT_KEY, NEW_CONTEXT_VALUE);
+		
+		PdfOutputContext outputContextNoPages = underTestNoPages.updateContext(newContext).outputContext();
+		assertTrue(outputContextNoPages.numPages().isEmpty());
+		assertTrue(outputContextNoPages.get("Key", String.class).isEmpty());
+		assertEquals(NEW_CONTEXT_VALUE, outputContextNoPages.get(NEW_CONTEXT_KEY, String.class).orElseThrow());
+
+		PdfOutputContext outputContextPages = underTestPages.updateContext(newContext).outputContext();
+		assertEquals(NUM_PAGES, outputContextPages.numPages().getAsInt());
+		assertTrue(outputContextPages.get("Key", String.class).isEmpty());
+		assertEquals(NEW_CONTEXT_VALUE, outputContextNoPages.get(NEW_CONTEXT_KEY, String.class).orElseThrow());
 	}
 
 }
