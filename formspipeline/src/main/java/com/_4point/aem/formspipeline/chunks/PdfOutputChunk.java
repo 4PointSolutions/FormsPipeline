@@ -20,8 +20,8 @@ public final class PdfOutputChunk<D extends Context> extends AbstractDocumentOut
 		this.outputContext = outputContext;
 	}
 	
-	private PdfOutputChunk(PdfOutputChunk<D> origChunk, Context newContext) {
-		super(origChunk.dataContext(), origChunk.bytes());
+	private PdfOutputChunk(PdfOutputChunk<D> origChunk, D dataContext, Context newContext) {
+		super(dataContext, origChunk.bytes());
 		OptionalInt numPages = origChunk.outputContext.numPages();
 		this.outputContext = numPages.isPresent() ? new SimplePdfOutputContext(new AggregateContext(newContext, origChunk.outputContext), numPages.getAsInt())
 												  : new SimplePdfOutputContext(new AggregateContext(newContext, origChunk.outputContext));
@@ -47,8 +47,23 @@ public final class PdfOutputChunk<D extends Context> extends AbstractDocumentOut
 	 * @param newContexts - one or more additional contexts.
 	 * @return
 	 */
-	public PdfOutputChunk<D> updateContext(Context... newContexts) { return new PdfOutputChunk<>(this, AggregateContext.aggregate(newContexts)); }
+	public PdfOutputChunk<D> updateContext(Context... newContexts) { return new PdfOutputChunk<>(this, this.dataContext(), AggregateContext.aggregate(newContexts)); }
 	
+	/**
+	 * Update the data context with additional data. 
+	 * 
+	 * This routine produces a new pdfOutputChunk that incorporates the new context while retaining the same Pdf data.
+	 * 
+	 * @param newContexts - one or more additional contexts.
+	 * @return
+	 */
+	@SuppressWarnings("unchecked")
+	public PdfOutputChunk<D> updateDataContext(Context... newContexts) { 
+		AggregateContext aggregateContext = new AggregateContext(AggregateContext.aggregate(newContexts), this.dataContext());
+		return new PdfOutputChunk<>(this, (D)aggregateContext, EmptyContext.emptyInstance()); 
+	}
+	
+
 
 	public static interface PdfOutputContext extends PagedContext {
 	}
