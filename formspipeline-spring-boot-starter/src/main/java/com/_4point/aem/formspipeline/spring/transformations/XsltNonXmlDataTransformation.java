@@ -3,6 +3,8 @@ package com._4point.aem.formspipeline.spring.transformations;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.nio.file.Path;
+import java.util.Collection;
+import java.util.Collections;
 
 import javax.xml.XMLConstants;
 import javax.xml.transform.Transformer;
@@ -15,6 +17,7 @@ import com._4point.aem.formspipeline.api.Context;
 import com._4point.aem.formspipeline.api.DataChunk;
 import com._4point.aem.formspipeline.api.DataTransformation.DataTransformationOneToOne;
 import com._4point.aem.formspipeline.chunks.SimpleDataChunk;
+import com._4point.aem.formspipeline.contexts.SingletonContext;
 import com._4point.aem.formspipeline.spring.chunks.XmlDataChunk;
 
 import net.sf.saxon.TransformerFactoryImpl;
@@ -27,6 +30,8 @@ import net.sf.saxon.TransformerFactoryImpl;
  *
  */
 public class XsltNonXmlDataTransformation implements DataTransformationOneToOne<XmlDataChunk, DataChunk<Context>> {
+	private static final String XSLT_TRANSFORMATION_CONTEXT_PREFIX = "com._4point.aem.formspipeline.spring.transformations.XsltNonXmlDataTransformation.";
+	private static final String XSLT_TRANSFORMATION_CONTEXT_PARAM_KEY = XSLT_TRANSFORMATION_CONTEXT_PREFIX + "parameters";
 	
 	private final Transformer transformer;
 	
@@ -61,14 +66,28 @@ public class XsltNonXmlDataTransformation implements DataTransformationOneToOne<
 		try {
 			//Add correlation ID, processing time, size of dataChunk, which transformer is used
 			ByteArrayOutputStream output = new ByteArrayOutputStream();
+			parameters(dataChunk.dataContext()).forEach(p->transformer.setParameter(p.name, p.value));	// pass in parameters for the XSLT 
 			transformer.transform(new StreamSource(dataChunk.asInputStream()), new StreamResult(output));
+			transformer.reset();
 			return new SimpleDataChunk(dataChunk.dataContext(), output.toByteArray());	// Include previous context in this one.
 		} catch (TransformerException e) {
 			throw new XmlTransformationException(e);
 		}
 	}
     
-    @SuppressWarnings("serial")
+	public record Parameter(String name, String value) {};
+	
+	public static Context buildContext(Collection<Parameter> p) { 
+		return SingletonContext.of(XSLT_TRANSFORMATION_CONTEXT_PARAM_KEY, p);
+	}
+	
+	@SuppressWarnings("unchecked")
+	private static Collection<Parameter> parameters(Context c) {
+		return c.get(XSLT_TRANSFORMATION_CONTEXT_PARAM_KEY, Collection.class)
+				.orElse(Collections.emptyList());
+	}
+
+	@SuppressWarnings("serial")
     public static class XmlTransformationException extends RuntimeException {
 
     	public XmlTransformationException() {

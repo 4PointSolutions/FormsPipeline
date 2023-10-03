@@ -3,12 +3,14 @@ package com._4point.aem.formspipeline.spring.transformations;
 import static org.junit.jupiter.api.Assertions.*;
 
 import java.nio.charset.StandardCharsets;
+import java.util.List;
 
 import org.junit.jupiter.api.Test;
 
 import com._4point.aem.formspipeline.api.Context;
 import com._4point.aem.formspipeline.api.DataChunk;
 import com._4point.aem.formspipeline.spring.chunks.XmlDataChunkImpl;
+import com._4point.aem.formspipeline.spring.transformations.XsltNonXmlDataTransformation.Parameter;
 
 /**
  * This class has minimal tests because the main tests are in XsltXmlDataTransformationTest since the class it tests
@@ -47,6 +49,8 @@ class XsltNonXmlDataTransformationTest {
 			    
 			    <xsl:output method="text" encoding="utf-8" />
 			    
+			    <xsl:param name="count"/>
+			    
 			    <xsl:template match="/">
 			        <xsl:apply-templates select="DriverSection" />
 			    </xsl:template>
@@ -68,8 +72,10 @@ class XsltNonXmlDataTransformationTest {
 			    </xsl:template>
 			    <xsl:template match="Archive_16">
 			        <xsl:value-of select="normalize-space(text())"/>
-			        <xsl:value-of>
-			Count = 1</xsl:value-of>
+			        <xsl:text>
+			</xsl:text>
+			        
+			        <xsl:value-of select="concat('Count = ', $count)" />
 			    </xsl:template>
 			    <xsl:template match="text()" /> <!-- Eat all the fields that are not listed above -->
 			</xsl:stylesheet>			
@@ -81,8 +87,10 @@ class XsltNonXmlDataTransformationTest {
 			Count = 1""";
 	@Test
 	void testProcess() {
+		List<Parameter> parameters = List.of(new Parameter("count", "1"));
 		XsltNonXmlDataTransformation underTest = new XsltNonXmlDataTransformation(XSLT_STR.getBytes(StandardCharsets.UTF_8));
-		DataChunk<Context> result = underTest.process(new XmlDataChunkImpl(XML_DATA.getBytes(StandardCharsets.UTF_8)));
+		XmlDataChunkImpl dataChunk = new XmlDataChunkImpl(XML_DATA.getBytes(StandardCharsets.UTF_8), XsltNonXmlDataTransformation.buildContext(parameters));
+		DataChunk<Context> result = underTest.process(dataChunk);
 		assertEquals(EXPECTED_RESULT, result.asString());
 	}
 
