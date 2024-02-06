@@ -2,17 +2,12 @@ package com._4point.aem.formspipeline.api;
 
 import java.util.stream.Stream;
 
-import com._4point.aem.formspipeline.api.DataTransformation.*;
-
 /**
  * This is a "tagging" interface that is the parent of all the DataTransformation interfaces.
  *
  */
 @SuppressWarnings("rawtypes")
-public sealed interface DataTransformation<T extends DataChunk<? extends Context>, R extends DataChunk<? extends Context>> permits DataTransformationOneToOne, 
-												   DataTransformationOneToMany, 
-												   DataTransformationManyToOne, 
-												   DataTransformationManyToMany 
+public sealed interface DataTransformation<T extends DataChunk<? extends Context>, R extends DataChunk<? extends Context>> 
 												   {
 	@FunctionalInterface
 	public non-sealed interface DataTransformationOneToOne<T extends DataChunk<? extends Context>, R extends DataChunk<? extends Context>> extends DataTransformation {

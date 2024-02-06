@@ -2,17 +2,12 @@ package com._4point.aem.formspipeline.api;
 
 import java.util.stream.Stream;
 
-import com._4point.aem.formspipeline.api.OutputTransformation.*;
-
 /**
  * This is a "tagging" interface that is the parent of all the OutputTransformation interfaces.
  *
  */
 @SuppressWarnings("rawtypes")
-public sealed interface OutputTransformation<T extends OutputChunk<? extends Context, ? extends Context>, R extends OutputChunk<? extends Context, ? extends Context>> permits OutputTransformationOneToOne,
-													 OutputTransformationOneToMany,
-													 OutputTransformationManyToOne,
-													 OutputTransformationManyToMany
+public sealed interface OutputTransformation<T extends OutputChunk<? extends Context, ? extends Context>, R extends OutputChunk<? extends Context, ? extends Context>> 
 													 {
 
 	@FunctionalInterface
