@@ -3,7 +3,10 @@ package com._4point.aem.formspipeline.spring.chunks;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.util.List;
 import java.util.Optional;
+import java.util.function.Consumer;
+import java.util.stream.IntStream;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -83,29 +86,34 @@ public class XmlDataChunkImpl implements XmlDataChunk {
 				throw new XmlDataException(String.format("Failed to create XmlDataContext ... %s", e.getMessage()),e);
 			} 
 		}
-	
-		private Optional<String> internalGetString(String xpath) {			
+
+		private Optional<String> internalGetString(String xpath) {
+			List<String> strings = internalGetStrings(xpath);
+			if (strings.size() > 1) {
+	        	//Multiple matches for the same xpath (i.e. repeated sections)9i
+	        	throw new IllegalArgumentException(String.format("Failed to parse xml path %s to a single entry (Found %d entries).", xpath, strings.size()));
+	        }
+			return strings.size() == 1 ? Optional.of(strings.get(0)) : Optional.empty();
+		}	
+
+		private List<String> internalGetStrings(String xpath) {			
 			try {
 				NodeList nodes = getNodeListByXpath(xpath);	        
-		        int length = nodes.getLength();
-				if (length > 1) {
-		        	//Multiple matches for the same xpath (i.e. repeated sections)9i
-		        	throw new IllegalArgumentException(String.format("Failed to parse xml path %s to a single entry (Found %d entries).", xpath, length));
-		        }
-		        
-		        if (length == 1) {	// If it's exactly one result, then that's what we're looking for.
-		        	Node node = nodes.item(0);
-		        	if (node.getNodeType() == Node.ELEMENT_NODE) {
-	        			return Optional.of(((Element)node).getTextContent());	
-		        	} else if (node.getNodeType() == Node.ATTRIBUTE_NODE) {
-		        		return Optional.of(((Attr)node).getTextContent());
-		        	}
-		        }
-		        
-		        return Optional.empty();	 
+		        return IntStream.range(0, nodes.getLength())
+		        	     		.mapToObj(nodes::item)
+		        	     		.mapMulti(this::mapNodeToString)
+		        	     		.toList();
 			} catch (XPathExpressionException e) {			
 				throw new IllegalArgumentException(String.format("Failed to parse xml path %s. Error message: %s", xpath, e.getMessage()),e);
 			} 		
+		}
+
+		private void mapNodeToString(Node node, Consumer<String> consumer) {
+			if (node.getNodeType() == Node.ELEMENT_NODE) {
+				consumer.accept(((Element)node).getTextContent());	
+			} else if (node.getNodeType() == Node.ATTRIBUTE_NODE) {
+				consumer.accept(((Attr)node).getTextContent());
+			}
 		}
 
 		private NodeList getNodeListByXpath(String xpath) throws XPathExpressionException {
@@ -120,6 +128,15 @@ public class XmlDataChunkImpl implements XmlDataChunk {
 				return (Optional<T>) internalGetString(key);
 			}
 			return Optional.empty();
+		}
+
+		@SuppressWarnings("unchecked")
+		@Override
+		public <T> List<T> getMulti(String key, Class<T> type) {
+			if (type.equals(String.class)) {
+				return (List<T>)internalGetStrings(key);
+			}
+			return List.of();
 		}
 	}
 }

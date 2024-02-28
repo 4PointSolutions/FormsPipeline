@@ -136,6 +136,14 @@ class XmlDataChunkImplTest {
     }
 
     @Test
+    void testGetString_simpleXML_repeatedSection_getMulti()throws Exception {
+    	tester().withXmlLocation(TestHelper.SIMPLE_XML_DATA_FILE)
+    			.create()
+    			.forXpath(TestHelper.REPEAT_SECTION_XPATH_EXP_FOR_SIMPLE_XML)
+    			.contextShouldContainMulti("2000", "1000", "4000");
+    }
+
+    @Test
     void testGetString_simpleXML_badXpath_throwException()throws Exception {
     	tester().withXmlLocation(TestHelper.SIMPLE_XML_DATA_FILE)
     			.create()
@@ -254,6 +262,12 @@ class XmlDataChunkImplTest {
 	    		checkXPath();
     			String actualValue = result.dataContext().getString(xpath).orElseThrow();
     			assertEquals(expectedValue, actualValue);
+    		}
+    		
+    		void contextShouldContainMulti(String... expectedValue) {
+	    		checkXPath();
+    			List<String> actualValue = result.dataContext().getStrings(xpath);
+    			assertArrayEquals(expectedValue, actualValue.toArray(new String[actualValue.size()]));
     		}
     		
     		void contextShouldReturnEmpty() {
