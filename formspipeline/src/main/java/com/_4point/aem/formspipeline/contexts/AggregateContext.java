@@ -32,6 +32,11 @@ public class AggregateContext implements Context {
 		return newContext.get(key, target).or(()->oldContext.get(key, target));
 	}
 	
+	@Override
+	public <T> List<T> getMulti(String key, Class<T> target) {
+		List<T> result = newContext.getMulti(key, target);
+		return result.isEmpty() ? oldContext.getMulti(key, target) : result;
+	}
 	/**
 	 * Aggregate all the contexts passed in into one context.
 	 * 

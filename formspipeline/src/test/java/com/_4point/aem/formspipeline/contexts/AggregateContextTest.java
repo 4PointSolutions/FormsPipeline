@@ -26,6 +26,13 @@ class AggregateContextTest {
 		public <T> Optional<T> get(String key, Class<T> target) {
 			return key.equalsIgnoreCase(KEY1) || key.equalsIgnoreCase(KEY4) ? Optional.of((T)VALUE1) : Optional.empty();
 		}
+
+		@SuppressWarnings("unchecked")
+		@Override
+		public <T> List<T> getMulti(String key, Class<T> target) {
+			// TODO Auto-generated method stub
+			return key.equalsIgnoreCase(KEY1) || key.equalsIgnoreCase(KEY4) ? List.of((T)VALUE1, (T)VALUE1) : List.of();
+		}
 	};
 	
 	private final Context context2 = new Context() {
@@ -35,6 +42,13 @@ class AggregateContextTest {
 		public <T> Optional<T> get(String key, Class<T> target) {
 			return key.equalsIgnoreCase(KEY2) || key.equalsIgnoreCase(KEY4) ? Optional.of((T)VALUE2) : Optional.empty();
 		}
+
+		@SuppressWarnings("unchecked")
+		@Override
+		public <T> List<T> getMulti(String key, Class<T> target) {
+			// TODO Auto-generated method stub
+			return key.equalsIgnoreCase(KEY2) || key.equalsIgnoreCase(KEY4) ? List.of((T)VALUE2, (T)VALUE2) : List.of();
+		}
 	};
 
 	private final Context context3 = new Context() {
@@ -43,6 +57,13 @@ class AggregateContextTest {
 		@Override
 		public <T> Optional<T> get(String key, Class<T> target) {
 			return key.equalsIgnoreCase(KEY3) || key.equalsIgnoreCase(KEY4) ? Optional.of((T)VALUE3) : Optional.empty();
+		}
+
+		@SuppressWarnings("unchecked")
+		@Override
+		public <T> List<T> getMulti(String key, Class<T> target) {
+			// TODO Auto-generated method stub
+			return key.equalsIgnoreCase(KEY3) || key.equalsIgnoreCase(KEY4) ? List.of((T)VALUE3, (T)VALUE3) : List.of();
 		}
 	};
 
@@ -69,6 +90,26 @@ class AggregateContextTest {
 	}
 
 	@Test
+	void testGetMulti_Context1() {
+		assertArrayEquals(new String[] {VALUE1, VALUE1}, asArray(underTest.getStrings(KEY1)));
+	}
+
+	@Test
+	void testGetMulti_Context2() {
+		assertArrayEquals(new String[] {VALUE2, VALUE2}, asArray(underTest.getStrings(KEY2)));
+	}
+
+	@Test
+	void testGetMulti_NotFound() {
+		assertTrue(underTest.getStrings(KEY3).isEmpty(), ()->"Expected get{" + KEY3 + ") to be empty.");
+	}
+
+	@Test
+	void testGetMulti_Both() {
+		assertArrayEquals(new String[] {VALUE1, VALUE1}, asArray(underTest.getStrings(KEY4)));
+	}
+
+	@Test
 	void testAggregate_0args() {
 		Context underTest = AggregateContext.aggregate();
 		assertSame(EmptyContext.emptyInstance(), underTest);
@@ -88,7 +129,12 @@ class AggregateContextTest {
 				()->assertEquals(VALUE2, underTest.getString(KEY2).orElseThrow()),
 				()->assertTrue(underTest.getString(KEY3).isEmpty(), ()->"Expected get{" + KEY3 + ") to be empty."),
 				()->assertEquals(VALUE2, underTest.getString(KEY4).orElseThrow()),
-				()->assertTrue(underTest.getString(KEY5).isEmpty(), ()->"Expected get{" + KEY5 + ") to be empty.")
+				()->assertTrue(underTest.getString(KEY5).isEmpty(), ()->"Expected get{" + KEY5 + ") to be empty."),
+				()->assertArrayEquals(new String[] {VALUE1, VALUE1}, asArray(underTest.getStrings(KEY1))),
+				()->assertArrayEquals(new String[] {VALUE2, VALUE2}, asArray(underTest.getStrings(KEY2))),
+				()->assertTrue(underTest.getStrings(KEY3).isEmpty(), ()->"Expected get{" + KEY3 + ") to be empty."),
+				()->assertArrayEquals(new String[] {VALUE2, VALUE2}, asArray(underTest.getStrings(KEY4))),
+				()->assertTrue(underTest.getStrings(KEY5).isEmpty(), ()->"Expected get{" + KEY5 + ") to be empty.")
 				);
 	}
 
@@ -100,7 +146,12 @@ class AggregateContextTest {
 				()->assertEquals(VALUE2, underTest.getString(KEY2).orElseThrow()),
 				()->assertEquals(VALUE3, underTest.getString(KEY3).orElseThrow()),
 				()->assertEquals(VALUE1, underTest.getString(KEY4).orElseThrow()),
-				()->assertTrue(underTest.getString(KEY5).isEmpty(), ()->"Expected get{" + KEY5 + ") to be empty.")
+				()->assertTrue(underTest.getString(KEY5).isEmpty(), ()->"Expected get{" + KEY5 + ") to be empty."),
+				()->assertArrayEquals(new String[] {VALUE1, VALUE1}, asArray(underTest.getStrings(KEY1))),
+				()->assertArrayEquals(new String[] {VALUE2, VALUE2}, asArray(underTest.getStrings(KEY2))),
+				()->assertArrayEquals(new String[] {VALUE3, VALUE3}, asArray(underTest.getStrings(KEY3))),
+				()->assertArrayEquals(new String[] {VALUE1, VALUE1}, asArray(underTest.getStrings(KEY4))),
+				()->assertTrue(underTest.getStrings(KEY5).isEmpty(), ()->"Expected get{" + KEY5 + ") to be empty.")
 				);
 	}
 
@@ -112,7 +163,16 @@ class AggregateContextTest {
 				()->assertEquals(VALUE2, underTest.getString(KEY2).orElseThrow()),
 				()->assertEquals(VALUE3, underTest.getString(KEY3).orElseThrow()),
 				()->assertEquals(VALUE1, underTest.getString(KEY4).orElseThrow()),
-				()->assertTrue(underTest.getString(KEY5).isEmpty(), ()->"Expected get{" + KEY5 + ") to be empty.")
+				()->assertTrue(underTest.getString(KEY5).isEmpty(), ()->"Expected get{" + KEY5 + ") to be empty."),
+				()->assertArrayEquals(new String[] {VALUE1, VALUE1}, asArray(underTest.getStrings(KEY1))),
+				()->assertArrayEquals(new String[] {VALUE2, VALUE2}, asArray(underTest.getStrings(KEY2))),
+				()->assertArrayEquals(new String[] {VALUE3, VALUE3}, asArray(underTest.getStrings(KEY3))),
+				()->assertArrayEquals(new String[] {VALUE1, VALUE1}, asArray(underTest.getStrings(KEY4))),
+				()->assertTrue(underTest.getStrings(KEY5).isEmpty(), ()->"Expected get{" + KEY5 + ") to be empty.")
 				);
+	}
+	
+	private static String[] asArray(List<String> list) {
+		return list.toArray(new String[list.size()]);
 	}
 }

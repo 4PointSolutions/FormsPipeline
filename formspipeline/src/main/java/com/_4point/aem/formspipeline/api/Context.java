@@ -3,6 +3,7 @@ package com._4point.aem.formspipeline.api;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
+import java.util.function.Supplier;
 
 import com._4point.aem.formspipeline.contexts.AggregateContext;
 import com._4point.aem.formspipeline.contexts.NamespacedContext;
@@ -26,6 +27,20 @@ public interface Context {
 	 */
 	<T> Optional<T> get(String key, Class<T> target);
 
+	/**
+	 * Gets an List of T for this key.
+	 * 
+	 * Note: Many types of contexts can only contain a single value for each key.  These contexts do not need to override
+	 * the default implementation.  Context implementations that can contain multiple values for a particular key *must*
+	 * implement this method.
+	 *  
+	 * @param <T>
+	 * @param key
+	 * @param target
+	 * @return
+	 */
+	default <T> List<T> getMulti(String key, Class<T> target) { return get(key, target).map(List::of).orElse(List.of()); };
+	
 	/**
 	 * Gets a String value for this key (if one exists).
 	 * 
@@ -65,6 +80,46 @@ public interface Context {
 	 * @return
 	 */
 	default Optional<Double> getDouble(String key) { return get(key, Double.class).or(()->get(key, String.class).map(Double::valueOf)); }
+	
+	/**
+	 * Gets a String value for this key (if one exists).
+	 * 
+	 * @param key
+	 * @return
+	 */
+	default List<String> getStrings(String key) { return getMulti(key, String.class); }
+	
+	/**
+	 * Gets a Boolean value for this key.  The value can be stored as a Boolean or as a String.
+	 * 
+	 * @param key
+	 * @return
+	 */
+	default List<Boolean> getBooleans(String key) { return or(getMulti(key, Boolean.class), ()->getMulti(key, String.class).stream().map(Boolean::valueOf).toList()); }
+	
+	/**
+	 * Gets a Integer value for this key.  The value can be stored as a Boolean or as a String.
+	 * 
+	 * @param key
+	 * @return
+	 */
+	default List<Integer> getIntegers(String key) { return or(getMulti(key, Integer.class), ()->getMulti(key, String.class).stream().map(Integer::valueOf).toList()); }
+
+	/**
+	 * Gets a Integer value for this key.  The value can be stored as a Boolean or as a String.
+	 * 
+	 * @param key
+	 * @return
+	 */
+	default List<Long> getLongs(String key) { return or(getMulti(key, Long.class), ()->getMulti(key, String.class).stream().map(Long::valueOf).toList()); }
+
+	/**
+	 * Gets a Double value for this key.  The value can be stored as a Boolean or as a String.
+	 * 
+	 * @param key
+	 * @return
+	 */
+	default List<Double> getDoubles(String key) { return or(getMulti(key, Double.class), ()->getMulti(key, String.class).stream().map(Double::valueOf).toList()); }
 	
 	/**
 	 * Incorporates (combines) this context with one or more other contexts. If the contexts have entries in 
@@ -116,6 +171,10 @@ public interface Context {
 	default Context incorporate(String namespace, List<Context> contexts) {
 		List<Context> namespacedContexts = contexts.stream().map(c->new NamespacedContext(namespace, c)).map(Context.class::cast).toList();
 		return AggregateContext.aggregate(namespacedContexts, this);
+	}
+	
+	private <E> List<E> or(List<E> inList, Supplier<List<E>> supplier) {
+		return inList.isEmpty() ? supplier.get() : inList;
 	}
 	
 	public static interface ContextBuilder {

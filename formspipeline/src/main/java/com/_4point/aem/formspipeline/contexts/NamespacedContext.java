@@ -1,5 +1,6 @@
 package com._4point.aem.formspipeline.contexts;
 
+import java.util.List;
 import java.util.Optional;
 
 import com._4point.aem.formspipeline.api.Context;
@@ -46,6 +47,14 @@ public class NamespacedContext implements Context {
 			return originalContext.get(key.substring(prefix.length()), target);
 		}
 		return Optional.empty();
+	}
+
+	@Override
+	public <T> List<T> getMulti(String key, Class<T> target) {
+		if (key.startsWith(prefix)) {
+			return originalContext.getMulti(key.substring(prefix.length()), target);
+		}
+		return List.of();
 	}
 
 }

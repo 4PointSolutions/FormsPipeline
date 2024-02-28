@@ -1,5 +1,6 @@
 package com._4point.aem.formspipeline.contexts;
 
+import java.util.List;
 import java.util.Optional;
 
 import com._4point.aem.formspipeline.api.Context;
@@ -17,6 +18,11 @@ public class EmptyContext implements Context {
 		return Optional.empty();
 	}
 
+	@Override
+	public <T> List<T> getMulti(String key, Class<T> target) {
+		return List.of();
+	}
+	
 	/**
 	 * Always returns the same EmptyContext object.
 	 * 
