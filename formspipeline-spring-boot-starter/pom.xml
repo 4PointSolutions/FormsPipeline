@@ -3,7 +3,7 @@
 	<parent>
 		<groupId>org.springframework.boot</groupId>
 		<artifactId>spring-boot-starter-parent</artifactId>
-		<version>3.2.2</version>
+		<version>3.2.3</version>
 		<relativePath /> <!-- lookup parent from repository -->
 	</parent>
 	<groupId>com._4point.aem.formspipeline</groupId>
@@ -37,8 +37,8 @@
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<formspipeline-version>0.0.1-SNAPSHOT</formspipeline-version>
 		<junit-addons.version>1.4</junit-addons.version>
-		<saxon-he.version>12.0</saxon-he.version>
-		<greenmail.version>2.0.0</greenmail.version>
+		<saxon-he.version>12.4</saxon-he.version>
+		<greenmail.version>2.0.1</greenmail.version>
 	</properties>
 	<distributionManagement>
 		<repository>
