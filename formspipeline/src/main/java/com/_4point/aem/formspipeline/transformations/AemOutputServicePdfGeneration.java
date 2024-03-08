@@ -73,8 +73,9 @@ public class AemOutputServicePdfGeneration<D extends Context, T extends DataChun
 		try {
 			Document pdfResult = myContext.transferAllSettings(outputService.generatePDFOutput())
 										  .executeOn(template, dataChunk.asInputStream());
-			
-			return PdfOutputChunk.createSimple(dataContext, pdfResult.getInputStream().readAllBytes());
+			Optional<Long> pageCount = pdfResult.getPageCount();
+			return pageCount.isPresent() ? PdfOutputChunk.createSimple(dataContext, pdfResult.getInputStream().readAllBytes(), pageCount.get().intValue())
+										 : PdfOutputChunk.createSimple(dataContext, pdfResult.getInputStream().readAllBytes());
 		} catch (IOException | OutputServiceException e) {
 			throw new IllegalStateException("Error while generating PDF from template (" + template.toString() + ").", e);
 		}

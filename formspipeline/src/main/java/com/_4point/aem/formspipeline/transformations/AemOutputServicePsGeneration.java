@@ -79,8 +79,9 @@ public class AemOutputServicePsGeneration <D extends Context, T extends DataChun
 		try {
 			Document result = myContext.transferAllSettings(outputService.generatePrintedOutput())
 											  .executeOn(template, dataChunk.asInputStream());
-						
-			return PsOutputChunk.createSimple(dataContext, result.getInputStream().readAllBytes());
+			Optional<Long> pageCount = result.getPageCount();
+			return pageCount.isPresent() ? PsOutputChunk.createSimple(dataContext, result.getInputStream().readAllBytes(), pageCount.get().intValue())
+										 : PsOutputChunk.createSimple(dataContext, result.getInputStream().readAllBytes());
 		} catch (IOException | OutputServiceException  e) {
 			throw new IllegalStateException("Error while generating PS document from template (" + template.toString() + ").", e);
 		}

@@ -56,7 +56,9 @@ public class AemOutputServicePclGeneration  <D extends Context, T extends DataCh
 		try {
 			Document result = myContext.transferAllSettings(outputService.generatePrintedOutput())
 											  .executeOn(template, dataChunk.asInputStream());
-			return PclOutputChunk.createSimple(dataContext, result.getInputStream().readAllBytes());
+			Optional<Long> pageCount = result.getPageCount();
+			return pageCount.isPresent() ? PclOutputChunk.createSimple(dataContext, result.getInputStream().readAllBytes(), pageCount.get().intValue())
+										 : PclOutputChunk.createSimple(dataContext, result.getInputStream().readAllBytes());
 		} catch (IOException | OutputServiceException  e) {
 			throw new IllegalStateException("Error while generating PCL document from template (" + template.toString() + ").", e);
 		}
