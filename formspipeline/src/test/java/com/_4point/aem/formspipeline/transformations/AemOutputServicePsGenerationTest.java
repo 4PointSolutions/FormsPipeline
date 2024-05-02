@@ -136,7 +136,7 @@ class AemOutputServicePsGenerationTest {
 	}
 
 	@Nested
-	class ContextReaderWriterTests {
+	static class ContextReaderWriterTests {
 		// Make sure we can write and then read everything
 		
 		@Test
