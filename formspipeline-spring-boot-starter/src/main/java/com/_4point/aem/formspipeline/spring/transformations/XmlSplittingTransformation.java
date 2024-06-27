@@ -1,6 +1,9 @@
 package com._4point.aem.formspipeline.spring.transformations;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.OutputStreamWriter;
+import java.nio.charset.StandardCharsets;
 import java.util.stream.Stream;
 import java.util.stream.Stream.Builder;
 
@@ -12,7 +15,6 @@ import org.slf4j.LoggerFactory;
 
 import com._4point.aem.formspipeline.api.DataTransformation.DataTransformationOneToMany;
 import com._4point.aem.formspipeline.spring.chunks.XmlDataChunk;
-import com._4point.aem.formspipeline.spring.transformations.XmlEventManipulation.AutoCloseableXmlEventWriter;
 
 /**
  * Splits an XmlChunk into multiple XmlChunks.
@@ -38,8 +40,7 @@ public class XmlSplittingTransformation extends XmlEventManipulation implements 
 			Builder<XmlDataChunk> streamBuilder = Stream.builder();
 			int transactionsSize = transactionInfo.transactions().size();
 			for (int i = 0; i < transactionsSize; i++) {
-				final int index = i;
-				byte[] replayTransactions = transactionInfo.replayTransaction((t,w)->writeTransactionWithPrePostAmble(index, t, w));
+				byte[] replayTransactions = replayTransaction(transactionInfo, i);
 				streamBuilder.accept(XmlDataChunk.create(replayTransactions, dataChunk.dataContext()));
 			}
 			return streamBuilder.build();
@@ -48,13 +49,14 @@ public class XmlSplittingTransformation extends XmlEventManipulation implements 
 		} 
 	}
 	
-	private void writeTransactionWithPrePostAmble(int transactionNumber, TransactionInfo ti, AutoCloseableXmlEventWriter ew) {
-		try {
+	private byte[] replayTransaction(TransactionInfo ti, int transactionNumber) throws XMLStreamException, IOException {
+		ByteArrayOutputStream os = new ByteArrayOutputStream();
+		// Create ByteArrayOuputStream to capture output, OutputStreamWriter to force UTF-8 output, then XMLEventWriter that is AutoCloseable 
+		try (os; var osw = new OutputStreamWriter(os, StandardCharsets.UTF_8); var ew = AutoCloseableXmlEventWriter.of(osw)) {
 			ti.writePreamble(ew);
 			ti.writeTransaction(ew, transactionNumber);
 			ti.writePostamble(ew);
-		} catch (XMLStreamException e) {
-			throw new IllegalStateException("Failed to construct split XML file.  %s".formatted(e.getMessage()), e);
 		}
+		return os.toByteArray();
 	}
 }

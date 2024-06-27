@@ -1,14 +1,10 @@
 package com._4point.aem.formspipeline.spring.transformations;
 
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStreamWriter;
-import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.function.BiConsumer;
-import java.util.function.Consumer;
 
 import javax.xml.namespace.NamespaceContext;
 import javax.xml.stream.XMLEventReader;
@@ -90,15 +86,6 @@ abstract class XmlEventManipulation {
 
 	protected record TransactionInfo(List<EventInfo> preamble, List<List<EventInfo>> transactions, List<EventInfo> postamble) {
 		
-		byte[] replayTransaction(BiConsumer<TransactionInfo, AutoCloseableXmlEventWriter> writingLogic) throws XMLStreamException, IOException {
-			ByteArrayOutputStream os = new ByteArrayOutputStream();
-			// Create ByteArrayOuputStream to capture output, OutputStreamWriter to force UTF-8 output, then XMLEventWriter that is AutoCloseable 
-			try (os; var osw = new OutputStreamWriter(os, StandardCharsets.UTF_8); var ew = new AutoCloseableXmlEventWriter(xmlOutputFactory.createXMLEventWriter(osw))) {
-				writingLogic.accept(this, ew);
-			}
-			return os.toByteArray();
-		}
-
 		protected TransactionInfo writePreamble(XMLEventWriter ew) throws XMLStreamException {
 			EventInfo.writeList(ew, preamble);
 			return this;
@@ -200,6 +187,10 @@ abstract class XmlEventManipulation {
 
 		public NamespaceContext getNamespaceContext() {
 			return xmlEventWriter.getNamespaceContext();
+		}
+		
+		public static AutoCloseableXmlEventWriter of(OutputStreamWriter osw) throws XMLStreamException {
+			return new AutoCloseableXmlEventWriter(xmlOutputFactory.createXMLEventWriter(osw));
 		}
 	}
 }
