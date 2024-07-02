@@ -66,7 +66,7 @@ abstract class XmlEventManipulation {
 					transactionStartIndex = i;
 				} else if (currentState == State.BeginTransaction && newState == State.EndTransaction) {
 					// We've completed a transaction, so store it away.
-					transactionList.add(eventList.subList(transactionStartIndex, i));
+					transactionList.add(eventList.subList(transactionStartIndex, i + 1));
 					transactionStartIndex = i;
 				} else if ((currentState == State.EndTransaction || currentState == State.BetweenTransactions) && (newState == State.InPostamble || newState == State.BetweenTransactions|| newState == State.BeginTransaction)) {
 					// We are between transactions and so, store the incoming data
