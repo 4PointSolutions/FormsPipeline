@@ -8,7 +8,7 @@
 	</parent>
 	<groupId>com._4point.aem.formspipeline</groupId>
 	<artifactId>formspipeline-spring-boot-starter</artifactId>
-	<version>0.0.1-SNAPSHOT</version>
+	<version>0.0.2-SNAPSHOT</version>
 	<name>Forms Pipeline Spring Starter</name>
 	<!--
 	Build this project with the following goals:
