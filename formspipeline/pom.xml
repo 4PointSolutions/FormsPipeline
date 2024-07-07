@@ -16,7 +16,7 @@
 		
 		<!-- Project dependecies -->
 		<fluentforms.version>0.0.3-SNAPSHOT</fluentforms.version>
-		<slf4j-api.version>1.7.21</slf4j-api.version>
+		<slf4j-api.version>2.0.13</slf4j-api.version>
 
 		<!-- Testing dependecies -->
 		<junit.version>5.10.3</junit.version>
