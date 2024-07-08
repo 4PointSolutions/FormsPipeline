@@ -15,11 +15,10 @@ import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import com._4point.aem.formspipeline.api.Context;
-import com._4point.aem.formspipeline.api.PagedData;
-import com._4point.aem.formspipeline.api.Result;
+import com._4point.aem.formspipeline.api.Message;
+import com._4point.aem.formspipeline.api.MessageBuilder;
 import com._4point.aem.formspipeline.chunks.PdfPayload;
 import com._4point.aem.formspipeline.contexts.EmptyContext;
-import com._4point.aem.formspipeline.contexts.SingletonContext;
 import com._4point.aem.formspipeline.utils.JavaPrinterService;
 
 @ExtendWith(MockitoExtension.class)
@@ -74,25 +73,20 @@ class LocalPrintDestinationTest {
 		Asserter process() {
 			Context outputContext = printJobName.map(s->LocalPrintDestination.addPrintJobNameToContext(EmptyContext.emptyInstance(), s))
 												.orElse(EmptyContext.emptyInstance());
-			PdfPayload<Context> input = PdfPayload.createSimple(outputContext, MOCK_PDF_DATA);
+			PdfPayload input = new PdfPayload(MOCK_PDF_DATA);
+			Message<byte[]> msg = MessageBuilder.createMessage(input.bytes(), outputContext);
 			var underTest = new LocalPrintDestination(mockPrinterService);
 			Mockito.doNothing().when(mockPrinterService).print(actualBytes.capture(), actualPrintJobName.capture());
-			Result result = underTest.process(input);
+			Optional<Message<?>> result = underTest.process(msg);
 			assertNotNull(result);
-			return new Asserter(result);
+			assertTrue(result.isEmpty());
+			return new Asserter();
 		}
 		
 		private class Asserter {
-			Result<? extends Context, ? extends PagedData, ? extends Context> result;
-			
-			public Asserter(Result<? extends Context, ? extends PagedData, ? extends Context> result) {
-				this.result = result;
-			}
-
 			void mockPrinterServiceShouldReceive(byte[] expectedBytes, String expectedPrintJobname) {
 				assertArrayEquals(expectedBytes, actualBytes.getValue());
 				assertEquals(expectedPrintJobname, actualPrintJobName.getValue());
-				
 			}
 		}
 	}

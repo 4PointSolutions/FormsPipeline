@@ -12,32 +12,32 @@ public sealed interface DataTransformation<T extends Message<?>, R extends Messa
 												   {
 	@FunctionalInterface
 	public non-sealed interface DataTransformationOneToOne<T extends Message<?>, R extends Message<?>> extends DataTransformation {
-		R process(T dataChunk);
+		R process(T msg);
 	}
 
 	@FunctionalInterface
 	public non-sealed interface DataTransformationOneToMany<T extends Message<?>, R extends Message<?>> extends DataTransformation {
-		Stream<R> process(T dataChunk);
+		Stream<R> process(T msg);
 	}
 
 	@FunctionalInterface
 	public non-sealed interface DataTransformationManyToOne<T extends Message<?>, R extends Message<?>> extends DataTransformation {
-		R process(Stream<T> dataChunks);
+		R process(Stream<T> msgs);
 	}
 
 	@FunctionalInterface
 	public non-sealed interface DataTransformationManyToMany<T extends Message<?>, R extends Message<?>> extends DataTransformation {
-		Stream<R> process(Stream<T> dataChunks);
+		Stream<R> process(Stream<T> msgs);
 	}
 
 	@FunctionalInterface
 	public non-sealed interface DataTransformationOneToOneOrZero<T extends Message<?>, R extends Message<?>> extends DataTransformation {
-		Optional<R> process(T dataChunk);
+		Optional<R> process(T msg);
 	}
 
 
 	@FunctionalInterface
 	public non-sealed interface DataTransformationManyToOneOrZero<T extends Message<?>, R extends Message<?>> extends DataTransformation {
-		Optional<R> process(Stream<T> dataChunks);
+		Optional<R> process(Stream<T> msgs);
 	}
 }

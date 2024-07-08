@@ -4,14 +4,9 @@ import java.util.Optional;
 
 import com._4point.aem.formspipeline.api.Context;
 import com._4point.aem.formspipeline.api.Context.ContextBuilder;
-import com._4point.aem.formspipeline.api.OutputDestination;
-import com._4point.aem.formspipeline.api.PagedData;
-import com._4point.aem.formspipeline.api.Result;
-import com._4point.aem.formspipeline.chunks.AbstractDocumentOutputChunk;
-import com._4point.aem.formspipeline.contexts.AggregateContext;
-import com._4point.aem.formspipeline.contexts.EmptyContext;
+import com._4point.aem.formspipeline.api.DataTransformation.DataTransformationOneToOneOrZero;
+import com._4point.aem.formspipeline.api.Message;
 import com._4point.aem.formspipeline.contexts.MapContext;
-import com._4point.aem.formspipeline.results.SimpleResult;
 import com._4point.aem.formspipeline.utils.JavaPrinterService;
 
 /**
@@ -21,9 +16,7 @@ import com._4point.aem.formspipeline.utils.JavaPrinterService;
  * @param <OC>
  * @param <O>
  */
-public class LocalPrintDestination<DC extends Context, OC extends PagedData,
-								  O extends AbstractDocumentOutputChunk<DC, OC>
-								  > implements OutputDestination<O, Result<DC, OC, Context>> {
+public class LocalPrintDestination implements DataTransformationOneToOneOrZero<Message<byte[]>, Message<?>> {
 	private static final String LOCAL_PRINT_DESTINATION_PREFIX = "com._4point.aem.formspipeline.destinations.local_print_destination.";
 	private static final String PRINTJOB_NAME_KEY = LOCAL_PRINT_DESTINATION_PREFIX + "print_job_key";
 	private static final String DEFAULT_PRINT_JOB_NAME = "AEM Print Job";
@@ -44,19 +37,15 @@ public class LocalPrintDestination<DC extends Context, OC extends PagedData,
 	}
 
 	@Override
-	public Result<DC, OC, Context> process(O outputChunk) {
-		DC dataContext = outputChunk.dataContext();
-		OC outputContext = outputChunk.outputContext();
-		Context combinedContext = new AggregateContext(dataContext, outputContext);
-		
-		ContextReader reader = new ContextReader(combinedContext);
+	public Optional<Message<?>> process(Message<byte[]> msg) {
+		ContextReader reader = new ContextReader(msg.context());
 		String printJobName = reader.printJobName().orElse(DEFAULT_PRINT_JOB_NAME);
 		
-		printerService.print(outputChunk.bytes(), printJobName);
-		
-		return new SimpleResult<DC, OC, Context>(dataContext, outputContext, EmptyContext.emptyInstance());
-	}
+		printerService.print(msg.payload(), printJobName);
 
+		return Optional.empty();
+	}
+	
 	/**
 	 * Write a Print Job Name to a context.  If this is added to the context before the LocalPrintDestination step is
 	 * invoked, then the LocalPrintDestination step will set the name of the job in the print queue to the Print Job Name. 
@@ -128,5 +117,5 @@ public class LocalPrintDestination<DC extends Context, OC extends PagedData,
 		
 		public Context build() 	{ return builder.build(); }
 	}
-	
+
 }
