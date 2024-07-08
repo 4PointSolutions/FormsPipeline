@@ -1,22 +1,22 @@
 package com._4point.aem.formspipeline.destinations;
 
+import static java.util.Objects.requireNonNull;
+
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 import java.util.Optional;
-import java.util.function.BiFunction;
+import java.util.function.Function;
 import java.util.function.UnaryOperator;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com._4point.aem.formspipeline.api.Context;
-import com._4point.aem.formspipeline.api.OutputChunk;
-import com._4point.aem.formspipeline.api.OutputDestination;
-import com._4point.aem.formspipeline.api.Result;
-import com._4point.aem.formspipeline.contexts.SingletonContext;
-import com._4point.aem.formspipeline.results.SimpleResult;
+import com._4point.aem.formspipeline.api.DataTransformation.DataTransformationOneToOne;
+import com._4point.aem.formspipeline.api.Message;
+import com._4point.aem.formspipeline.api.MessageBuilder;
 
 /**
  * FolderOutputDestination - Writes the output to a local file folder.
@@ -29,15 +29,14 @@ import com._4point.aem.formspipeline.results.SimpleResult;
  * @param <D> - DataContext - The type of context created from the Data Transformation steps.
  * @param <O> - OutputContext - The type of context created from the Output Generation step.
  */
-public class FolderOutputDestination<D extends Context, O extends Context> implements OutputDestination<OutputChunk<D, O>, 
-															Result<D, O, ? extends Context>> {
+public class FolderOutputDestination implements DataTransformationOneToOne<Message<byte[]>, Message<Path>> {
 	private static final Logger logger = LoggerFactory.getLogger(FolderOutputDestination.class);
 
 	private static final String CONTEXT_PREFIX = "com._4point.aem.formspipeline.destinations.FolderOutputDestination"; 
 	private static final String FILENAME_CONTEXT_KEY = CONTEXT_PREFIX + ".filename"; 
 	private static final int RENAME_MAX_LIMIT = 1000;
 	private final Path destinationFolder;
-	private final BiFunction<D, O, Path> filenameFn;
+	private final Function<Context, Path> filenameFn;
 	private final UnaryOperator<Path> renameFn;
 	
 	public static final UnaryOperator<Path> DEFAULT_RENAME_FUNCTION = (a)-> Path.of("result");
@@ -49,7 +48,7 @@ public class FolderOutputDestination<D extends Context, O extends Context> imple
 	 * @param filenameFn - Function that provides the initial filename
 	 * @param renameFn - Function that provides a new filename if the previous one exists.
 	 */
-	public FolderOutputDestination(Path destinationFolder, BiFunction<D, O, Path> filenameFn, UnaryOperator<Path> renameFn) {		
+	public FolderOutputDestination(Path destinationFolder, Function<Context, Path> filenameFn, UnaryOperator<Path> renameFn) {		
 		this.destinationFolder = destinationFolder;
 		this.filenameFn = filenameFn;
 		this.renameFn = renameFn; 
@@ -63,10 +62,8 @@ public class FolderOutputDestination<D extends Context, O extends Context> imple
 	 * @param destinationFolder - Folder to write to
 	 * @param filenameFn - Function that provides the initial filename
 	 */
-	public FolderOutputDestination(Path destinationFolder, BiFunction<D, O, Path> filenameFn) {		
-		this.destinationFolder = destinationFolder;
-		this.filenameFn = filenameFn;
-		this.renameFn = DEFAULT_RENAME_FUNCTION; 
+	public FolderOutputDestination(Path destinationFolder, Function<Context, Path> filenameFn) {
+		this(destinationFolder, filenameFn, DEFAULT_RENAME_FUNCTION);
 	}
 
 	//Intended to be used by the class itself and unit test
@@ -83,12 +80,12 @@ public class FolderOutputDestination<D extends Context, O extends Context> imple
 		
 	private static boolean shouldRename(Path destination) {
 		//As long as destination exist whether it's a file or folder same logic applies
-		return destination!=null && Files.exists(destination);	
+		return Files.exists(destination);	
 	}
 	
 	//Intended to be used by the class itself and unit test
-	private Path getDestinationFolder(OutputChunk<D, O> outputChunk) {
-		return destinationFolder.resolve(filenameFn.apply(outputChunk.dataContext(), outputChunk.outputContext()));
+	private Path getDestinationFolder(Context context) {
+		return destinationFolder.resolve(requireNonNull(filenameFn.apply(context)));
 	}	
 
 	private static String getFileNameExcludingExtension(String filename) {
@@ -104,7 +101,7 @@ public class FolderOutputDestination<D extends Context, O extends Context> imple
 	private Path applyLimitedRename(Path destination) {
 		String originalFilename = destination.getFileName().toString();
 		//Using the default rename has no file extension		
-		Path newDestination = getRenamedFile(originalFilename, destinationFolder.resolve(renameFn.apply(destination)));
+		Path newDestination = getRenamedFile(originalFilename, destinationFolder.resolve(requireNonNull(renameFn.apply(destination))));
 		logger.debug("applyLimitedRename newDestination {}", newDestination);
 		if(!Files.exists(newDestination)) {
 			logger.debug("applyLimitedRename newDestination {} doesn't exist", newDestination);
@@ -132,67 +129,31 @@ public class FolderOutputDestination<D extends Context, O extends Context> imple
 		return newDestination.resolve(Path.of(newDestination.toAbsolutePath().toString()+"."+origExtension.get()));			
 	}
 
+	private Path determineDestination(Context context) {
+		Path interimDestination = getDestinationFolder(context);
+		try {
+			return shouldRename(interimDestination) ? applyLimitedRename(interimDestination) : interimDestination;
+		} catch (IndexOutOfBoundsException e) {
+			throw new IndexOutOfBoundsException("Unable to write file (%s). File %s exists rename attempted. %s".formatted( 
+					interimDestination.toAbsolutePath().toString(), 
+					getDestinationFolder(context).toAbsolutePath().toString(), e));
+		} 
+	}
+	
 	/**
 	 * Process an OutputChunk and write the contents out to the destination folder.
 	 * 
 	 *
 	 */
 	@Override
-	public Result<D, O, Context> process(OutputChunk<D, O> outputChunk) {
-		Path destination = getDestinationFolder(outputChunk);
+	public Message<Path> process(Message<byte[]> msg) {
+		Path destination = determineDestination(msg.context());
+		logger.atDebug().addArgument(destination::toAbsolutePath).log("writing to destination {}");
 		try {
-			if(shouldRename(destination)) {
-				destination = applyLimitedRename(destination);
-			} 		
-			if (logger.isDebugEnabled()) {
-				logger.debug("writing to destination {}", (destination != null?destination.toAbsolutePath().toString():null));					
-			}
-			Files.write(destination, outputChunk.bytes(), StandardOpenOption.WRITE,StandardOpenOption.CREATE_NEW);
-			return new SimpleResult<>(outputChunk.dataContext(), outputChunk.outputContext(), SingletonContext.of(FILENAME_CONTEXT_KEY, destination.toString()));
+			Files.write(destination, msg.payload(), StandardOpenOption.WRITE,StandardOpenOption.CREATE_NEW);
+			return MessageBuilder.fromMessageReplacingPayload(msg, destination);
 		} catch (IOException e) {
-			throw new IllegalStateException("Unable to write file (" + (destination!=null?destination.toAbsolutePath().toString():null) + ").", e);
-		} catch (IndexOutOfBoundsException e) {
-			throw new IndexOutOfBoundsException(String.format("Unable to write file (%s). File %s exists rename attempted. %s", 
-					(destination != null ?destination.toAbsolutePath().toString():""), 
-					getDestinationFolder(outputChunk).toAbsolutePath().toString(), e));
-		} 
-	}
-
-	/**
-	 * Returns a ContextReader used for reading the result context from a FolderOutputDestination.
-	 * 
-	 * This is provided for standardization, but since the only thing written to the result context is
-	 * the filename, you can use the static getFilenameWritten() method instead and save some code.
-	 * 
-	 * @param c
-	 * @return
-	 */
-	public static ContextReader reader(Context c) { return new ContextReader(c); }
-	
-	/**
-	 * An object for reading the result Context from the FolderOutputDestination object. 
-	 *
-	 */
-	public static class ContextReader {
-		private final Optional<Path> filenameWritten;
-
-		public ContextReader(Context context) {
-			this.filenameWritten = getFilenameWritten(context);
+			throw new IllegalStateException("Unable to write file (" + destination.toAbsolutePath().toString() + ").", e);
 		}
-
-		public Optional<Path> filenameWritten() {
-			return filenameWritten;
-		}
-	}
-	
-	/**
-	 * Convenience function to extract the filename written by a FolderOutputDestination from the 
-	 * result Context of the FolderOutputDestination process() step. 
-	 * 
-	 * @param context - Result Context from a FolderOutputDestination pipeline step. 
-	 * @return - Filename written.  It should always return a result if the FolderOutputDestination step worked.
-	 */
-	public static Optional<Path> getFilenameWritten(Context context) {
-		return context.getString(FILENAME_CONTEXT_KEY).map(Path::of);
 	}
 }

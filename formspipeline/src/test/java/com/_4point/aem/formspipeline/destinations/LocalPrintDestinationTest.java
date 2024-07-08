@@ -15,9 +15,9 @@ import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import com._4point.aem.formspipeline.api.Context;
-import com._4point.aem.formspipeline.api.PagedContext;
+import com._4point.aem.formspipeline.api.PagedData;
 import com._4point.aem.formspipeline.api.Result;
-import com._4point.aem.formspipeline.chunks.PdfOutputChunk;
+import com._4point.aem.formspipeline.chunks.PdfPayload;
 import com._4point.aem.formspipeline.contexts.EmptyContext;
 import com._4point.aem.formspipeline.contexts.SingletonContext;
 import com._4point.aem.formspipeline.utils.JavaPrinterService;
@@ -74,7 +74,7 @@ class LocalPrintDestinationTest {
 		Asserter process() {
 			Context outputContext = printJobName.map(s->LocalPrintDestination.addPrintJobNameToContext(EmptyContext.emptyInstance(), s))
 												.orElse(EmptyContext.emptyInstance());
-			PdfOutputChunk<Context> input = PdfOutputChunk.createSimple(outputContext, MOCK_PDF_DATA);
+			PdfPayload<Context> input = PdfPayload.createSimple(outputContext, MOCK_PDF_DATA);
 			var underTest = new LocalPrintDestination(mockPrinterService);
 			Mockito.doNothing().when(mockPrinterService).print(actualBytes.capture(), actualPrintJobName.capture());
 			Result result = underTest.process(input);
@@ -83,9 +83,9 @@ class LocalPrintDestinationTest {
 		}
 		
 		private class Asserter {
-			Result<? extends Context, ? extends PagedContext, ? extends Context> result;
+			Result<? extends Context, ? extends PagedData, ? extends Context> result;
 			
-			public Asserter(Result<? extends Context, ? extends PagedContext, ? extends Context> result) {
+			public Asserter(Result<? extends Context, ? extends PagedData, ? extends Context> result) {
 				this.result = result;
 			}
 

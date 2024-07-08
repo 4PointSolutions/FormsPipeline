@@ -26,7 +26,7 @@ import com._4point.aem.fluentforms.api.output.PrintConfig;
 import com._4point.aem.fluentforms.impl.SimpleDocumentFactoryImpl;
 import com._4point.aem.formspipeline.api.Context;
 import com._4point.aem.formspipeline.api.DataChunk;
-import com._4point.aem.formspipeline.chunks.PsOutputChunk;
+import com._4point.aem.formspipeline.chunks.PsPayload;
 import com._4point.aem.formspipeline.chunks.SimpleChunk;
 import com._4point.aem.formspipeline.contexts.EmptyContext;
 import com._4point.aem.formspipeline.transformations.AemOutputServicePsGeneration.AemOutputServicePsGenerationContext;
@@ -102,7 +102,7 @@ class AemOutputServicePsGenerationTest {
 															  .template(RESOURCES_DIR.resolve("sampleForms").resolve("SampleForPs.xdp").toAbsolutePath())
 															  .build();
 		
-		PsOutputChunk<Context> result = underTest.process(new CustomDataChunk(TEST_CHUNK_DATA_STRING, context));
+		PsPayload<Context> result = underTest.process(new CustomDataChunk(TEST_CHUNK_DATA_STRING, context));
 		
 		assertNotNull(result);
 	}

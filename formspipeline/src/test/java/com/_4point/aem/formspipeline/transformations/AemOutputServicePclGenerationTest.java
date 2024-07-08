@@ -27,7 +27,7 @@ import com._4point.aem.fluentforms.api.output.PrintConfig;
 import com._4point.aem.fluentforms.impl.SimpleDocumentFactoryImpl;
 import com._4point.aem.formspipeline.api.Context;
 import com._4point.aem.formspipeline.api.DataChunk;
-import com._4point.aem.formspipeline.chunks.PclOutputChunk;
+import com._4point.aem.formspipeline.chunks.PclPayload;
 import com._4point.aem.formspipeline.chunks.SimpleChunk;
 import com._4point.aem.formspipeline.contexts.EmptyContext;
 import com._4point.aem.formspipeline.transformations.AemOutputServicePclGeneration.AemOutputServicePclGenerationContext;
@@ -103,7 +103,7 @@ class AemOutputServicePclGenerationTest {
 															  .template(RESOURCES_DIR.resolve("sampleForms").resolve("SampleForPcl.xdp").toAbsolutePath())
 															  .build();
 		
-		PclOutputChunk<Context> result = underTest.process(new CustomDataChunk(TEST_CHUNK_DATA_STRING, context));
+		PclPayload<Context> result = underTest.process(new CustomDataChunk(TEST_CHUNK_DATA_STRING, context));
 		
 		assertNotNull(result);
 	}

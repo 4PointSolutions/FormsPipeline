@@ -8,7 +8,7 @@ import org.slf4j.LoggerFactory;
 import com._4point.aem.formspipeline.api.Context;
 import com._4point.aem.formspipeline.api.DataChunk;
 import com._4point.aem.formspipeline.api.OutputGeneration;
-import com._4point.aem.formspipeline.chunks.PsOutputChunk;
+import com._4point.aem.formspipeline.chunks.PsPayload;
 
 /**
  * This class is used to call AEM to generate a Postscript document by first generating a PDF and then converting it to PostScript.
@@ -33,7 +33,7 @@ import com._4point.aem.formspipeline.chunks.PsOutputChunk;
  * @param <D>
  * @param <T>
  */
-public class AemOutputServicePsGenerationViaPdf <D extends Context, T extends DataChunk<D>> implements OutputGeneration<T, PsOutputChunk<D>> {
+public class AemOutputServicePsGenerationViaPdf <D extends Context, T extends DataChunk<D>> implements OutputGeneration<T, PsPayload<D>> {
 	private static final Logger logger = LoggerFactory.getLogger(AemOutputServicePsGenerationViaPdf.class);
 
 	private final AemOutputServicePdfGeneration<D, T> pdfGenerator;
@@ -46,7 +46,7 @@ public class AemOutputServicePsGenerationViaPdf <D extends Context, T extends Da
 	}
 
 	@Override
-	public PsOutputChunk<D> process(T dataChunk) {
+	public PsPayload<D> process(T dataChunk) {
 		return Stream.of(dataChunk)
 					 .map(pdfGenerator::process)
 					 .map(pdfToPsConverter::process)

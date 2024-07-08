@@ -18,8 +18,8 @@ import com._4point.aem.formspipeline.aem.AemConfigBuilder;
 import com._4point.aem.formspipeline.api.Context;
 import com._4point.aem.formspipeline.api.Context.ContextBuilder;
 import com._4point.aem.formspipeline.api.OutputTransformation.OutputTransformationOneToOne;
-import com._4point.aem.formspipeline.chunks.PdfOutputChunk;
-import com._4point.aem.formspipeline.chunks.PsOutputChunk;
+import com._4point.aem.formspipeline.chunks.PdfPayload;
+import com._4point.aem.formspipeline.chunks.PsPayload;
 import com._4point.aem.formspipeline.contexts.MapContext;
 import com.adobe.fd.cpdf.api.enumeration.Color;
 import com.adobe.fd.cpdf.api.enumeration.FontInclusion;
@@ -30,7 +30,7 @@ import com.adobe.fd.cpdf.api.enumeration.Style;
 
 import jakarta.ws.rs.client.Client;
 
-public class AemConvertPdfToPsService <D extends Context> implements OutputTransformationOneToOne<PdfOutputChunk<D>, PsOutputChunk<D>>{
+public class AemConvertPdfToPsService <D extends Context> implements OutputTransformationOneToOne<PdfPayload<D>, PsPayload<D>>{
 
 	private final ConvertPdfService convertPdfService;
 	
@@ -43,15 +43,15 @@ public class AemConvertPdfToPsService <D extends Context> implements OutputTrans
 	}
 	
 	@Override
-	public PsOutputChunk<D> process(PdfOutputChunk<D> pdfChunk) {
+	public PsPayload<D> process(PdfPayload<D> pdfChunk) {
 		OptionalInt pageCount = pdfChunk.outputContext().numPages();
 		var myContext = new AemConvertPdfToPsServiceContext.ContextReader(pdfChunk.dataContext());
 		try {
 			Document result = myContext.transferAllSettings(convertPdfService.toPS())
 									   .executeOn(pdfChunk.bytes());
 			
-			return pageCount.isPresent() ? PsOutputChunk.createSimple(pdfChunk.dataContext(), result.getInputStream().readAllBytes(), pageCount.getAsInt())
-										 : PsOutputChunk.createSimple(pdfChunk.dataContext(), result.getInputStream().readAllBytes());
+			return pageCount.isPresent() ? PsPayload.createSimple(pdfChunk.dataContext(), result.getInputStream().readAllBytes(), pageCount.getAsInt())
+										 : PsPayload.createSimple(pdfChunk.dataContext(), result.getInputStream().readAllBytes());
 		} catch (ConvertPdfServiceException | IOException e) {
 			throw new IllegalStateException("Error while converting PDF document to PostScript.", e);
 		}

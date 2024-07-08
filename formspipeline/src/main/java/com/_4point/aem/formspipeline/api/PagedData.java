@@ -10,7 +10,6 @@ import java.util.OptionalInt;
  * (and more specifically has a number of pages).
  *
  */
-public interface PagedContext extends Context {
+public interface PagedData extends TypedData {
 	OptionalInt numPages();
-	String contentType();
 }

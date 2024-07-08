@@ -5,7 +5,7 @@ import java.util.Optional;
 import com._4point.aem.formspipeline.api.Context;
 import com._4point.aem.formspipeline.api.Context.ContextBuilder;
 import com._4point.aem.formspipeline.api.OutputDestination;
-import com._4point.aem.formspipeline.api.PagedContext;
+import com._4point.aem.formspipeline.api.PagedData;
 import com._4point.aem.formspipeline.api.Result;
 import com._4point.aem.formspipeline.chunks.AbstractDocumentOutputChunk;
 import com._4point.aem.formspipeline.contexts.AggregateContext;
@@ -21,7 +21,7 @@ import com._4point.aem.formspipeline.utils.JavaPrinterService;
  * @param <OC>
  * @param <O>
  */
-public class LocalPrintDestination<DC extends Context, OC extends PagedContext,
+public class LocalPrintDestination<DC extends Context, OC extends PagedData,
 								  O extends AbstractDocumentOutputChunk<DC, OC>
 								  > implements OutputDestination<O, Result<DC, OC, Context>> {
 	private static final String LOCAL_PRINT_DESTINATION_PREFIX = "com._4point.aem.formspipeline.destinations.local_print_destination.";

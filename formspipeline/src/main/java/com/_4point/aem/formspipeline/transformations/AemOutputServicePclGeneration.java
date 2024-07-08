@@ -27,7 +27,7 @@ import com._4point.aem.formspipeline.api.Context;
 import com._4point.aem.formspipeline.api.Context.ContextBuilder;
 import com._4point.aem.formspipeline.api.DataChunk;
 import com._4point.aem.formspipeline.api.OutputGeneration;
-import com._4point.aem.formspipeline.chunks.PclOutputChunk;
+import com._4point.aem.formspipeline.chunks.PclPayload;
 import com._4point.aem.formspipeline.contexts.MapContext;
 import com._4point.aem.formspipeline.utils.ProcessingMetadataDetails;
 import com._4point.aem.formspipeline.utils.ProcessingMetadataDetails.ProcessingMetadataDetailBuilder;
@@ -35,7 +35,7 @@ import com.adobe.fd.output.api.PaginationOverride;
 
 import jakarta.ws.rs.client.Client;
 
-public class AemOutputServicePclGeneration  <D extends Context, T extends DataChunk<D>> implements OutputGeneration<T, PclOutputChunk<D>> {
+public class AemOutputServicePclGeneration  <D extends Context, T extends DataChunk<D>> implements OutputGeneration<T, PclPayload<D>> {
 	private static final Logger logger = LoggerFactory.getLogger(AemOutputServicePclGeneration.class);
 
 	private final OutputService outputService;
@@ -49,7 +49,7 @@ public class AemOutputServicePclGeneration  <D extends Context, T extends DataCh
 	}
 	
 	@Override
-	public PclOutputChunk<D> process(T dataChunk) {
+	public PclPayload<D> process(T dataChunk) {
 		D dataContext = dataChunk.dataContext();
 		var myContext = new AemOutputServicePclGenerationContext.ContextReader(dataContext);
 		PathOrUrl template = myContext.template();
@@ -57,8 +57,8 @@ public class AemOutputServicePclGeneration  <D extends Context, T extends DataCh
 			Document result = myContext.transferAllSettings(outputService.generatePrintedOutput())
 											  .executeOn(template, dataChunk.asInputStream());
 			Optional<Long> pageCount = result.getPageCount();
-			return pageCount.isPresent() ? PclOutputChunk.createSimple(dataContext, result.getInputStream().readAllBytes(), pageCount.get().intValue())
-										 : PclOutputChunk.createSimple(dataContext, result.getInputStream().readAllBytes());
+			return pageCount.isPresent() ? PclPayload.createSimple(dataContext, result.getInputStream().readAllBytes(), pageCount.get().intValue())
+										 : PclPayload.createSimple(dataContext, result.getInputStream().readAllBytes());
 		} catch (IOException | OutputServiceException  e) {
 			throw new IllegalStateException("Error while generating PCL document from template (" + template.toString() + ").", e);
 		}

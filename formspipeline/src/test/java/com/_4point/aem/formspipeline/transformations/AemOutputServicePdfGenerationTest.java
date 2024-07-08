@@ -18,7 +18,7 @@ import org.junit.jupiter.api.Test;
 import com._4point.aem.fluentforms.api.PathOrUrl;
 import com._4point.aem.formspipeline.api.Context;
 import com._4point.aem.formspipeline.api.DataChunk;
-import com._4point.aem.formspipeline.chunks.PdfOutputChunk;
+import com._4point.aem.formspipeline.chunks.PdfPayload;
 import com._4point.aem.formspipeline.chunks.SimpleChunk;
 import com._4point.aem.formspipeline.contexts.EmptyContext;
 import com._4point.aem.formspipeline.transformations.AemOutputServicePdfGeneration.AemOutputServicePdfGenerationContext;
@@ -93,7 +93,7 @@ class AemOutputServicePdfGenerationTest {
 															  .template("Foo.xdp")
 															  .build();
 		
-		PdfOutputChunk<Context> result = underTest.process(new CustomDataChunk(TEST_CHUNK_DATA_STRING, context));
+		PdfPayload<Context> result = underTest.process(new CustomDataChunk(TEST_CHUNK_DATA_STRING, context));
 		
 		assertNotNull(result);
 //		assertresult.bytes()

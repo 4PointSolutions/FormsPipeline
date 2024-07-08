@@ -11,7 +11,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import com._4point.aem.formspipeline.api.Context;
-import com._4point.aem.formspipeline.chunks.PdfOutputChunk.PdfOutputContext;
+import com._4point.aem.formspipeline.chunks.PdfPayload.PdfOutputContext;
 import com._4point.aem.formspipeline.contexts.EmptyContext;
 import com._4point.aem.formspipeline.contexts.SingletonContext;
 
@@ -27,8 +27,8 @@ class PdfOutputChunkTest {
 	private static final byte[] TEST_BYTES = TEST_STRING.getBytes(StandardCharsets.UTF_8);
 	private static final int NUM_PAGES = 23;
 	
-	private final PdfOutputChunk<CustomContext> underTestNoPages = PdfOutputChunk.createSimple(DATA_CONTEXT, TEST_BYTES);
-	private final PdfOutputChunk<CustomContext> underTestPages = PdfOutputChunk.createSimple(DATA_CONTEXT, TEST_BYTES, NUM_PAGES);
+	private final PdfPayload<CustomContext> underTestNoPages = PdfPayload.createSimple(DATA_CONTEXT, TEST_BYTES);
+	private final PdfPayload<CustomContext> underTestPages = PdfPayload.createSimple(DATA_CONTEXT, TEST_BYTES, NUM_PAGES);
 	
 	@BeforeEach
 	void setUp() throws Exception {
@@ -79,13 +79,13 @@ class PdfOutputChunkTest {
 		String NEW_CONTEXT_VALUE = "value";
 		Context newContext = SingletonContext.of(NEW_CONTEXT_KEY, NEW_CONTEXT_VALUE);
 		
-		PdfOutputChunk<CustomContext> updatedNoPagesChunk = underTestNoPages.updateDataContext(newContext);
+		PdfPayload<CustomContext> updatedNoPagesChunk = underTestNoPages.updateDataContext(newContext);
 		Context dataContextNoPages = updatedNoPagesChunk.dataContext();
 		assertTrue(updatedNoPagesChunk.outputContext().numPages().isEmpty());	// Make sure this is still the same
 		assertTrue(dataContextNoPages.get("Key", String.class).isEmpty());
 		assertEquals(NEW_CONTEXT_VALUE, dataContextNoPages.get(NEW_CONTEXT_KEY, String.class).orElseThrow());
 
-		PdfOutputChunk<CustomContext> updatedPagesChunk = underTestPages.updateContext(newContext);
+		PdfPayload<CustomContext> updatedPagesChunk = underTestPages.updateContext(newContext);
 		Context dataContextPages = updatedPagesChunk.dataContext();
 		assertEquals(NUM_PAGES, updatedPagesChunk.outputContext().numPages().getAsInt());
 		assertTrue(dataContextPages.get("Key", String.class).isEmpty());

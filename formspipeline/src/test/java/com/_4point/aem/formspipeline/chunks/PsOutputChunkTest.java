@@ -10,7 +10,7 @@ import java.nio.charset.StandardCharsets;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import com._4point.aem.formspipeline.chunks.PsOutputChunk.PsOutputContext;
+import com._4point.aem.formspipeline.chunks.PsPayload.PsOutputContext;
 import com._4point.aem.formspipeline.contexts.EmptyContext;
 
 class PsOutputChunkTest {
@@ -24,8 +24,8 @@ class PsOutputChunkTest {
 	private static final byte[] TEST_BYTES = TEST_STRING.getBytes(StandardCharsets.UTF_8);
 	private static final int NUM_PAGES = 23;
 	
-	private final PsOutputChunk<CustomContext> underTestNoPages = PsOutputChunk.createSimple(DATA_CONTEXT, TEST_BYTES);
-	private final PsOutputChunk<CustomContext> underTestPages = PsOutputChunk.createSimple(DATA_CONTEXT, TEST_BYTES, NUM_PAGES);
+	private final PsPayload<CustomContext> underTestNoPages = PsPayload.createSimple(DATA_CONTEXT, TEST_BYTES);
+	private final PsPayload<CustomContext> underTestPages = PsPayload.createSimple(DATA_CONTEXT, TEST_BYTES, NUM_PAGES);
 	
 	@BeforeEach
 	void setUp() throws Exception {

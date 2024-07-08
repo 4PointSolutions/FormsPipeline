@@ -10,7 +10,7 @@ import java.nio.charset.StandardCharsets;
  * Chunks are generic objects that contain data (i.e. a set of bytes). 
  * 
  */
-public interface Chunk {
+public interface RawData {
 	/**
 	 * Retrieve the data stored in this chunk as an array of bytes.
 	 * 

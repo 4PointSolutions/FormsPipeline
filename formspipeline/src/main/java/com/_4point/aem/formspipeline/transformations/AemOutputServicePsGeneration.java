@@ -27,7 +27,7 @@ import com._4point.aem.formspipeline.api.Context;
 import com._4point.aem.formspipeline.api.Context.ContextBuilder;
 import com._4point.aem.formspipeline.api.DataChunk;
 import com._4point.aem.formspipeline.api.OutputGeneration;
-import com._4point.aem.formspipeline.chunks.PsOutputChunk;
+import com._4point.aem.formspipeline.chunks.PsPayload;
 import com._4point.aem.formspipeline.contexts.MapContext;
 import com._4point.aem.formspipeline.utils.ProcessingMetadataDetails;
 import com._4point.aem.formspipeline.utils.ProcessingMetadataDetails.ProcessingMetadataDetailBuilder;
@@ -58,7 +58,7 @@ import jakarta.ws.rs.client.Client;
  * @param <D>
  * @param <T>
  */
-public class AemOutputServicePsGeneration <D extends Context, T extends DataChunk<D>> implements OutputGeneration<T, PsOutputChunk<D>> {
+public class AemOutputServicePsGeneration <D extends Context, T extends DataChunk<D>> implements OutputGeneration<T, PsPayload<D>> {
 	private static final Logger logger = LoggerFactory.getLogger(AemOutputServicePsGeneration.class);
 
 	private final OutputService outputService;
@@ -72,7 +72,7 @@ public class AemOutputServicePsGeneration <D extends Context, T extends DataChun
 	}
 	
 	@Override
-	public PsOutputChunk<D> process(T dataChunk) {
+	public PsPayload<D> process(T dataChunk) {
 		D dataContext = dataChunk.dataContext();
 		var myContext = new AemOutputServicePsGenerationContext.ContextReader(dataContext);
 		PathOrUrl template = myContext.template();
@@ -80,8 +80,8 @@ public class AemOutputServicePsGeneration <D extends Context, T extends DataChun
 			Document result = myContext.transferAllSettings(outputService.generatePrintedOutput())
 											  .executeOn(template, dataChunk.asInputStream());
 			Optional<Long> pageCount = result.getPageCount();
-			return pageCount.isPresent() ? PsOutputChunk.createSimple(dataContext, result.getInputStream().readAllBytes(), pageCount.get().intValue())
-										 : PsOutputChunk.createSimple(dataContext, result.getInputStream().readAllBytes());
+			return pageCount.isPresent() ? PsPayload.createSimple(dataContext, result.getInputStream().readAllBytes(), pageCount.get().intValue())
+										 : PsPayload.createSimple(dataContext, result.getInputStream().readAllBytes());
 		} catch (IOException | OutputServiceException  e) {
 			throw new IllegalStateException("Error while generating PS document from template (" + template.toString() + ").", e);
 		}

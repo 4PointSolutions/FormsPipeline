@@ -27,7 +27,7 @@ import com._4point.aem.formspipeline.api.Context;
 import com._4point.aem.formspipeline.api.Context.ContextBuilder;
 import com._4point.aem.formspipeline.api.DataChunk;
 import com._4point.aem.formspipeline.api.OutputGeneration;
-import com._4point.aem.formspipeline.chunks.PdfOutputChunk;
+import com._4point.aem.formspipeline.chunks.PdfPayload;
 import com._4point.aem.formspipeline.contexts.MapContext;
 import com._4point.aem.formspipeline.utils.ProcessingMetadataDetails;
 import com._4point.aem.formspipeline.utils.ProcessingMetadataDetails.ProcessingMetadataDetailBuilder;
@@ -56,7 +56,7 @@ import com.adobe.fd.output.api.AcrobatVersion;
  * @param <D>
  * @param <T>
  */
-public class AemOutputServicePdfGeneration<D extends Context, T extends DataChunk<D>> implements OutputGeneration<T, PdfOutputChunk<D>> {
+public class AemOutputServicePdfGeneration<D extends Context, T extends DataChunk<D>> implements OutputGeneration<T, PdfPayload<D>> {
 	private static final Logger logger = LoggerFactory.getLogger(AemOutputServicePdfGeneration.class);
 
 	private final OutputService outputService;
@@ -66,7 +66,7 @@ public class AemOutputServicePdfGeneration<D extends Context, T extends DataChun
 	}
 
 	@Override
-	public PdfOutputChunk<D> process(T dataChunk) {		
+	public PdfPayload<D> process(T dataChunk) {		
 		D dataContext = dataChunk.dataContext();
 		var myContext = new AemOutputServicePdfGenerationContext.ContextReader(dataContext);
 		PathOrUrl template = myContext.template();
@@ -74,8 +74,8 @@ public class AemOutputServicePdfGeneration<D extends Context, T extends DataChun
 			Document pdfResult = myContext.transferAllSettings(outputService.generatePDFOutput())
 										  .executeOn(template, dataChunk.asInputStream());
 			Optional<Long> pageCount = pdfResult.getPageCount();
-			return pageCount.isPresent() ? PdfOutputChunk.createSimple(dataContext, pdfResult.getInputStream().readAllBytes(), pageCount.get().intValue())
-										 : PdfOutputChunk.createSimple(dataContext, pdfResult.getInputStream().readAllBytes());
+			return pageCount.isPresent() ? PdfPayload.createSimple(dataContext, pdfResult.getInputStream().readAllBytes(), pageCount.get().intValue())
+										 : PdfPayload.createSimple(dataContext, pdfResult.getInputStream().readAllBytes());
 		} catch (IOException | OutputServiceException e) {
 			throw new IllegalStateException("Error while generating PDF from template (" + template.toString() + ").", e);
 		}

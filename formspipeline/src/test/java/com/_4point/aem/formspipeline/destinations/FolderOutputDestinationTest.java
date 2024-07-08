@@ -5,10 +5,8 @@ import static org.hamcrest.Matchers.allOf;
 import static org.hamcrest.Matchers.containsString;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import org.junit.jupiter.api.Tag;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -16,24 +14,22 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.io.TempDir;
-import org.mockito.Mock;
-import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import com._4point.aem.formspipeline.api.Context;
-import com._4point.aem.formspipeline.api.OutputChunk;
-import com._4point.aem.formspipeline.api.Result;
+import com._4point.aem.formspipeline.api.Message;
+import com._4point.aem.formspipeline.api.MessageBuilder;
 import com._4point.aem.formspipeline.contexts.EmptyContext;
 
 @ExtendWith(MockitoExtension.class)
 class FolderOutputDestinationTest {
-    private static String mockOutputString = "Test Bytes";
-	private static byte[] mockOutputBytes = mockOutputString.getBytes(StandardCharsets.UTF_8); 
+	private static final String mockOutputString = "Test Bytes";
+	private static final byte[] MOCK_OUTPUT_BYTES = mockOutputString.getBytes(StandardCharsets.UTF_8); 
+	private static final Message<byte[]> MOCK_MESSAGE = MessageBuilder.createMessage(MOCK_OUTPUT_BYTES, EmptyContext.emptyInstance() );
 	
-	@Mock private OutputChunk<EmptyContext, EmptyContext> mockOutputChunk;
 	
 	//Helper method
 	private void writeFile(Path testFolder, final Path filename, final Path fileRename, int counter) throws IOException {
@@ -63,9 +59,9 @@ class FolderOutputDestinationTest {
 	}	
 	
 	//Helper Method
-	private void validateIndexOutOfBoundException(final FolderOutputDestination<EmptyContext, EmptyContext> underTest) {
+	private void validateIndexOutOfBoundException(final FolderOutputDestination underTest) {
 		//Rename function keeps setting file to same name therefore reaches limit
-		IndexOutOfBoundsException ex = assertThrows(IndexOutOfBoundsException.class, ()->underTest.process(mockOutputChunk));
+		IndexOutOfBoundsException ex = assertThrows(IndexOutOfBoundsException.class, ()->underTest.process(MOCK_MESSAGE));
 		String msg = ex.getMessage();
 		assertNotNull(msg);		
 		assertThat(msg, allOf(containsString("exists rename attempted")));
@@ -133,8 +129,7 @@ class FolderOutputDestinationTest {
 		final Path filename = Path.of("foo.txt");
 		final Path fileRename = Path.of("foo2.txt");		
 		//Mockito.when(mockOutputChunk.bytes()).thenReturn(mockOutputBytes);
-		final FolderOutputDestination<EmptyContext, EmptyContext> underTest = new FolderOutputDestination<>(
-				testFolder, (a, b)->filename,(a)-> fileRename);
+		final FolderOutputDestination underTest = new FolderOutputDestination(testFolder, __->filename, __->fileRename);
 		
 		//Creates a file with the same name so that rename call is triggered when process is called
 		writeFile(testFolder, filename, fileRename,1000);		
@@ -171,8 +166,7 @@ class FolderOutputDestinationTest {
 	void testProcess_missingFileExtension_IndexOutOfBoundsException(@TempDir Path testFolder) throws Exception {
 		final Path filename = Path.of("foo");
 		final Path fileRename = Path.of("foo2.txt");		
-		final FolderOutputDestination<EmptyContext, EmptyContext> underTest = new FolderOutputDestination<>(
-				testFolder, (a, b)->filename,(a)-> fileRename);
+		final FolderOutputDestination underTest = new FolderOutputDestination(testFolder, __->filename,  __->fileRename);
 		
 		//Creates a file with the same name so that rename call is triggered when process is called
 		writeFile(testFolder, filename, fileRename,1000);		
@@ -257,19 +251,18 @@ class FolderOutputDestinationTest {
 		}
 
 		Asserter callProcess() {
-			Mockito.when(mockOutputChunk.bytes()).thenReturn(mockOutputBytes);
-			final FolderOutputDestination<EmptyContext, EmptyContext> underTest = fileRename == null 
-					? new FolderOutputDestination<>(testFolder, (a, b)->filename) 
-					: new FolderOutputDestination<>(testFolder, (a, b)->filename, (a)->fileRename);
-				 var result = underTest.process(mockOutputChunk);
+			final FolderOutputDestination underTest = fileRename == null 
+					? new FolderOutputDestination(testFolder, __->filename) 
+					: new FolderOutputDestination(testFolder, __->filename, __->fileRename);
+				 var result = underTest.process(MOCK_MESSAGE);
 			 return new Asserter(result, testFolder);
 		}
 		
 		private static class Asserter {
-			private final Result<EmptyContext, EmptyContext, Context> result;
+			private final Message<Path> result;
 			private final Path testFolder;
 
-			public Asserter(Result<EmptyContext, EmptyContext, Context> result, Path testFolder) {
+			public Asserter(Message<Path> result, Path testFolder) {
 				this.result = result;
 				this.testFolder = testFolder;
 			}
@@ -283,10 +276,7 @@ class FolderOutputDestinationTest {
 				assertEquals(expectedFileName,expectedFileRename.getFileName().toString());
 				assertEquals(mockOutputString, Files.readString(expectedFile));
 				
-				assertNull(result.dataContext());		// Should be null because the mock will not return anything
-				assertNull(result.outputContext());		// Should be null because the mock will not return anything
-				assertEquals(expectedFile, FolderOutputDestination.reader(result.resultContext()).filenameWritten().get());
-				assertEquals(expectedFile, FolderOutputDestination.getFilenameWritten(result.resultContext()).get());	// Test both ways of getting the filename.
+				assertEquals(expectedFile, result.payload());
 			}
 		}
 		

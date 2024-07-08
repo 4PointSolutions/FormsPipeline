@@ -17,8 +17,8 @@ import org.junit.jupiter.api.Test;
 
 import com._4point.aem.formspipeline.api.Context;
 import com._4point.aem.formspipeline.api.DataChunk;
-import com._4point.aem.formspipeline.chunks.PdfOutputChunk;
-import com._4point.aem.formspipeline.chunks.PsOutputChunk;
+import com._4point.aem.formspipeline.chunks.PdfPayload;
+import com._4point.aem.formspipeline.chunks.PsPayload;
 import com._4point.aem.formspipeline.chunks.SimpleChunk;
 import com._4point.aem.formspipeline.transformations.AemConvertPdfToPsService.AemConvertPdfToPsServiceContext;
 import com.github.tomakehurst.wiremock.client.WireMock;
@@ -72,7 +72,7 @@ class AemConvertPdfToPsServiceTest {
 														 .fontInclusion(AemConvertPdfToPsServiceContext.FONT_INCLUSION__EMBEDDED_AND_REFERENCED_FONTS)
 														 .build();
 
-		PsOutputChunk<Context> result = underTest.process(PdfOutputChunk.createSimple(context, TEST_CHUNK_DATA_STRING.getBytes()));
+		PsPayload<Context> result = underTest.process(PdfPayload.createSimple(context, TEST_CHUNK_DATA_STRING.getBytes()));
 		
 		assertNotNull(result);
 	}
