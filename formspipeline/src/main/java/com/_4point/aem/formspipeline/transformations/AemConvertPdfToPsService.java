@@ -17,7 +17,9 @@ import com._4point.aem.fluentforms.impl.convertPdf.ConvertPdfServiceImpl;
 import com._4point.aem.formspipeline.aem.AemConfigBuilder;
 import com._4point.aem.formspipeline.api.Context;
 import com._4point.aem.formspipeline.api.Context.ContextBuilder;
-import com._4point.aem.formspipeline.api.OutputTransformation.OutputTransformationOneToOne;
+import com._4point.aem.formspipeline.api.DataTransformation.DataTransformationOneToOne;
+import com._4point.aem.formspipeline.api.Message;
+import com._4point.aem.formspipeline.api.MessageBuilder;
 import com._4point.aem.formspipeline.chunks.PdfPayload;
 import com._4point.aem.formspipeline.chunks.PsPayload;
 import com._4point.aem.formspipeline.contexts.MapContext;
@@ -30,8 +32,7 @@ import com.adobe.fd.cpdf.api.enumeration.Style;
 
 import jakarta.ws.rs.client.Client;
 
-public class AemConvertPdfToPsService <D extends Context> implements OutputTransformationOneToOne<PdfPayload<D>, PsPayload<D>>{
-
+public class AemConvertPdfToPsService <D extends Context> implements DataTransformationOneToOne<Message<PdfPayload>, Message<PsPayload>> {
 	private final ConvertPdfService convertPdfService;
 	
 	public AemConvertPdfToPsService(ConvertPdfService convertPdfService) {
@@ -43,15 +44,17 @@ public class AemConvertPdfToPsService <D extends Context> implements OutputTrans
 	}
 	
 	@Override
-	public PsPayload<D> process(PdfPayload<D> pdfChunk) {
-		OptionalInt pageCount = pdfChunk.outputContext().numPages();
-		var myContext = new AemConvertPdfToPsServiceContext.ContextReader(pdfChunk.dataContext());
+	public Message<PsPayload> process(Message<PdfPayload> msg) {
+		OptionalInt pageCount = msg.payload().numPages();
+		var myContext = new AemConvertPdfToPsServiceContext.ContextReader(msg.context());
 		try {
 			Document result = myContext.transferAllSettings(convertPdfService.toPS())
-									   .executeOn(pdfChunk.bytes());
+									   .executeOn(msg.payload().bytes());
 			
-			return pageCount.isPresent() ? PsPayload.createSimple(pdfChunk.dataContext(), result.getInputStream().readAllBytes(), pageCount.getAsInt())
-										 : PsPayload.createSimple(pdfChunk.dataContext(), result.getInputStream().readAllBytes());
+			var psPayload = pageCount.isPresent() ? new PsPayload(result.getInputStream().readAllBytes(), pageCount.getAsInt())
+										 		  : new PsPayload(result.getInputStream().readAllBytes());
+			
+			return MessageBuilder.fromMessageReplacingPayload(msg, psPayload);
 		} catch (ConvertPdfServiceException | IOException e) {
 			throw new IllegalStateException("Error while converting PDF document to PostScript.", e);
 		}
@@ -279,5 +282,4 @@ public class AemConvertPdfToPsService <D extends Context> implements OutputTrans
 			return new AemConvertPdfToPsService<>(new ConvertPdfServiceImpl(adapter));
 		}
 	}
-
 }

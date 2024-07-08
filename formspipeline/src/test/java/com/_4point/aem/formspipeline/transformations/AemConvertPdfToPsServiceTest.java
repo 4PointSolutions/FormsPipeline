@@ -2,24 +2,19 @@ package com._4point.aem.formspipeline.transformations;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import java.io.IOException;
 import java.net.URI;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.List;
-import java.util.Optional;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
 import com._4point.aem.formspipeline.api.Context;
-import com._4point.aem.formspipeline.api.DataChunk;
+import com._4point.aem.formspipeline.api.Message;
+import com._4point.aem.formspipeline.api.MessageBuilder;
 import com._4point.aem.formspipeline.chunks.PdfPayload;
 import com._4point.aem.formspipeline.chunks.PsPayload;
-import com._4point.aem.formspipeline.chunks.SimpleChunk;
 import com._4point.aem.formspipeline.transformations.AemConvertPdfToPsService.AemConvertPdfToPsServiceContext;
 import com.github.tomakehurst.wiremock.client.WireMock;
 import com.github.tomakehurst.wiremock.http.ResponseDefinition;
@@ -72,7 +67,9 @@ class AemConvertPdfToPsServiceTest {
 														 .fontInclusion(AemConvertPdfToPsServiceContext.FONT_INCLUSION__EMBEDDED_AND_REFERENCED_FONTS)
 														 .build();
 
-		PsPayload<Context> result = underTest.process(PdfPayload.createSimple(context, TEST_CHUNK_DATA_STRING.getBytes()));
+		PdfPayload pdfPayload = new PdfPayload(TEST_CHUNK_DATA_STRING.getBytes());
+		Message<PdfPayload> msgIn = MessageBuilder.createMessage(pdfPayload, context);
+		Message<PsPayload> result = underTest.process(msgIn);
 		
 		assertNotNull(result);
 	}

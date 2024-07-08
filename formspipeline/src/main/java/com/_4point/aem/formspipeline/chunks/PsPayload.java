@@ -1,8 +1,6 @@
 package com._4point.aem.formspipeline.chunks;
 
-import com._4point.aem.formspipeline.api.Context;
-
-public final class PsPayload <D extends Context> extends AbstractInMemoryPagedDataImpl {
+public final class PsPayload extends AbstractInMemoryPagedDataImpl {
 	public static final String CONTENT_TYPE = "application/postscript";
 	
 	public PsPayload(byte[] bytes) {
