@@ -32,7 +32,7 @@ import com.adobe.fd.cpdf.api.enumeration.Style;
 
 import jakarta.ws.rs.client.Client;
 
-public class AemConvertPdfToPsService <D extends Context> implements DataTransformationOneToOne<Message<PdfPayload>, Message<PsPayload>> {
+public class AemConvertPdfToPsService implements DataTransformationOneToOne<Message<PdfPayload>, Message<PsPayload>> {
 	private final ConvertPdfService convertPdfService;
 	
 	public AemConvertPdfToPsService(ConvertPdfService convertPdfService) {
@@ -42,7 +42,7 @@ public class AemConvertPdfToPsService <D extends Context> implements DataTransfo
 	public static Builder builder() {
 		return new Builder();
 	}
-	
+
 	@Override
 	public Message<PsPayload> process(Message<PdfPayload> msg) {
 		OptionalInt pageCount = msg.payload().numPages();
@@ -277,9 +277,9 @@ public class AemConvertPdfToPsService <D extends Context> implements DataTransfo
 			return this;
 		}
 		
-		public <D extends Context> AemConvertPdfToPsService<D> build() {
+		public AemConvertPdfToPsService build() {
 			RestServicesConvertPdfServiceAdapter adapter = setBuilderFields(RestServicesConvertPdfServiceAdapter.builder()).build();
-			return new AemConvertPdfToPsService<>(new ConvertPdfServiceImpl(adapter));
+			return new AemConvertPdfToPsService(new ConvertPdfServiceImpl(adapter));
 		}
 	}
 }

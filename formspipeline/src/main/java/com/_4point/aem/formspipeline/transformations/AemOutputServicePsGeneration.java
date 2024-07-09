@@ -25,12 +25,12 @@ import com._4point.aem.fluentforms.impl.output.OutputServiceImpl;
 import com._4point.aem.formspipeline.aem.AemConfigBuilder;
 import com._4point.aem.formspipeline.api.Context;
 import com._4point.aem.formspipeline.api.Context.ContextBuilder;
-import com._4point.aem.formspipeline.api.DataChunk;
-import com._4point.aem.formspipeline.api.OutputGeneration;
+import com._4point.aem.formspipeline.api.DataTransformation.DataTransformationOneToOne;
+import com._4point.aem.formspipeline.api.Message;
+import com._4point.aem.formspipeline.api.MessageBuilder;
 import com._4point.aem.formspipeline.chunks.PsPayload;
+import com._4point.aem.formspipeline.chunks.XmlPayload;
 import com._4point.aem.formspipeline.contexts.MapContext;
-import com._4point.aem.formspipeline.utils.ProcessingMetadataDetails;
-import com._4point.aem.formspipeline.utils.ProcessingMetadataDetails.ProcessingMetadataDetailBuilder;
 import com.adobe.fd.output.api.PaginationOverride;
 
 import jakarta.ws.rs.client.Client;
@@ -55,10 +55,8 @@ import jakarta.ws.rs.client.Client;
  * location of an AEM server, credentials to talk to that server, etc.).  This is done using a Builder object retrieved 
  * by calling the static builder() method.
  *
- * @param <D>
- * @param <T>
  */
-public class AemOutputServicePsGeneration <D extends Context, T extends DataChunk<D>> implements OutputGeneration<T, PsPayload<D>> {
+public class AemOutputServicePsGeneration implements DataTransformationOneToOne<Message<XmlPayload>, Message<PsPayload>> {
 	private static final Logger logger = LoggerFactory.getLogger(AemOutputServicePsGeneration.class);
 
 	private final OutputService outputService;
@@ -72,16 +70,17 @@ public class AemOutputServicePsGeneration <D extends Context, T extends DataChun
 	}
 	
 	@Override
-	public PsPayload<D> process(T dataChunk) {
-		D dataContext = dataChunk.dataContext();
+	public Message<PsPayload> process(Message<XmlPayload> msg) {
+		Context dataContext = msg.context();
 		var myContext = new AemOutputServicePsGenerationContext.ContextReader(dataContext);
 		PathOrUrl template = myContext.template();
 		try {
-			Document result = myContext.transferAllSettings(outputService.generatePrintedOutput())
-											  .executeOn(template, dataChunk.asInputStream());
-			Optional<Long> pageCount = result.getPageCount();
-			return pageCount.isPresent() ? PsPayload.createSimple(dataContext, result.getInputStream().readAllBytes(), pageCount.get().intValue())
-										 : PsPayload.createSimple(dataContext, result.getInputStream().readAllBytes());
+			Document psResult = myContext.transferAllSettings(outputService.generatePrintedOutput())
+											  .executeOn(template, msg.payload().asInputStream());
+			Optional<Long> pageCount = psResult.getPageCount();
+			var result = pageCount.isPresent() ? new PsPayload(psResult.getInputStream().readAllBytes(), pageCount.get().intValue())
+											   : new PsPayload(psResult.getInputStream().readAllBytes());
+			return MessageBuilder.createMessage(result, msg.context());
 		} catch (IOException | OutputServiceException  e) {
 			throw new IllegalStateException("Error while generating PS document from template (" + template.toString() + ").", e);
 		}
@@ -222,9 +221,9 @@ public class AemOutputServicePsGeneration <D extends Context, T extends DataChun
 			return this;
 		}
 		
-		public <D extends Context, T extends DataChunk<D>> AemOutputServicePsGeneration<D,T> build() {
+		public AemOutputServicePsGeneration build() {
 			RestServicesOutputServiceAdapter adapter = setBuilderFields(RestServicesOutputServiceAdapter.builder()).build();
-			return new AemOutputServicePsGeneration<>(new OutputServiceImpl(adapter, UsageContext.CLIENT_SIDE));
+			return new AemOutputServicePsGeneration(new OutputServiceImpl(adapter, UsageContext.CLIENT_SIDE));
 		}
 	}
 }

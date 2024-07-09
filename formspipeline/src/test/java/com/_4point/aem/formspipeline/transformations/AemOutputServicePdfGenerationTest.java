@@ -1,12 +1,17 @@
 package com._4point.aem.formspipeline.transformations;
 
-import static org.hamcrest.CoreMatchers.*;
+import static org.hamcrest.CoreMatchers.allOf;
+import static org.hamcrest.CoreMatchers.containsString;
+import static org.hamcrest.CoreMatchers.containsStringIgnoringCase;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertAll;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.net.URI;
 import java.net.URL;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.util.List;
 
@@ -17,9 +22,10 @@ import org.junit.jupiter.api.Test;
 
 import com._4point.aem.fluentforms.api.PathOrUrl;
 import com._4point.aem.formspipeline.api.Context;
-import com._4point.aem.formspipeline.api.DataChunk;
+import com._4point.aem.formspipeline.api.Message;
+import com._4point.aem.formspipeline.api.MessageBuilder;
 import com._4point.aem.formspipeline.chunks.PdfPayload;
-import com._4point.aem.formspipeline.chunks.SimpleChunk;
+import com._4point.aem.formspipeline.chunks.XmlPayload;
 import com._4point.aem.formspipeline.contexts.EmptyContext;
 import com._4point.aem.formspipeline.transformations.AemOutputServicePdfGeneration.AemOutputServicePdfGenerationContext;
 import com.adobe.fd.output.api.AcrobatVersion;
@@ -34,29 +40,8 @@ import com.github.tomakehurst.wiremock.stubbing.StubMapping;
 class AemOutputServicePdfGenerationTest {
 	
 	private static final String TEST_CHUNK_DATA_STRING = "<root>data bytes</root>";
-
-	private class CustomDataChunk implements DataChunk<Context> {
-		private final SimpleChunk chunk;
-		private final Context context;
-
-		public CustomDataChunk(String chunkData, Context context) {
-			this.chunk = new SimpleChunk(chunkData);
-			this.context = context;
-		}
-
-		@Override
-		public byte[] bytes() {
-			return chunk.bytes();
-		}
-
-		@Override
-		public Context dataContext() {
-			return this.context;
-		}
-	}
-
 	
-	private AemOutputServicePdfGeneration<Context, CustomDataChunk> underTest;
+	private AemOutputServicePdfGeneration underTest;
 			
 	private static final boolean WIREMOCK_RECORDING = false;
 
@@ -93,10 +78,10 @@ class AemOutputServicePdfGenerationTest {
 															  .template("Foo.xdp")
 															  .build();
 		
-		PdfPayload<Context> result = underTest.process(new CustomDataChunk(TEST_CHUNK_DATA_STRING, context));
+		Message<PdfPayload> result = underTest.process(MessageBuilder.createMessage(new XmlPayload(TEST_CHUNK_DATA_STRING), context));
 		
 		assertNotNull(result);
-//		assertresult.bytes()
+		assertNotNull(result.payload());
 	}
 
 	@Test
@@ -106,7 +91,7 @@ class AemOutputServicePdfGenerationTest {
 															  .template(template)
 															  .build();
 		
-		IllegalStateException ex = assertThrows(IllegalStateException.class, ()->underTest.process(new CustomDataChunk(TEST_CHUNK_DATA_STRING, context)));
+		IllegalStateException ex = assertThrows(IllegalStateException.class, ()->underTest.process(MessageBuilder.createMessage(new XmlPayload(TEST_CHUNK_DATA_STRING), context)));
 		
 		String msg = ex.getMessage();
 		assertNotNull(msg);
@@ -116,7 +101,7 @@ class AemOutputServicePdfGenerationTest {
 	@Test
 	void testProcess_MissingTemplate() {
 		// No template argument in the context.
-		IllegalArgumentException ex = assertThrows(IllegalArgumentException.class, ()->underTest.process(new CustomDataChunk(TEST_CHUNK_DATA_STRING, EmptyContext.emptyInstance())));
+		IllegalArgumentException ex = assertThrows(IllegalArgumentException.class, ()->underTest.process(MessageBuilder.createMessage(new XmlPayload(TEST_CHUNK_DATA_STRING), EmptyContext.emptyInstance())));
 		
 		String msg = ex.getMessage();
 		assertNotNull(msg);

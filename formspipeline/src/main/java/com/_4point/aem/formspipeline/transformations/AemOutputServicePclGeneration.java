@@ -25,17 +25,17 @@ import com._4point.aem.fluentforms.impl.output.OutputServiceImpl;
 import com._4point.aem.formspipeline.aem.AemConfigBuilder;
 import com._4point.aem.formspipeline.api.Context;
 import com._4point.aem.formspipeline.api.Context.ContextBuilder;
-import com._4point.aem.formspipeline.api.DataChunk;
-import com._4point.aem.formspipeline.api.OutputGeneration;
+import com._4point.aem.formspipeline.api.DataTransformation.DataTransformationOneToOne;
+import com._4point.aem.formspipeline.api.Message;
+import com._4point.aem.formspipeline.api.MessageBuilder;
 import com._4point.aem.formspipeline.chunks.PclPayload;
+import com._4point.aem.formspipeline.chunks.XmlPayload;
 import com._4point.aem.formspipeline.contexts.MapContext;
-import com._4point.aem.formspipeline.utils.ProcessingMetadataDetails;
-import com._4point.aem.formspipeline.utils.ProcessingMetadataDetails.ProcessingMetadataDetailBuilder;
 import com.adobe.fd.output.api.PaginationOverride;
 
 import jakarta.ws.rs.client.Client;
 
-public class AemOutputServicePclGeneration  <D extends Context, T extends DataChunk<D>> implements OutputGeneration<T, PclPayload<D>> {
+public class AemOutputServicePclGeneration implements DataTransformationOneToOne<Message<XmlPayload>, Message<PclPayload>> {
 	private static final Logger logger = LoggerFactory.getLogger(AemOutputServicePclGeneration.class);
 
 	private final OutputService outputService;
@@ -49,16 +49,17 @@ public class AemOutputServicePclGeneration  <D extends Context, T extends DataCh
 	}
 	
 	@Override
-	public PclPayload<D> process(T dataChunk) {
-		D dataContext = dataChunk.dataContext();
+	public Message<PclPayload> process(Message<XmlPayload> msg) {
+		Context dataContext = msg.context();
 		var myContext = new AemOutputServicePclGenerationContext.ContextReader(dataContext);
 		PathOrUrl template = myContext.template();
 		try {
 			Document result = myContext.transferAllSettings(outputService.generatePrintedOutput())
-											  .executeOn(template, dataChunk.asInputStream());
+											  .executeOn(template, msg.payload().asInputStream());
 			Optional<Long> pageCount = result.getPageCount();
-			return pageCount.isPresent() ? PclPayload.createSimple(dataContext, result.getInputStream().readAllBytes(), pageCount.get().intValue())
-										 : PclPayload.createSimple(dataContext, result.getInputStream().readAllBytes());
+			var pdfPayload = pageCount.isPresent() ? new PclPayload(result.getInputStream().readAllBytes(), pageCount.get().intValue())
+												   : new PclPayload(result.getInputStream().readAllBytes());
+			return MessageBuilder.createMessage(pdfPayload, msg.context());
 		} catch (IOException | OutputServiceException  e) {
 			throw new IllegalStateException("Error while generating PCL document from template (" + template.toString() + ").", e);
 		}
@@ -200,10 +201,11 @@ public class AemOutputServicePclGeneration  <D extends Context, T extends DataCh
 			return this;
 		}
 		
-		public <D extends Context, T extends DataChunk<D>> AemOutputServicePclGeneration<D,T> build() {
+		public AemOutputServicePclGeneration build() {
 			RestServicesOutputServiceAdapter adapter = setBuilderFields(RestServicesOutputServiceAdapter.builder()).build();
-			return new AemOutputServicePclGeneration<>(new OutputServiceImpl(adapter, UsageContext.CLIENT_SIDE));
+			return new AemOutputServicePclGeneration(new OutputServiceImpl(adapter, UsageContext.CLIENT_SIDE));
 		}
 	}
+
 }
 

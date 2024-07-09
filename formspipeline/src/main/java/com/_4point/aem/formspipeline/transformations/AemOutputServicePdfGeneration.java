@@ -8,8 +8,6 @@ import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
 
-import jakarta.ws.rs.client.Client;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -25,13 +23,15 @@ import com._4point.aem.fluentforms.impl.output.OutputServiceImpl;
 import com._4point.aem.formspipeline.aem.AemConfigBuilder;
 import com._4point.aem.formspipeline.api.Context;
 import com._4point.aem.formspipeline.api.Context.ContextBuilder;
-import com._4point.aem.formspipeline.api.DataChunk;
-import com._4point.aem.formspipeline.api.OutputGeneration;
+import com._4point.aem.formspipeline.api.DataTransformation.DataTransformationOneToOne;
+import com._4point.aem.formspipeline.api.Message;
+import com._4point.aem.formspipeline.api.MessageBuilder;
 import com._4point.aem.formspipeline.chunks.PdfPayload;
+import com._4point.aem.formspipeline.chunks.XmlPayload;
 import com._4point.aem.formspipeline.contexts.MapContext;
-import com._4point.aem.formspipeline.utils.ProcessingMetadataDetails;
-import com._4point.aem.formspipeline.utils.ProcessingMetadataDetails.ProcessingMetadataDetailBuilder;
 import com.adobe.fd.output.api.AcrobatVersion;
+
+import jakarta.ws.rs.client.Client;
 
 /**
  * This class is used to call AEM to generate a PDF.
@@ -53,10 +53,8 @@ import com.adobe.fd.output.api.AcrobatVersion;
  * location of an AEM server, credentials to talk to that server, etc.).  This is done using a Builder object retrieved 
  * by calling the static builder() method.
  *
- * @param <D>
- * @param <T>
  */
-public class AemOutputServicePdfGeneration<D extends Context, T extends DataChunk<D>> implements OutputGeneration<T, PdfPayload<D>> {
+public class AemOutputServicePdfGeneration implements DataTransformationOneToOne<Message<XmlPayload>, Message<PdfPayload>> {
 	private static final Logger logger = LoggerFactory.getLogger(AemOutputServicePdfGeneration.class);
 
 	private final OutputService outputService;
@@ -66,16 +64,17 @@ public class AemOutputServicePdfGeneration<D extends Context, T extends DataChun
 	}
 
 	@Override
-	public PdfPayload<D> process(T dataChunk) {		
-		D dataContext = dataChunk.dataContext();
-		var myContext = new AemOutputServicePdfGenerationContext.ContextReader(dataContext);
-		PathOrUrl template = myContext.template();
+	public Message<PdfPayload> process(Message<XmlPayload> msg) {
+		Context dataContext = msg.context();
+		var myContextReader = new AemOutputServicePdfGenerationContext.ContextReader(dataContext);
+		PathOrUrl template = myContextReader.template();
 		try {
-			Document pdfResult = myContext.transferAllSettings(outputService.generatePDFOutput())
-										  .executeOn(template, dataChunk.asInputStream());
+			Document pdfResult = myContextReader.transferAllSettings(outputService.generatePDFOutput())
+										  .executeOn(template, msg.payload().asInputStream());
 			Optional<Long> pageCount = pdfResult.getPageCount();
-			return pageCount.isPresent() ? PdfPayload.createSimple(dataContext, pdfResult.getInputStream().readAllBytes(), pageCount.get().intValue())
-										 : PdfPayload.createSimple(dataContext, pdfResult.getInputStream().readAllBytes());
+			var result = pageCount.isPresent() ? new PdfPayload(pdfResult.getInputStream().readAllBytes(), pageCount.get().intValue())
+											   : new PdfPayload(pdfResult.getInputStream().readAllBytes());
+			return MessageBuilder.createMessage(result, msg.context());
 		} catch (IOException | OutputServiceException e) {
 			throw new IllegalStateException("Error while generating PDF from template (" + template.toString() + ").", e);
 		}
@@ -230,9 +229,9 @@ public class AemOutputServicePdfGeneration<D extends Context, T extends DataChun
 			return this;
 		}
 		
-		public <D extends Context, T extends DataChunk<D>> AemOutputServicePdfGeneration<D,T> build() {
+		public AemOutputServicePdfGeneration build() {
 			RestServicesOutputServiceAdapter adapter = setBuilderFields(RestServicesOutputServiceAdapter.builder()).build();
-			return new AemOutputServicePdfGeneration<>(new OutputServiceImpl(adapter, UsageContext.CLIENT_SIDE));
+			return new AemOutputServicePdfGeneration(new OutputServiceImpl(adapter, UsageContext.CLIENT_SIDE));
 		}
 	}
 }

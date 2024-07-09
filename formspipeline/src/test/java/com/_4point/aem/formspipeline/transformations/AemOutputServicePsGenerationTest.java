@@ -25,9 +25,10 @@ import com._4point.aem.fluentforms.api.PathOrUrl;
 import com._4point.aem.fluentforms.api.output.PrintConfig;
 import com._4point.aem.fluentforms.impl.SimpleDocumentFactoryImpl;
 import com._4point.aem.formspipeline.api.Context;
-import com._4point.aem.formspipeline.api.DataChunk;
+import com._4point.aem.formspipeline.api.Message;
+import com._4point.aem.formspipeline.api.MessageBuilder;
 import com._4point.aem.formspipeline.chunks.PsPayload;
-import com._4point.aem.formspipeline.chunks.SimpleChunk;
+import com._4point.aem.formspipeline.chunks.XmlPayload;
 import com._4point.aem.formspipeline.contexts.EmptyContext;
 import com._4point.aem.formspipeline.transformations.AemOutputServicePsGeneration.AemOutputServicePsGenerationContext;
 import com.adobe.fd.output.api.PaginationOverride;
@@ -44,27 +45,7 @@ class AemOutputServicePsGenerationTest {
 	private static final String TEST_CHUNK_DATA_STRING = "<root>data bytes</root>";
 	private static final Path RESOURCES_DIR = Path.of("src", "test", "resources");
 
-	private class CustomDataChunk implements DataChunk<Context> {
-		private final SimpleChunk chunk;
-		private final Context context;
-
-		public CustomDataChunk(String chunkData, Context context) {
-			this.chunk = new SimpleChunk(chunkData);
-			this.context = context;
-		}
-
-		@Override
-		public byte[] bytes() {
-			return chunk.bytes();
-		}
-
-		@Override
-		public Context dataContext() {
-			return this.context;
-		}
-	}
-	
-	private AemOutputServicePsGeneration<Context, CustomDataChunk> underTest;
+	private AemOutputServicePsGeneration underTest;
 	
 	private static final boolean WIREMOCK_RECORDING = false;
 	
@@ -102,9 +83,10 @@ class AemOutputServicePsGenerationTest {
 															  .template(RESOURCES_DIR.resolve("sampleForms").resolve("SampleForPs.xdp").toAbsolutePath())
 															  .build();
 		
-		PsPayload<Context> result = underTest.process(new CustomDataChunk(TEST_CHUNK_DATA_STRING, context));
+		Message<PsPayload> result = underTest.process(MessageBuilder.createMessage(new XmlPayload(TEST_CHUNK_DATA_STRING), context));
 		
 		assertNotNull(result);
+		assertNotNull(result.payload());
 	}
 	
 	@Test
@@ -114,7 +96,7 @@ class AemOutputServicePsGenerationTest {
 															  .template(template)
 															  .build();
 		
-		IllegalStateException ex = assertThrows(IllegalStateException.class, ()->underTest.process(new CustomDataChunk(TEST_CHUNK_DATA_STRING, context)));
+		IllegalStateException ex = assertThrows(IllegalStateException.class, ()->underTest.process(MessageBuilder.createMessage(new XmlPayload(TEST_CHUNK_DATA_STRING), context)));
 		
 		String msg = ex.getMessage();
 		assertNotNull(msg);
@@ -125,7 +107,7 @@ class AemOutputServicePsGenerationTest {
 	@Test
 	void testProcess_MissingTemplate() {
 		// No template argument in the context.
-		IllegalArgumentException ex = assertThrows(IllegalArgumentException.class, ()->underTest.process(new CustomDataChunk(TEST_CHUNK_DATA_STRING, EmptyContext.emptyInstance())));
+		IllegalArgumentException ex = assertThrows(IllegalArgumentException.class, ()->underTest.process(MessageBuilder.createMessage(new XmlPayload(TEST_CHUNK_DATA_STRING), EmptyContext.emptyInstance())));
 		
 		String msg = ex.getMessage();
 		assertNotNull(msg);

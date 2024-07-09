@@ -6,6 +6,7 @@ public final class PsPayload extends AbstractInMemoryPagedDataImpl {
 	public PsPayload(byte[] bytes) {
 		super(bytes, CONTENT_TYPE);
 	}
+
 	public PsPayload(byte[] bytes, int numPages) {
 		super(bytes, CONTENT_TYPE, numPages);
 	}

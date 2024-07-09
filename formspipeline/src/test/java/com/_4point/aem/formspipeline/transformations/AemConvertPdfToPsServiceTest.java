@@ -28,7 +28,7 @@ class AemConvertPdfToPsServiceTest {
 
 	private static final String TEST_CHUNK_DATA_STRING = "<root>data bytes</root>";
 
-	private AemConvertPdfToPsService<Context> underTest;
+	private AemConvertPdfToPsService underTest;
 	
 	private static final boolean WIREMOCK_RECORDING = false;
 	

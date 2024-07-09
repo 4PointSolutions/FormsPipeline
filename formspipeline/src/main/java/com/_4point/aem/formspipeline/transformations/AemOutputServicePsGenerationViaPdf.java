@@ -5,10 +5,10 @@ import java.util.stream.Stream;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com._4point.aem.formspipeline.api.Context;
-import com._4point.aem.formspipeline.api.DataChunk;
-import com._4point.aem.formspipeline.api.OutputGeneration;
+import com._4point.aem.formspipeline.api.DataTransformation.DataTransformationOneToOne;
+import com._4point.aem.formspipeline.api.Message;
 import com._4point.aem.formspipeline.chunks.PsPayload;
+import com._4point.aem.formspipeline.chunks.XmlPayload;
 
 /**
  * This class is used to call AEM to generate a Postscript document by first generating a PDF and then converting it to PostScript.
@@ -30,24 +30,22 @@ import com._4point.aem.formspipeline.chunks.PsPayload;
  * location of an AEM server, credentials to talk to that server, etc.).  This is done using a Builder object retrieved 
  * by calling the static builder() method.
  *
- * @param <D>
- * @param <T>
  */
-public class AemOutputServicePsGenerationViaPdf <D extends Context, T extends DataChunk<D>> implements OutputGeneration<T, PsPayload<D>> {
+public class AemOutputServicePsGenerationViaPdf implements DataTransformationOneToOne<Message<XmlPayload>, Message<PsPayload>> {
 	private static final Logger logger = LoggerFactory.getLogger(AemOutputServicePsGenerationViaPdf.class);
 
-	private final AemOutputServicePdfGeneration<D, T> pdfGenerator;
-	private final AemConvertPdfToPsService<D> pdfToPsConverter;
+	private final AemOutputServicePdfGeneration pdfGenerator;
+	private final AemConvertPdfToPsService pdfToPsConverter;
 	
 	
-	public AemOutputServicePsGenerationViaPdf(AemOutputServicePdfGeneration<D, T> pdfGenerator, AemConvertPdfToPsService<D> pdfToPsConverter) {
+	public AemOutputServicePsGenerationViaPdf(AemOutputServicePdfGeneration pdfGenerator, AemConvertPdfToPsService pdfToPsConverter) {
 		this.pdfGenerator = pdfGenerator;
 		this.pdfToPsConverter = pdfToPsConverter;
 	}
 
 	@Override
-	public PsPayload<D> process(T dataChunk) {
-		return Stream.of(dataChunk)
+	public Message<PsPayload> process(Message<XmlPayload> msg) {
+		return Stream.of(msg)
 					 .map(pdfGenerator::process)
 					 .map(pdfToPsConverter::process)
 					 .findFirst()
