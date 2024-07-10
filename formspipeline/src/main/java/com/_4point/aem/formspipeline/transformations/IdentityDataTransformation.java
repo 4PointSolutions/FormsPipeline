@@ -2,20 +2,19 @@ package com._4point.aem.formspipeline.transformations;
 
 import java.util.stream.Stream;
 
-import com._4point.aem.formspipeline.api.Context;
-import com._4point.aem.formspipeline.api.DataChunk;
-import com._4point.aem.formspipeline.api.DataTransformation.DataTransformationOneToOne;
 import com._4point.aem.formspipeline.api.DataTransformation.DataTransformationManyToMany;
+import com._4point.aem.formspipeline.api.DataTransformation.DataTransformationOneToOne;
+import com._4point.aem.formspipeline.api.Message;
 
-public class IdentityDataTransformation<T extends DataChunk<? extends Context>> implements DataTransformationManyToMany<T, T>, DataTransformationOneToOne<T, T> {
+public class IdentityDataTransformation<T> implements DataTransformationManyToMany<Message<T>, Message<T>>, DataTransformationOneToOne<Message<T>, Message<T>> {
 
 	@Override
-	public T process(T dataChunk) {
+	public Message<T> process(Message<T> dataChunk) {
 		return dataChunk;
 	}
 
 	@Override
-	public Stream<T> process(Stream<T> dataChunks) {
+	public Stream<Message<T>> process(Stream<Message<T>> dataChunks) {
 		return dataChunks;
 	}
 }

@@ -25,9 +25,9 @@ import javax.print.event.PrintJobEvent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com._4point.aem.formspipeline.chunks.PclPayload;
-import com._4point.aem.formspipeline.chunks.PdfPayload;
-import com._4point.aem.formspipeline.chunks.PsPayload;
+import com._4point.aem.formspipeline.payloads.PclPayload;
+import com._4point.aem.formspipeline.payloads.PdfPayload;
+import com._4point.aem.formspipeline.payloads.PsPayload;
 
 /**
  * This class will send the output from AEM to a printer using a printerService.print() call.

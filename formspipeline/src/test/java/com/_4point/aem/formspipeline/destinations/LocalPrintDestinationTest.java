@@ -17,8 +17,8 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import com._4point.aem.formspipeline.api.Context;
 import com._4point.aem.formspipeline.api.Message;
 import com._4point.aem.formspipeline.api.MessageBuilder;
-import com._4point.aem.formspipeline.chunks.PdfPayload;
 import com._4point.aem.formspipeline.contexts.EmptyContext;
+import com._4point.aem.formspipeline.payloads.PdfPayload;
 import com._4point.aem.formspipeline.utils.JavaPrinterService;
 
 @ExtendWith(MockitoExtension.class)

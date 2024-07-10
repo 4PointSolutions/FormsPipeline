@@ -6,9 +6,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com._4point.aem.formspipeline.api.DataTransformation.DataTransformationOneToOne;
+import com._4point.aem.formspipeline.payloads.PsPayload;
+import com._4point.aem.formspipeline.payloads.XmlPayload;
 import com._4point.aem.formspipeline.api.Message;
-import com._4point.aem.formspipeline.chunks.PsPayload;
-import com._4point.aem.formspipeline.chunks.XmlPayload;
 
 /**
  * This class is used to call AEM to generate a Postscript document by first generating a PDF and then converting it to PostScript.

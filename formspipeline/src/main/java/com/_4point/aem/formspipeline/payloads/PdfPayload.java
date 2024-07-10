@@ -1,4 +1,4 @@
-package com._4point.aem.formspipeline.chunks;
+package com._4point.aem.formspipeline.payloads;
 
 public final class PdfPayload extends AbstractInMemoryPagedDataImpl {
 	public static final String CONTENT_TYPE = "application/pdf";

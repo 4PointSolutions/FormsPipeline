@@ -26,9 +26,9 @@ import com._4point.aem.formspipeline.api.Context.ContextBuilder;
 import com._4point.aem.formspipeline.api.DataTransformation.DataTransformationOneToOne;
 import com._4point.aem.formspipeline.api.Message;
 import com._4point.aem.formspipeline.api.MessageBuilder;
-import com._4point.aem.formspipeline.chunks.PdfPayload;
-import com._4point.aem.formspipeline.chunks.XmlPayload;
 import com._4point.aem.formspipeline.contexts.MapContext;
+import com._4point.aem.formspipeline.payloads.PdfPayload;
+import com._4point.aem.formspipeline.payloads.XmlPayload;
 import com.adobe.fd.output.api.AcrobatVersion;
 
 import jakarta.ws.rs.client.Client;
