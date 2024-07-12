@@ -36,11 +36,11 @@ public class MessageBuilder<T> {
 		return new MessageImpl<T>(payload, context);
 	}
 
-	public static <T,R> Function<Message<T>, Message<R>> transformPayload(Function<T,R> fn) {
+	public static <T,R> Function<? super Message<T>, Message<R>> transformPayload(Function<T,R> fn) {
 		return m->MessageBuilder.createMessage(fn.apply(m.payload()), m.context());
 	}
 	
-	public static <T> Function<Message<T>, Message<T>> transformContext(Function<? super Context, ? extends Context> fn) {
+	public static <T> Function<? super Message<T>, Message<T>> transformContext(Function<? super Context, ? extends Context> fn) {
 		return m->MessageBuilder.createMessage(m.payload(), fn.apply(m.context()));
 	}
 	
