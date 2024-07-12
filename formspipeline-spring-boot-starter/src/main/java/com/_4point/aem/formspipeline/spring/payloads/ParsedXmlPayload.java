@@ -30,17 +30,17 @@ import com._4point.aem.formspipeline.api.Context;
 import com._4point.aem.formspipeline.contexts.AggregateContext;
 import com._4point.aem.formspipeline.payloads.XmlPayload;
 
-public class XmlDataChunkImpl extends XmlPayload {	
-	private static final Logger logger = LoggerFactory.getLogger(XmlDataChunkImpl.class);
+public class ParsedXmlPayload extends XmlPayload {	
+	private static final Logger logger = LoggerFactory.getLogger(ParsedXmlPayload.class);
 
 	private final ParsedXmlContextImpl xmlContext;
 
-	public XmlDataChunkImpl(byte[] bytes) {
+	public ParsedXmlPayload(byte[] bytes) {
 		super(bytes);
 		this.xmlContext = ParsedXmlContextImpl.initializeXmlDoc(this.bytes());
 	}
 
-	public XmlDataChunkImpl(String xml) {
+	public ParsedXmlPayload(String xml) {
 		super(xml);
 		this.xmlContext = ParsedXmlContextImpl.initializeXmlDoc(this.bytes());
 	}

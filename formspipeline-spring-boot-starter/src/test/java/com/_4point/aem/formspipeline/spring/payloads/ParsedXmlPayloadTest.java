@@ -12,16 +12,16 @@ import org.junit.jupiter.api.Test;
 
 import com._4point.aem.formspipeline.api.Context;
 import com._4point.aem.formspipeline.spring.common.TestHelper;
-import com._4point.aem.formspipeline.spring.payloads.XmlDataChunkImpl.XmlDataException;
+import com._4point.aem.formspipeline.spring.payloads.ParsedXmlPayload.XmlDataException;
 
-class XmlDataChunkImplTest {
+class ParsedXmlPayloadTest {
 	
     @DisplayName("Should throw exception when it encounters bad XML.")
     @Test
     void testInitializeXmlDoc_throwException() {
     	String badXmlDataFile = TestHelper.BAD_XML_DATA_FILE;
 		byte[] fileContent = TestHelper.getFileBytesFromResource(badXmlDataFile);
-		XmlDataException ex = assertThrows(XmlDataException.class, ()->new XmlDataChunkImpl(fileContent));
+		XmlDataException ex = assertThrows(XmlDataException.class, ()->new ParsedXmlPayload(fileContent));
 		String msg = ex.getMessage();
 		assertThat(msg, containsStringIgnoringCase("failed to create XmlDataContext"));
     }
@@ -226,9 +226,9 @@ class XmlDataChunkImplTest {
 
     	Asserter create() {
     		if (xmlLocation != null && prevContext == null) {
-    			return new Asserter(new XmlDataChunkImpl(TestHelper.getFileBytesFromResource(xmlLocation)).xmlContext());
+    			return new Asserter(new ParsedXmlPayload(TestHelper.getFileBytesFromResource(xmlLocation)).xmlContext());
     		} else if (xmlLocation != null && prevContext != null) {
-    			return new Asserter(prevContext.incorporate(new XmlDataChunkImpl(TestHelper.getFileBytesFromResource(xmlLocation)).xmlContext()));
+    			return new Asserter(prevContext.incorporate(new ParsedXmlPayload(TestHelper.getFileBytesFromResource(xmlLocation)).xmlContext()));
     		} else {
     			throw new IllegalArgumentException("Bad argument combination xmlLocation=%s, prevContext=%s".formatted(xmlLocation, prevContext));
     		}
