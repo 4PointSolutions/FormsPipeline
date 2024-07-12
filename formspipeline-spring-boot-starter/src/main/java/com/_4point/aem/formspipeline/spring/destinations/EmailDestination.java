@@ -7,13 +7,11 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import com._4point.aem.formspipeline.api.Context;
+import com._4point.aem.formspipeline.api.Message;
 import com._4point.aem.formspipeline.api.Context.ContextBuilder;
-import com._4point.aem.formspipeline.api.OutputChunk;
-import com._4point.aem.formspipeline.api.OutputDestination;
-import com._4point.aem.formspipeline.api.Result;
-import com._4point.aem.formspipeline.contexts.EmptyContext;
+import com._4point.aem.formspipeline.api.DataTransformation.DataTransformationOneToOneOrZero;
 import com._4point.aem.formspipeline.contexts.MapContext;
-import com._4point.aem.formspipeline.results.SimpleResult;
+import com._4point.aem.formspipeline.payloads.PdfPayload;
 import com._4point.aem.formspipeline.spring.utils.EmailService;
 import com._4point.aem.formspipeline.spring.utils.EmailService.EmailServiceException;
 import com._4point.aem.formspipeline.spring.utils.EmailService.SendEmailData;
@@ -31,8 +29,7 @@ import jakarta.activation.DataSource;
  * @param <DC>  Data Context type
  * @param <OC>  Output Context type
  */
-public class EmailDestination<DC extends Context, OC extends Context> implements OutputDestination<OutputChunk<DC, OC>, 
-																								   Result<DC, OC, ? extends Context>> {
+public class EmailDestination implements DataTransformationOneToOneOrZero<Message<PdfPayload>, Message<?>> {
 
 	private static final String EMAIL_DESTINATION_PREFIX = "com._4point.aem.formspipeline.spring.destinations.EmailDestination.";
 	private static final String EMAIL_TO_KEY = EMAIL_DESTINATION_PREFIX + "to";
@@ -50,16 +47,16 @@ public class EmailDestination<DC extends Context, OC extends Context> implements
 	}
 
 	@Override
-	public Result<DC, OC, ? extends Context> process(OutputChunk<DC, OC> outputChunk) {
+	public Optional<Message<?>> process(Message<PdfPayload> msg) {
 		final String attachmentFilename = "pdfAttachment";
 		
-		Stream.of(outputChunk.dataContext())			// Get the data Context
+		Stream.of(msg.context())			// Get the data Context
 			  .map(EmailDestination::reader)			// Create a ContextReader
-			  .map(cr->toSendEmailData(cr, outputChunk.bytes(), attachmentFilename))	// Use that to create SendEmailData
+			  .map(cr->toSendEmailData(cr, msg.payload().bytes(), attachmentFilename))	// Use that to create SendEmailData
 			  .map(SafeSendEmailData::from)				// Make it a SafeSendEmailData
 			  .forEach(this::sendEmail);				// Use it to send Email.
 
-		return new SimpleResult<DC, OC, Context>(outputChunk.dataContext(), outputChunk.outputContext(), EmptyContext.emptyInstance());
+		return Optional.empty();
 	}
 
 	// Creates a SendEmailData by pulling information from a context (via ContextReader).  Accepts one and only one attachment

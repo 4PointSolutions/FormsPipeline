@@ -17,14 +17,14 @@ import javax.xml.stream.events.XMLEvent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com._4point.aem.formspipeline.spring.chunks.XmlDataChunk;
+import com._4point.aem.formspipeline.payloads.XmlPayload;
 
 abstract class XmlEventManipulation {
 	private static final Logger logger = LoggerFactory.getLogger(XmlEventManipulation.class);
 	private static final XMLInputFactory xmlInputFactory = XMLInputFactory.newInstance();
 	private static final XMLOutputFactory xmlOutputFactory = XMLOutputFactory.newInstance();
 
-	protected static List<EventInfo> readToList(XmlDataChunk dataChunk) throws XMLStreamException, IOException {
+	protected static List<EventInfo> readToList(XmlPayload dataChunk) throws XMLStreamException, IOException {
 		try (InputStream os = dataChunk.asInputStream()) {
 			XMLEventReader reader = xmlInputFactory.createXMLEventReader(os);
 			return EventInfo.readToList(reader);

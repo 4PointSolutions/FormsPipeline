@@ -14,7 +14,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com._4point.aem.formspipeline.api.DataTransformation.DataTransformationOneToMany;
-import com._4point.aem.formspipeline.spring.chunks.XmlDataChunk;
+import com._4point.aem.formspipeline.api.Message;
+import com._4point.aem.formspipeline.api.MessageBuilder;
+import com._4point.aem.formspipeline.payloads.XmlPayload;
 
 /**
  * Splits an XmlChunk into multiple XmlChunks.
@@ -23,7 +25,7 @@ import com._4point.aem.formspipeline.spring.chunks.XmlDataChunk;
  * created per element below the root.  Characters between transaction elements will be ignored. 
  * 
  */
-public class XmlSplittingTransformation extends XmlEventManipulation implements DataTransformationOneToMany<XmlDataChunk, XmlDataChunk> {
+public class XmlSplittingTransformation extends XmlEventManipulation implements DataTransformationOneToMany<Message<XmlPayload>, Message<XmlPayload>> {
 	private static final Logger logger = LoggerFactory.getLogger(XmlSplittingTransformation.class);
 
 	private final int wrapperLevels;
@@ -32,16 +34,17 @@ public class XmlSplittingTransformation extends XmlEventManipulation implements 
 		this.wrapperLevels = wrapperLevels;
 	}
 	
+//	public Stream<XmlDataChunk> process(XmlDataChunk dataChunk) {
 	@Override
-	public Stream<XmlDataChunk> process(XmlDataChunk dataChunk) {
+	public Stream<Message<XmlPayload>> process(Message<XmlPayload> msg) {
 		try {
-			TransactionInfo transactionInfo = convertToTransactions(readToList(dataChunk), wrapperLevels);
+			TransactionInfo transactionInfo = convertToTransactions(readToList(msg.payload()), wrapperLevels);
 
-			Builder<XmlDataChunk> streamBuilder = Stream.builder();
+			Builder<Message<XmlPayload>> streamBuilder = Stream.builder();
 			int transactionsSize = transactionInfo.transactions().size();
 			for (int i = 0; i < transactionsSize; i++) {
 				byte[] replayTransactions = replayTransaction(transactionInfo, i);
-				streamBuilder.accept(XmlDataChunk.create(replayTransactions, dataChunk.dataContext()));
+				streamBuilder.accept(MessageBuilder.createMessage(new XmlPayload(replayTransactions), msg.context()));
 			}
 			return streamBuilder.build();
 		} catch (XMLStreamException | TransformerFactoryConfigurationError | IOException e) {

@@ -9,7 +9,10 @@ import java.util.stream.Stream;
 import org.junit.jupiter.api.Test;
 import org.xmlunit.builder.Input;
 
-import com._4point.aem.formspipeline.spring.chunks.XmlDataChunk;
+import com._4point.aem.formspipeline.api.Message;
+import com._4point.aem.formspipeline.api.MessageBuilder;
+import com._4point.aem.formspipeline.contexts.EmptyContext;
+import com._4point.aem.formspipeline.payloads.XmlPayload;
 
 class XmlAggregationTransformationTest {
 
@@ -17,8 +20,10 @@ class XmlAggregationTransformationTest {
 	
 	@Test
 	void testProcess() {
-		Stream<XmlDataChunk> chunks = Stream.of(XmlDataChunk.create(XmlEventManipulationTest.TRANSACTION_1), XmlDataChunk.create(XmlEventManipulationTest.TRANSACTION_2), XmlDataChunk.create(XmlEventManipulationTest.TRANSACTION_3));
-		XmlDataChunk result = underTest.process(chunks);
+		Stream<Message<XmlPayload>> chunks = Stream.of(XmlEventManipulationTest.TRANSACTION_1, XmlEventManipulationTest.TRANSACTION_2, XmlEventManipulationTest.TRANSACTION_3)
+												   .map(XmlPayload::new)
+												   .map(p->MessageBuilder.createMessage(p, EmptyContext.emptyInstance()));
+		Message<XmlPayload> result = underTest.process(chunks);
 
 		assertNotNull(result);
 //		System.out.println("-----");
@@ -27,7 +32,9 @@ class XmlAggregationTransformationTest {
 //		System.out.println("-----");
 //		System.out.println(new String(result.bytes()));
 //		System.out.println("-----");
-		assertThat(Input.fromByteArray(result.bytes()), isIdenticalTo(Input.fromByteArray(XmlEventManipulationTest.FULL_TRANSACTION)).ignoreWhitespace());
+		assertAll(
+				()->assertThat(Input.fromByteArray(result.payload().bytes()), isIdenticalTo(Input.fromByteArray(XmlEventManipulationTest.FULL_TRANSACTION)).ignoreWhitespace()),
+				()->assertSame(EmptyContext.emptyInstance(), result.context())
+				);
 	}
-
 }

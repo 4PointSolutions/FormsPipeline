@@ -35,7 +35,7 @@
 		<maven.compiler.source>${java.version}</maven.compiler.source>
 		<maven.compiler.target>${java.version}</maven.compiler.target>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-		<formspipeline-version>0.0.1-SNAPSHOT</formspipeline-version>
+		<formspipeline-version>0.0.2-SNAPSHOT</formspipeline-version>
 		<junit-addons.version>1.4</junit-addons.version>
 		<saxon-he.version>12.4</saxon-he.version>
 		<greenmail.version>2.0.1</greenmail.version>

@@ -7,9 +7,9 @@ import java.util.List;
 
 import org.junit.jupiter.api.Test;
 
-import com._4point.aem.formspipeline.api.Context;
-import com._4point.aem.formspipeline.api.DataChunk;
-import com._4point.aem.formspipeline.spring.chunks.XmlDataChunkImpl;
+import com._4point.aem.formspipeline.api.Message;
+import com._4point.aem.formspipeline.api.MessageBuilder;
+import com._4point.aem.formspipeline.payloads.XmlPayload;
 import com._4point.aem.formspipeline.spring.transformations.XsltNonXmlDataTransformation.Parameter;
 
 /**
@@ -89,9 +89,9 @@ class XsltNonXmlDataTransformationTest {
 	void testProcess() {
 		List<Parameter> parameters = List.of(new Parameter("count", "1"));
 		XsltNonXmlDataTransformation underTest = new XsltNonXmlDataTransformation(XSLT_STR.getBytes(StandardCharsets.UTF_8));
-		XmlDataChunkImpl dataChunk = new XmlDataChunkImpl(XML_DATA.getBytes(StandardCharsets.UTF_8), XsltNonXmlDataTransformation.buildContext(parameters));
-		DataChunk<Context> result = underTest.process(dataChunk);
-		assertEquals(EXPECTED_RESULT, result.asString());
+		Message<XmlPayload> dataChunk = MessageBuilder.createMessage(new XmlPayload(XML_DATA.getBytes(StandardCharsets.UTF_8)), XsltNonXmlDataTransformation.buildContext(parameters));
+		Message<byte[]> result = underTest.process(dataChunk);
+		assertEquals(EXPECTED_RESULT, new String(result.payload()));
 	}
 
 }

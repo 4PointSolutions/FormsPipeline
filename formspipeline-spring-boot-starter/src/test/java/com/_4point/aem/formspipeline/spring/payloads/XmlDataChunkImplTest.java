@@ -1,4 +1,4 @@
-package com._4point.aem.formspipeline.spring.chunks;
+package com._4point.aem.formspipeline.spring.payloads;
 
 import static org.hamcrest.MatcherAssert.assertThat; 
 import static org.hamcrest.Matchers.*;
@@ -11,9 +11,8 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import com._4point.aem.formspipeline.api.Context;
-import com._4point.aem.formspipeline.spring.chunks.XmlDataChunkImpl.XmlDataContextImpl;
-import com._4point.aem.formspipeline.spring.chunks.XmlDataChunk.XmlDataException;
 import com._4point.aem.formspipeline.spring.common.TestHelper;
+import com._4point.aem.formspipeline.spring.payloads.XmlDataChunkImpl.XmlDataException;
 
 class XmlDataChunkImplTest {
 	
@@ -22,7 +21,7 @@ class XmlDataChunkImplTest {
     void testInitializeXmlDoc_throwException() {
     	String badXmlDataFile = TestHelper.BAD_XML_DATA_FILE;
 		byte[] fileContent = TestHelper.getFileBytesFromResource(badXmlDataFile);
-		XmlDataException ex = assertThrows(XmlDataException.class, ()->XmlDataContextImpl.initializeXmlDoc(fileContent));
+		XmlDataException ex = assertThrows(XmlDataException.class, ()->new XmlDataChunkImpl(fileContent));
 		String msg = ex.getMessage();
 		assertThat(msg, containsStringIgnoringCase("failed to create XmlDataContext"));
     }
@@ -82,25 +81,27 @@ class XmlDataChunkImplTest {
     			.forXpath(xpath)
     			.contextShouldContain(EXPECTED_VALUE);
     }
+
     
-    @DisplayName("Data from new context should be have precendence over data in current context with the same key when createed from another XmlDataChunk.")
-    @Test
-    void testGetString_createFrom_simpleXML() throws Exception {
-    	String xpath = "/laptops/laptop[1]/@name";
-    	String NOT_EXPECTED_VALUE = "Lenonvo";
-    	String EXPECTED_VALUE = "NotLenonvo";
-    	XmlDataChunk chunk = XmlDataChunk.create(TestHelper.getFileBytesFromResource(TestHelper.SIMPLE_XML_DATA_FILE));
-    	// validate starting condition
-    	String origValue = chunk.dataContext().getString(xpath).orElseThrow();
-    	assertEquals(NOT_EXPECTED_VALUE, origValue);
-    	
-    	// update the chunk's context
-    	XmlDataChunk updatedChunk = chunk.updateContext(createSingletonContext(xpath, EXPECTED_VALUE));
-    	
-    	// validate that the value has changed.
-    	String resultValue = updatedChunk.dataContext().getString(xpath).orElseThrow();
-    	assertEquals(EXPECTED_VALUE, resultValue);
-    }
+    // Don't think I need to test context updating any more (Context is a separate object) 
+//    @DisplayName("Data from new context should be have precendence over data in current context with the same key when createed from another XmlDataChunk.")
+//    @Test
+//    void testGetString_createFrom_simpleXML() throws Exception {
+//    	String xpath = "/laptops/laptop[1]/@name";
+//    	String NOT_EXPECTED_VALUE = "Lenonvo";
+//    	String EXPECTED_VALUE = "NotLenonvo";
+//    	XmlDataChunk chunk = XmlDataChunk.create(TestHelper.getFileBytesFromResource(TestHelper.SIMPLE_XML_DATA_FILE));
+//    	// validate starting condition
+//    	String origValue = chunk.dataContext().getString(xpath).orElseThrow();
+//    	assertEquals(NOT_EXPECTED_VALUE, origValue);
+//    	
+//    	// update the chunk's context
+//    	XmlDataChunk updatedChunk = chunk.updateContext(createSingletonContext(xpath, EXPECTED_VALUE));
+//    	
+//    	// validate that the value has changed.
+//    	String resultValue = updatedChunk.dataContext().getString(xpath).orElseThrow();
+//    	assertEquals(EXPECTED_VALUE, resultValue);
+//    }
 
     @Test
     void testGet_simpleXML_FoundRepeatItemUsingAttribute_returnValue() {
@@ -205,39 +206,39 @@ class XmlDataChunkImplTest {
 	}
 	
     // These tests use the "Tester" pattern, as outlined here: http://testerpattern.nl/
-    private CreateMethodTester tester() {
-    	return new CreateMethodTester();
+    private ContextMethodTester tester() {
+    	return new ContextMethodTester();
     }
 
-    private static class CreateMethodTester {
+    private static class ContextMethodTester {
     	private String xmlLocation;
     	private Context prevContext;
     	
-    	CreateMethodTester withXmlLocation(String xmlLocation) {
+    	ContextMethodTester withXmlLocation(String xmlLocation) {
     		this.xmlLocation = xmlLocation;
     		return this;
     	}
     	
-    	CreateMethodTester withPrevContextContaining(String prevKey, String value) {
+    	ContextMethodTester withPrevContextContaining(String prevKey, String value) {
            	this.prevContext = createSingletonContext(prevKey, value);
     		return this;
     	}
 
     	Asserter create() {
     		if (xmlLocation != null && prevContext == null) {
-    			return new Asserter(XmlDataChunk.create(TestHelper.getFileBytesFromResource(xmlLocation)));
+    			return new Asserter(new XmlDataChunkImpl(TestHelper.getFileBytesFromResource(xmlLocation)).xmlContext());
     		} else if (xmlLocation != null && prevContext != null) {
-    			return new Asserter(XmlDataChunk.create(TestHelper.getFileBytesFromResource(xmlLocation), prevContext));
+    			return new Asserter(prevContext.incorporate(new XmlDataChunkImpl(TestHelper.getFileBytesFromResource(xmlLocation)).xmlContext()));
     		} else {
     			throw new IllegalArgumentException("Bad argument combination xmlLocation=%s, prevContext=%s".formatted(xmlLocation, prevContext));
     		}
     	}
     	
     	private static class Asserter {
-    		private final XmlDataChunk result;
+    		private final Context result;
     		private String xpath;
 
-			public Asserter(XmlDataChunk result) {
+			public Asserter(Context result) {
 				this.result = result;
 			}
     		
@@ -248,37 +249,37 @@ class XmlDataChunkImplTest {
 			
 	    	<E extends Exception> void shouldThrowEx(Class<E> ex) {
 	    		checkXPath();
-	        	assertThrows(ex, ()->result.dataContext().getString(xpath));      	
+	        	assertThrows(ex, ()->result.getString(xpath));      	
 
 	    	}
 
 	    	void contextShouldContainIgnoringWhitespace(String expectedValue) {
 	    		checkXPath();
-    			String actualValue = result.dataContext().getString(xpath).orElseThrow();
+    			String actualValue = result.getString(xpath).orElseThrow();
     			assertEquals(expectedValue.replaceAll("\\s+",""), actualValue.replaceAll("\\s+",""));
     		}
 
     		void contextShouldContain(String expectedValue) {
 	    		checkXPath();
-    			String actualValue = result.dataContext().getString(xpath).orElseThrow();
+    			String actualValue = result.getString(xpath).orElseThrow();
     			assertEquals(expectedValue, actualValue);
     		}
     		
     		void contextShouldContainMulti(String... expectedValue) {
 	    		checkXPath();
-    			List<String> actualValue = result.dataContext().getStrings(xpath);
+    			List<String> actualValue = result.getStrings(xpath);
     			assertArrayEquals(expectedValue, actualValue.toArray(new String[actualValue.size()]));
     		}
     		
     		void contextShouldReturnEmpty() {
 	    		checkXPath();
-    			Optional<String> actualValue = result.dataContext().getString(xpath);
+    			Optional<String> actualValue = result.getString(xpath);
 	    		assertTrue(actualValue.isEmpty());
 	    	}
 
     		void contextListShouldReturnEmpty() {
 	    		checkXPath();
-    			Optional<List> value = result.dataContext().get(xpath, List.class);
+    			Optional<List> value = result.get(xpath, List.class);
 				assertTrue(value.isEmpty(), ()->"Expected Optional to be empty but it wasn't.");
     			
     		}

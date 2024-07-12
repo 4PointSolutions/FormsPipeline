@@ -1,9 +1,7 @@
 package com._4point.aem.formspipeline.spring.transformations;
 
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.xmlunit.matchers.CompareMatcher.isIdenticalTo;
 
@@ -21,7 +19,10 @@ import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.xmlunit.builder.Input;
 
-import com._4point.aem.formspipeline.spring.chunks.XmlDataChunk;
+import com._4point.aem.formspipeline.api.Message;
+import com._4point.aem.formspipeline.api.MessageBuilder;
+import com._4point.aem.formspipeline.contexts.EmptyContext;
+import com._4point.aem.formspipeline.payloads.XmlPayload;
 import com._4point.aem.formspipeline.spring.common.TestHelper;
 import com._4point.aem.formspipeline.spring.transformations.XsltNonXmlDataTransformation.XmlTransformationException;
 
@@ -38,16 +39,16 @@ import net.sf.saxon.TransformerFactoryImpl;
  */
 @ExtendWith(MockitoExtension.class)
 class XsltXmlDataTransformationTest {
-	private final byte[] xmlBytes = TestHelper.getFileBytesFromResource(TestHelper.SIMPLE_XML_DATA_FILE);
-	private final byte[] xsltBytes = TestHelper.getFileBytesFromResource(TestHelper.SIMPLE_XSLT_DATA_FILE);	
+	private static final byte[] XML_BYTES = TestHelper.getFileBytesFromResource(TestHelper.SIMPLE_XML_DATA_FILE);
+	private static final byte[] XSLT_BYTES = TestHelper.getFileBytesFromResource(TestHelper.SIMPLE_XSLT_DATA_FILE);	
 		
-	private final byte[] xsltBytesV21 = TestHelper.getFileBytesFromResource(TestHelper.XSLTV21_DATA_FILE);
+	private static final byte[] XSLT_BYTES_V21 = TestHelper.getFileBytesFromResource(TestHelper.XSLTV21_DATA_FILE);
 
-	private final byte[] dataBytes20 = TestHelper.getFileBytesFromResource(TestHelper.XSLTV20_DATA_FILE);
-	private final byte[] xsltBytesV20 = TestHelper.getFileBytesFromResource(TestHelper.SIMPLE_XSLTV20_DATA_FILE);
+	private static final byte[] XML_BYTES_V20 = TestHelper.getFileBytesFromResource(TestHelper.XSLTV20_DATA_FILE);
+	private static final byte[] XSLT_BYTES_V20 = TestHelper.getFileBytesFromResource(TestHelper.SIMPLE_XSLTV20_DATA_FILE);
 	
-	private final byte[] invalidXsltBytes = TestHelper.getFileBytesFromResource(TestHelper.INVALID_XSLT_DATA_FILE);
-	private final byte[] xsltIncludeBytes = TestHelper.getFileBytesFromResource(TestHelper.SIMPLE_XSLT_INCLUDE_FILE);
+	private static final byte[] INVALID_XSLT_BYTES = TestHelper.getFileBytesFromResource(TestHelper.INVALID_XSLT_DATA_FILE);
+	private static final byte[] XSLT_INCLUDE_BYTES = TestHelper.getFileBytesFromResource(TestHelper.SIMPLE_XSLT_INCLUDE_FILE);
 		
 	@Mock Transformer mockTransformer;
 	@Mock TransformerFactoryImpl mockTransformerFactory;
@@ -94,7 +95,7 @@ class XsltXmlDataTransformationTest {
     @Test
     void testConstructor_throwException() {
     	Exception e = assertThrows(IllegalArgumentException.class, () -> {
-    		new XsltXmlDataTransformation(invalidXsltBytes);
+    		new XsltXmlDataTransformation(INVALID_XSLT_BYTES);
     	});
     	assertTrue(e.getMessage().contains("Failed to instantiate XsltXmlDataTransformation."));
     }
@@ -106,43 +107,44 @@ class XsltXmlDataTransformationTest {
     	Mockito.doThrow(TransformerException.class)
     			.when(mockTransformer)    			
     			.transform(any(Source.class), any(Result.class));    	    	
-    	XmlDataChunk xmlChunk = XmlDataChunk.create(xmlBytes);
-    	    	
-    	XsltXmlDataTransformation underTest = new XsltXmlDataTransformation(xsltBytes,mockTransformerFactory);
-    	assertThrows(XmlTransformationException.class, ()->underTest.process(xmlChunk));
+    	XsltXmlDataTransformation underTest = new XsltXmlDataTransformation(XSLT_BYTES,mockTransformerFactory);
+    	assertThrows(XmlTransformationException.class, ()->underTest.process(createMessage(XML_BYTES)));
     }
 	
 	@Test
 	void testProcess_success() {
-		XsltXmlDataTransformation underTest = new XsltXmlDataTransformation(xsltBytes);		
-		XmlDataChunk data = underTest.process(XmlDataChunk.create(xmlBytes));
-		assertThat(Input.fromByteArray(data.bytes()), isIdenticalTo(Input.fromString(EXPECTED_ELEMENT_NAME_CHANGED_XML)));
+		XsltXmlDataTransformation underTest = new XsltXmlDataTransformation(XSLT_BYTES);		
+    	Message<XmlPayload> data = underTest.process(createMessage(XML_BYTES));
+    	assertThat(Input.fromByteArray(data.payload().bytes()), isIdenticalTo(Input.fromString(EXPECTED_ELEMENT_NAME_CHANGED_XML)));
 	}
 	
 	@Test
 	void testProcess_withInclude() throws Exception {
-		XsltXmlDataTransformation underTest = new XsltXmlDataTransformation(xsltIncludeBytes, TestHelper.getPathFromResource(TestHelper.SIMPLE_XSLT_INCLUDE_FILE).getParent());		
-		XmlDataChunk data = underTest.process(XmlDataChunk.create(xmlBytes));
-		assertThat(Input.fromByteArray(data.bytes()), isIdenticalTo(Input.fromString(EXPECTED_ELEMENT_NAME_CHANGED_XML)));
+		XsltXmlDataTransformation underTest = new XsltXmlDataTransformation(XSLT_INCLUDE_BYTES, TestHelper.getPathFromResource(TestHelper.SIMPLE_XSLT_INCLUDE_FILE).getParent());		
+    	Message<XmlPayload> data = underTest.process(createMessage(XML_BYTES));
+		assertThat(Input.fromByteArray(data.payload().bytes()), isIdenticalTo(Input.fromString(EXPECTED_ELEMENT_NAME_CHANGED_XML)));
 	}
 	
 	@Test
 	//xsl:perform-sort available in XSLT 2.0 and newer
 	void testProcess_xsltVersion20_Sorting_success() {
-		XsltXmlDataTransformation underTest2 = new XsltXmlDataTransformation(xsltBytesV21);		
-		XmlDataChunk data2 = underTest2.process(XmlDataChunk.create(xmlBytes));
-		assertThat(Input.fromByteArray(data2.bytes()), isIdenticalTo(Input.fromString(EXPECTED_SORTED_XML)));
+		XsltXmlDataTransformation underTest2 = new XsltXmlDataTransformation(XSLT_BYTES_V21);		
+    	Message<XmlPayload> data2 = underTest2.process(createMessage(XML_BYTES));
+		assertThat(Input.fromByteArray(data2.payload().bytes()), isIdenticalTo(Input.fromString(EXPECTED_SORTED_XML)));
 	}
-	
+
 	@Test
 	//function current-group() available in XSLT 2.0 and newer
 	void testProcess_xsltVersion20_Grouping_success() throws TransformerException {  			
-		XsltXmlDataTransformation underTest = new XsltXmlDataTransformation(xsltBytesV20);		
-		XmlDataChunk data = underTest.process(XmlDataChunk.create(dataBytes20));
+		XsltXmlDataTransformation underTest = new XsltXmlDataTransformation(XSLT_BYTES_V20);		
+		Message<XmlPayload> data = underTest.process(createMessage(XML_BYTES_V20));
 		
-		String s = new String(data.bytes(), StandardCharsets.UTF_8);
+		String s = new String(data.payload().bytes(), StandardCharsets.UTF_8);
 		System.out.println("testProcess_xsltVersion31_success ... " +s);
 		assertEquals(EXPECTED_XSLT20_TABLE.trim(),s.trim());	
 	}
-	
+
+	private Message<XmlPayload> createMessage(byte[] xmlBytes) {
+		return MessageBuilder.createMessage(new XmlPayload(xmlBytes), EmptyContext.emptyInstance());
+	}
 }

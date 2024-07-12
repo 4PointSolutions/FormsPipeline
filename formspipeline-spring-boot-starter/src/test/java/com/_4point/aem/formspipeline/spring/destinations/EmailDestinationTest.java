@@ -1,12 +1,20 @@
 package com._4point.aem.formspipeline.spring.destinations;
 
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.*;
-import static org.junit.jupiter.api.Assertions.*;
+import static org.hamcrest.Matchers.allOf;
+import static org.hamcrest.Matchers.containsString;
+import static org.junit.jupiter.api.Assertions.assertAll;
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertIterableEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.Optional;
 import java.util.function.Supplier;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -21,9 +29,9 @@ import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import com._4point.aem.formspipeline.api.Context;
-import com._4point.aem.formspipeline.api.Result;
-import com._4point.aem.formspipeline.chunks.PdfOutputChunk;
-import com._4point.aem.formspipeline.contexts.EmptyContext;
+import com._4point.aem.formspipeline.api.Message;
+import com._4point.aem.formspipeline.api.MessageBuilder;
+import com._4point.aem.formspipeline.payloads.PdfPayload;
 import com._4point.aem.formspipeline.spring.destinations.EmailDestination.ContextWriter;
 import com._4point.aem.formspipeline.spring.utils.EmailService;
 import com._4point.aem.formspipeline.spring.utils.EmailService.EmailServiceException;
@@ -94,19 +102,16 @@ class EmailDestinationTest {
 	@ParameterizedTest
 	@EnumSource
 	void testProcess(TestScenario scenario, @Mock EmailService mockEmailService) throws Exception {
-		EmailDestination underTest = new EmailDestination<>(mockEmailService);
+		EmailDestination underTest = new EmailDestination(mockEmailService);
 		Mockito.when(mockEmailService.sendMail(sendEmailData.capture())).thenReturn(mockEmailService);
 		Context dataContext = scenario.context();
-		PdfOutputChunk<Context> input = PdfOutputChunk.createSimple(dataContext, MOCK_PDF_DATA);
-		Result result = underTest.process(input);
+		Message<PdfPayload> input = MessageBuilder.createMessage(new PdfPayload(MOCK_PDF_DATA), dataContext);
+		Optional<Message<?>> result = underTest.process(input);
 		assertNotNull(result);
+
+		// Validate the result - There's no return
+		assertTrue(result.isEmpty());
 		
-		// Validate the result - There's no return, so just make sure that we got back what we sent in plus the EmptyContext.
-		assertAll(
-				()->assertSame(input.dataContext(), result.dataContext()),
-				()->assertSame(input.outputContext(), result.outputContext()),
-				()->assertSame(EmptyContext.emptyInstance(), result.resultContext())
-				);
 		
 		
 		// Validate sendEmailData
@@ -137,7 +142,7 @@ class EmailDestinationTest {
 	@Test
 	void testEmailError(@Mock EmailService mockEmailService) throws Exception {
 		String expectedMsg = "DummyMessage";
-		EmailDestination underTest = new EmailDestination<>(mockEmailService);
+		EmailDestination underTest = new EmailDestination(mockEmailService);
 		Mockito.when(mockEmailService.sendMail(sendEmailData.capture())).thenThrow(new EmailServiceException(expectedMsg));
 	
 		// Set up SendEmailData
@@ -151,13 +156,11 @@ class EmailDestinationTest {
 											  .attachmentFilename(Path.of(ATTACHMENT_FILENAME_VALUE))
 											  .build()
 											  ;
-		PdfOutputChunk<Context> input = PdfOutputChunk.createSimple(dataContext, MOCK_PDF_DATA);
+		Message<PdfPayload> input = MessageBuilder.createMessage(new PdfPayload(MOCK_PDF_DATA), dataContext);
 		IllegalStateException ex = assertThrows(IllegalStateException.class, ()->underTest.process(input));
 		String msg = ex.getMessage();
 		assertNotNull(msg);
 		
 		assertThat(msg, allOf(containsString(expectedMsg), containsString("Error while sending email")));
-		
 	}
-
 }

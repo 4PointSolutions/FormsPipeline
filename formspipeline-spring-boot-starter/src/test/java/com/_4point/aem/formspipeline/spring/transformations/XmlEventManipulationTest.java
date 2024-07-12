@@ -1,14 +1,13 @@
 package com._4point.aem.formspipeline.spring.transformations;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 
-
 import org.junit.jupiter.api.Test;
 
-import com._4point.aem.formspipeline.spring.chunks.XmlDataChunk;
+import com._4point.aem.formspipeline.payloads.XmlPayload;
 import com._4point.aem.formspipeline.spring.transformations.XmlEventManipulation.EventInfo;
 import com._4point.aem.formspipeline.spring.transformations.XmlEventManipulation.TransactionInfo;
 
@@ -60,7 +59,7 @@ class XmlEventManipulationTest {
 	
 	@Test
 	void testReadToList() throws Exception {
-		List<EventInfo> result = XmlEventManipulation.readToList(XmlDataChunk.create(XmlEventManipulationTest.FULL_TRANSACTION));
+		List<EventInfo> result = XmlEventManipulation.readToList(new XmlPayload(XmlEventManipulationTest.FULL_TRANSACTION));
 		
 //		printEventList(result);
 		assertEquals(result.size(), EXPECTED_NUM_EVENTS, ()->"Expected " + EXPECTED_NUM_EVENTS + " events in the sample XML.");
@@ -68,7 +67,7 @@ class XmlEventManipulationTest {
 
 	@Test
 	void testConvertToTransactions() throws Exception {
-		List<EventInfo> input = XmlEventManipulation.readToList(XmlDataChunk.create(XmlEventManipulationTest.FULL_TRANSACTION));
+		List<EventInfo> input = XmlEventManipulation.readToList(new XmlPayload(XmlEventManipulationTest.FULL_TRANSACTION));
 		TransactionInfo result = XmlEventManipulation.convertToTransactions(input, 2);
 		
 //		System.out.println("------ PreAmble ");

@@ -13,9 +13,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com._4point.aem.formspipeline.api.DataTransformation.DataTransformationManyToOne;
-import com._4point.aem.formspipeline.spring.chunks.XmlDataChunk;
+import com._4point.aem.formspipeline.api.Message;
+import com._4point.aem.formspipeline.api.MessageBuilder;
+import com._4point.aem.formspipeline.payloads.XmlPayload;
 
-public class XmlAggregationTransformation extends XmlEventManipulation	implements DataTransformationManyToOne<XmlDataChunk, XmlDataChunk> {
+public class XmlAggregationTransformation extends XmlEventManipulation	implements DataTransformationManyToOne<Message<XmlPayload>, Message<XmlPayload>> {
 	private static final Logger logger = LoggerFactory.getLogger(XmlAggregationTransformation.class);
 
 	private final int wrapperLevels;
@@ -25,10 +27,13 @@ public class XmlAggregationTransformation extends XmlEventManipulation	implement
 	}
 
 	@Override
-	public XmlDataChunk process(Stream<XmlDataChunk> dataChunks) {
+	public Message<XmlPayload> process(Stream<Message<XmlPayload>> msgs) {
 	 	try {
-			List<XmlDataChunk> chunkList = dataChunks.toList();
-			List<TransactionInfo> transactions = chunkList.stream().map(this::readToListUnchecked).toList();
+			List<Message<XmlPayload>> chunkList = msgs.toList();
+			List<TransactionInfo> transactions = chunkList.stream()
+														  .map(Message::payload)
+														  .map(this::readToListUnchecked)
+														  .toList();
 			TransactionInfo t1 = transactions.get(0);
 			ByteArrayOutputStream os = new ByteArrayOutputStream();
 			
@@ -40,17 +45,18 @@ public class XmlAggregationTransformation extends XmlEventManipulation	implement
 				}
 				t1.writePostamble(ew);
 			}
-			return XmlDataChunk.create(os.toByteArray(), chunkList.get(0).dataContext());
+			return MessageBuilder.createMessage(new XmlPayload(os.toByteArray()), chunkList.get(0).context());
 		} catch (XMLStreamException | IOException e) {
 			throw new IllegalStateException("Failed to combine XML file.  %s".formatted(e.getMessage()), e);
 		}
 	}
 
-	private TransactionInfo readToListUnchecked(XmlDataChunk dataChunk) {
+	private TransactionInfo readToListUnchecked(XmlPayload dataChunk) {
 		try {
 			return convertToTransactions(readToList(dataChunk), wrapperLevels);
 		} catch (XMLStreamException | IOException e) {
 			throw new IllegalStateException("Failed to read XML file.  %s".formatted(e.getMessage()), e);
 		}
 	}
+
 }

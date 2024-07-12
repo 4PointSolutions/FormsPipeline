@@ -2,10 +2,10 @@ package com._4point.aem.formspipeline.spring.transformations;
 
 import java.nio.file.Path;
 
-import com._4point.aem.formspipeline.api.Context;
-import com._4point.aem.formspipeline.api.DataChunk;
 import com._4point.aem.formspipeline.api.DataTransformation.DataTransformationOneToOne;
-import com._4point.aem.formspipeline.spring.chunks.XmlDataChunk;
+import com._4point.aem.formspipeline.api.Message;
+import com._4point.aem.formspipeline.api.MessageBuilder;
+import com._4point.aem.formspipeline.payloads.XmlPayload;
 
 import net.sf.saxon.TransformerFactoryImpl;
 
@@ -17,7 +17,7 @@ import net.sf.saxon.TransformerFactoryImpl;
  * @author lien.ly
  *
  */
-public class XsltXmlDataTransformation implements DataTransformationOneToOne<XmlDataChunk, XmlDataChunk> {
+public class XsltXmlDataTransformation implements DataTransformationOneToOne<Message<XmlPayload>, Message<XmlPayload>> {
 	
 	private final XsltNonXmlDataTransformation transformer;
 	
@@ -42,8 +42,8 @@ public class XsltXmlDataTransformation implements DataTransformationOneToOne<Xml
 	}
 	
 	@Override
-	public XmlDataChunk process(XmlDataChunk dataChunk) {
-		DataChunk<Context> result = transformer.process(dataChunk);
-		return XmlDataChunk.create(result.bytes(), result.dataContext());	// Convert from regular DataChunk to XmlDataChunk
+	public Message<XmlPayload> process(Message<XmlPayload> msg) {
+		Message<byte[]> result = transformer.process(msg);
+		return MessageBuilder.createMessage(new XmlPayload(result.payload()), result.context());	// Convert from regular DataChunk to XmlDataChunk
 	}
 }

@@ -14,11 +14,11 @@ import javax.xml.transform.stream.StreamResult;
 import javax.xml.transform.stream.StreamSource;
 
 import com._4point.aem.formspipeline.api.Context;
-import com._4point.aem.formspipeline.api.DataChunk;
 import com._4point.aem.formspipeline.api.DataTransformation.DataTransformationOneToOne;
-import com._4point.aem.formspipeline.chunks.SimpleDataChunk;
+import com._4point.aem.formspipeline.api.Message;
+import com._4point.aem.formspipeline.api.MessageBuilder;
 import com._4point.aem.formspipeline.contexts.SingletonContext;
-import com._4point.aem.formspipeline.spring.chunks.XmlDataChunk;
+import com._4point.aem.formspipeline.payloads.XmlPayload;
 
 import net.sf.saxon.TransformerFactoryImpl;
 
@@ -29,7 +29,7 @@ import net.sf.saxon.TransformerFactoryImpl;
  * Receiving one xslt and one xml document and perform the transformation using that data.
  *
  */
-public class XsltNonXmlDataTransformation implements DataTransformationOneToOne<XmlDataChunk, DataChunk<Context>> {
+public class XsltNonXmlDataTransformation implements DataTransformationOneToOne<Message<XmlPayload>, Message<byte[]>> {
 	private static final String XSLT_TRANSFORMATION_CONTEXT_PREFIX = "com._4point.aem.formspipeline.spring.transformations.XsltNonXmlDataTransformation.";
 	private static final String XSLT_TRANSFORMATION_CONTEXT_PARAM_KEY = XSLT_TRANSFORMATION_CONTEXT_PREFIX + "parameters";
 	
@@ -62,14 +62,15 @@ public class XsltNonXmlDataTransformation implements DataTransformationOneToOne<
 	}
 	
 	@Override
-	public DataChunk<Context> process(XmlDataChunk dataChunk) {
+//	public DataChunk<Context> process(XmlDataChunk dataChunk) {
+	public Message<byte[]> process(Message<XmlPayload> msg) {
 		try {
 			//Add correlation ID, processing time, size of dataChunk, which transformer is used
 			ByteArrayOutputStream output = new ByteArrayOutputStream();
-			parameters(dataChunk.dataContext()).forEach(p->transformer.setParameter(p.name, p.value));	// pass in parameters for the XSLT 
-			transformer.transform(new StreamSource(dataChunk.asInputStream()), new StreamResult(output));
+			parameters(msg.context()).forEach(p->transformer.setParameter(p.name, p.value));	// pass in parameters for the XSLT 
+			transformer.transform(new StreamSource(msg.payload().asInputStream()), new StreamResult(output));
 			transformer.reset();
-			return new SimpleDataChunk(dataChunk.dataContext(), output.toByteArray());	// Include previous context in this one.
+			return MessageBuilder.createMessage(output.toByteArray(), msg.context());	// Include previous context in this one.
 		} catch (TransformerException e) {
 			throw new XmlTransformationException(e);
 		}
