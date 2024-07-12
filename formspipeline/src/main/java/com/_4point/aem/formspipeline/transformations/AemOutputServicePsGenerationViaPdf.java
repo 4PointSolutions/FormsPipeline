@@ -1,11 +1,13 @@
 package com._4point.aem.formspipeline.transformations;
 
+import java.util.function.Function;
 import java.util.stream.Stream;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com._4point.aem.formspipeline.api.DataTransformation.DataTransformationOneToOne;
+import com._4point.aem.formspipeline.payloads.PdfPayload;
 import com._4point.aem.formspipeline.payloads.PsPayload;
 import com._4point.aem.formspipeline.payloads.XmlPayload;
 import com._4point.aem.formspipeline.api.Message;
@@ -34,20 +36,26 @@ import com._4point.aem.formspipeline.api.Message;
 public class AemOutputServicePsGenerationViaPdf implements DataTransformationOneToOne<Message<XmlPayload>, Message<PsPayload>> {
 	private static final Logger logger = LoggerFactory.getLogger(AemOutputServicePsGenerationViaPdf.class);
 
-	private final AemOutputServicePdfGeneration pdfGenerator;
-	private final AemConvertPdfToPsService pdfToPsConverter;
+	private final Function<? super Message<XmlPayload>, ? extends Message<PdfPayload>> generatePdfFn;
+	private final Function<? super Message<PdfPayload>, ? extends Message<PsPayload>> generatePsFn;
 	
+	public AemOutputServicePsGenerationViaPdf(
+			Function<? super Message<XmlPayload>, ? extends Message<PdfPayload>> generatePdfFn,
+			Function<? super Message<PdfPayload>, ? extends Message<PsPayload>> generatePsFn) {
+		this.generatePdfFn = generatePdfFn;
+		this.generatePsFn = generatePsFn;
+	}
 	
 	public AemOutputServicePsGenerationViaPdf(AemOutputServicePdfGeneration pdfGenerator, AemConvertPdfToPsService pdfToPsConverter) {
-		this.pdfGenerator = pdfGenerator;
-		this.pdfToPsConverter = pdfToPsConverter;
+		this(pdfGenerator::process, pdfToPsConverter::process);
 	}
+
 
 	@Override
 	public Message<PsPayload> process(Message<XmlPayload> msg) {
 		return Stream.of(msg)
-					 .map(pdfGenerator::process)
-					 .map(pdfToPsConverter::process)
+					 .map(generatePdfFn)
+					 .map(generatePsFn)
 					 .findFirst()
 					 .orElseThrow();
 	}
