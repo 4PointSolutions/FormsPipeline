@@ -1,5 +1,7 @@
 package com._4point.aem.formspipeline.api;
 
+import java.util.function.Function;
+
 public class MessageBuilder<T> {
 //	private T payload;
 //	private Context context;
@@ -32,6 +34,14 @@ public class MessageBuilder<T> {
 	 */
 	public static <T> Message<T> createMessage(T payload, Context context) {
 		return new MessageImpl<T>(payload, context);
+	}
+
+	public static <T,R> Function<Message<T>, Message<R>> transformPayload(Function<T,R> fn) {
+		return m->MessageBuilder.createMessage(fn.apply(m.payload()), m.context());
+	}
+	
+	public static <T> Function<Message<T>, Message<T>> transformContext(Function<? super Context, ? extends Context> fn) {
+		return m->MessageBuilder.createMessage(m.payload(), fn.apply(m.context()));
 	}
 	
 	private record MessageImpl<T>(T payload, Context context) implements Message<T> {};
