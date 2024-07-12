@@ -1,11 +1,8 @@
 package com._4point.aem.formspipeline.api;
 
-import java.util.stream.Stream;
+import java.util.function.Function;
 
-public interface Pipeline<T, R> {
-	
-	public Stream<R> process(T dataChunk);
-	public Stream<R> process(Stream<T> dataChunks);
+public interface Pipeline<T, R> extends Function<T, R> {
 
 	public interface PipelineFactory<T, R> {
 		
@@ -15,5 +12,6 @@ public interface Pipeline<T, R> {
 			Pipeline<T, R> build();
 		}
 	}
+
 }
 
